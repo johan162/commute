@@ -1,0 +1,7 @@
+{
+  "name": "Commute Tracker",
+  "description": "An application to track your commute time to work, providing detailed statistics, visualizations, and data export options. It uses GPS to automatically stop the timer upon arrival.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}
