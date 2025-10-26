@@ -1,0 +1,19 @@
+{
+  "name": "Commute Tracker",
+  "short_name": "Commute Tracker",
+  "description": "An application to track your commute time to work, providing detailed statistics and visualizations.",
+  "start_url": "/commute/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#111827",
+  "theme_color": "#2DD4BF",
+  "scope": "/commute/",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
