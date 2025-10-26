@@ -72,7 +72,7 @@ if ! git checkout gh-pages; then
     exit 1
 fi
 
-# Remove old files (keep .git directory)
+# Remove old files (keep .git & .gitignore in directory)
 echo -e "${GREEN}Removing old files from gh-pages...${NC}"
 git rm -rf assets *.svg *.html *.json manifest.* *.js  > /dev/null 2>&1 || true
 
