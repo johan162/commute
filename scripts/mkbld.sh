@@ -74,8 +74,7 @@ fi
 
 # Remove old files (keep .git directory)
 echo -e "${GREEN}Removing old files from gh-pages...${NC}"
-git rm -rf . > /dev/null 2>&1 || true
-rm -rf * > /dev/null 2>&1 || true
+git rm -rf assets *.svg *.html *.json manifest.* *.js  > /dev/null 2>&1 || true
 
 # Copy new build files
 echo -e "${GREEN}Copying new build files...${NC}"
