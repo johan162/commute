@@ -7,6 +7,7 @@
 - Make it possible to set the proximity zone for arriving at work location in the "Settings" tab
 - Make it possible (via setting in "Settings" tab) to automatically record the position when the timer is stopped as the work location
 - Make it optional for the GPS GeoFence auto-turn off by a setting in them "Settings" tab
+- Add 90% CI to PDF Report
 
 
 ## 🐛 BUGS
