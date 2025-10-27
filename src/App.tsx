@@ -14,7 +14,9 @@ const App: React.FC = () => {
   const [view, setView] = useState<View>('main');
   const [commuteRecords, setCommuteRecords] = useLocalStorage<CommuteRecord[]>('commuteRecords', []);
   const [workLocations, setWorkLocations] = useLocalStorage<Coordinates[]>('workLocations', []);
-  const version = '0.2.0';
+  const [autoStopRadius, setAutoStopRadius] = useLocalStorage<number>('autoStopRadius', 50);
+  const [autoStopEnabled, setAutoStopEnabled] = useLocalStorage<boolean>('autoStopEnabled', true);
+  const version = '0.3.0';
 
   const averageWorkLocation = useMemo<Coordinates | null>(() => {
     if (workLocations.length === 0) return null;
@@ -57,6 +59,10 @@ const App: React.FC = () => {
     setWorkLocations(prev => [...prev, location]);
   };
   
+  const deleteCommuteRecords = (recordIds: number[]) => {
+    setCommuteRecords(prev => prev.filter(record => !recordIds.includes(record.id)));
+  };
+
   const clearAllData = () => {
     if(window.confirm('Are you sure you want to delete all commute records and work locations? This action cannot be undone.')){
         setCommuteRecords([]);
@@ -70,12 +76,24 @@ const App: React.FC = () => {
       case 'stats':
         return <StatsView records={commuteRecords} stats={stats} />;
       case 'history':
-        return <HistoryView records={commuteRecords} median={stats?.median} />;
+        return <HistoryView records={commuteRecords} median={stats?.median} onDeleteRecords={deleteCommuteRecords} />;
       case 'settings':
-        return <SettingsView onAddLocation={addWorkLocation} workLocationCount={workLocations.length} onClearAllData={clearAllData} />;
+        return <SettingsView 
+          onAddLocation={addWorkLocation} 
+          workLocationCount={workLocations.length} 
+          onClearAllData={clearAllData}
+          autoStopRadius={autoStopRadius}
+          onAutoStopRadiusChange={setAutoStopRadius}
+          autoStopEnabled={autoStopEnabled}
+          onAutoStopEnabledChange={setAutoStopEnabled}
+        />;
       case 'main':
       default:
-        return <MainView onSaveCommute={addCommuteRecord} workLocation={averageWorkLocation} />;
+        return <MainView 
+          onSaveCommute={addCommuteRecord} 
+          workLocation={autoStopEnabled ? averageWorkLocation : null} 
+          autoStopRadius={autoStopRadius} 
+        />;
     }
   };
 

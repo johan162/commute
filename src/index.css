@@ -2,3 +2,39 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom slider styles */
+.slider::-webkit-slider-thumb {
+  appearance: none;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #06b6d4;
+  cursor: pointer;
+  border: 2px solid #155e75;
+}
+
+.slider::-webkit-slider-thumb:hover {
+  background: #0891b2;
+}
+
+.slider:disabled::-webkit-slider-thumb {
+  background: #4b5563;
+  border-color: #374151;
+  cursor: not-allowed;
+}
+
+.slider::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  background: #06b6d4;
+  cursor: pointer;
+  border: 2px solid #155e75;
+}
+
+.slider:disabled::-moz-range-thumb {
+  background: #4b5563;
+  border-color: #374151;
+  cursor: not-allowed;
+}

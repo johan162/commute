@@ -9,7 +9,7 @@ interface UseCommuteTimerProps {
   autoStopRadius?: number; // in meters
 }
 
-export const useCommuteTimer = ({ workLocation, onStop, autoStopRadius = 100 }: UseCommuteTimerProps) => {
+export const useCommuteTimer = ({ workLocation, onStop, autoStopRadius = 50 }: UseCommuteTimerProps) => {
   const [isRunning, setIsRunning] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [statusMessage, setStatusMessage] = useState('Press "Leaving" to start your commute.');

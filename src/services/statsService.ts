@@ -48,6 +48,13 @@ export const getPercentile = (data: number[], percentile: number): number => {
     return sorted[lower] * (1 - weight) + sorted[upper] * weight;
 };
 
+export const getPercentileNearestRank = (data: number[], percentile: number): number => {
+    if (data.length === 0) return 0;
+    const sorted = [...data].sort((a, b) => a - b);
+    const index = Math.ceil((percentile / 100) * sorted.length) - 1;
+    return sorted[Math.max(0, index)];
+};
+
 export const getConfidenceInterval = (data: number[], confidenceLevel: number = 90): { low: number; high: number } | null => {
     if (data.length < 5) return null;
     
@@ -58,5 +65,18 @@ export const getConfidenceInterval = (data: number[], confidenceLevel: number = 
     return {
         low: getPercentile(data, lowPercentile),
         high: getPercentile(data, highPercentile)
+    };
+};
+
+export const getConfidenceIntervalRank = (data: number[], confidenceLevel: number = 90): { low: number; high: number } | null => {
+    if (data.length < 5) return null;
+    
+    const tailPercent = (100 - confidenceLevel) / 2;
+    const lowPercentile = tailPercent;
+    const highPercentile = 100 - tailPercent;
+
+    return {
+        low: getPercentileNearestRank(data, lowPercentile),
+        high: getPercentileNearestRank(data, highPercentile)
     };
 };

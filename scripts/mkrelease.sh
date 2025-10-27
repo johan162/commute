@@ -13,6 +13,12 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# =====================================
+# CONFIGURATION
+# =====================================
+
+declare GITHUB_USER="johan162"
+declare SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 declare PROGRAMNAME="commute"
 declare PROGRAMNAME_PRETTY="Commute Tracker"
 
@@ -37,7 +43,7 @@ log_step() {
 validate_version() {
     local version=$1
     if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        log_error "Invalid version format. Expected: x.y.z (e.g., 0.1.0)"
+        log_error "Invalid version format. Expected: x.y.z (e.g., 0.1.0). Only numeric versions allowed."
         exit 1
     fi
 }
@@ -99,13 +105,12 @@ EOF
 trap cleanup EXIT
 
 # Main script starts here
-echo -e "${GREEN}=== Commute Tracker Release Script ===${NC}"
+echo -e "${BLUE}=== Commute Tracker Release Script ===${NC}"
 
 
 # Parse arguments
-VERSION=""
-RELEASE_TYPE="minor"
-DRY_RUN=false
+declare VERSION=""
+declare RELEASE_TYPE="minor"
 
 for arg in "$@"; do
     case $arg in
@@ -114,7 +119,7 @@ for arg in "$@"; do
             exit 0
             ;;
         -*)
-            print_error_colored "Unknown option: $arg"
+            log_error "Unknown option: $arg"
             echo "Usage: $0 <version> [major|minor|patch] [--help]"
             echo "Run '$0 --help' for detailed information"
             exit 1
@@ -131,7 +136,7 @@ for arg in "$@"; do
 done
 
 if [[ -z "$VERSION" ]]; then
-    print_error_colored "Error: Version required"
+    log_error "Error: Version required"
     echo ""
     echo "Usage: $0 <version> [major|minor|patch] [--help]"
     echo ""
@@ -202,7 +207,7 @@ fi
 log_info "✓ Build successful"
 
 # ===============================================================
-# Step 5: Update the version number string in src/App.tsx
+# Step 5: Update the version number string in src/App.tsx and README.md
 # ===============================================================
 log_step "5. Updating version in src/App.tsx..."
 if [ ! -f "src/App.tsx" ]; then
@@ -231,14 +236,38 @@ if ! grep -q "const version = '$VERSION';" src/App.tsx; then
     exit 1
 fi
 
-# Step 5.1: Updated CHANGELOG.md
-log_step "5.1 Updating CHANGELOG.md..."
-# 3.2: Generate changelog entry
+# --------------------------------------------------------------
+# Step 5.1: Update version number in badge in README.md
+# --------------------------------------------------------------
+log_step "5.1 Updating version badge in README.md..."
+if [ ! -f "README.md" ]; then
+    log_error "README.md not found"
+    exit 1
+fi
+# ![Version](https://img.shields.io/badge/version-0.2.0-brightgreen.svg)
+# Update version badge using sed
+if sed -i.tmp -E "s/badge\/version-[0-9]+\.[0-9]+\.[0-9]+/badge\/version-$VERSION/g" README.md; then
+    rm -f README.md.tmp
+    log_info "✓ Version badge updated to $VERSION in README.md"
+else
+    rm -f README.md.tmp
+    log_error "Failed to update version badge in README.md"
+    exit 1
+fi
+# Verify the change was made
+if ! grep -q "badge/version-$VERSION" README.md; then
+    log_error "Version badge update verification failed"
+    exit 1
+fi
 
+# --------------------------------------------------------------
+# Step 5.2: Updated CHANGELOG.md
+# --------------------------------------------------------------
+log_step "5.2 Updating CHANGELOG.md..."
     echo "  ✓ Preparing changelog..."
     CHANGELOG_DATE=$(date +%Y-%m-%d)
 
-    # Create temporary changelog entry (customize as needed)
+    # Create temporary changelog entry 
     cat > CHANGELOG_ENTRY.tmp << EOF
 ## [$VERSION] - $CHANGELOG_DATE
 
@@ -314,7 +343,7 @@ git commit -m "Release: v$VERSION"
 log_info "✓ Merged develop to main with release commit"
 
 # ===============================================================
-# Step 10: Build and push to gh-pages using existing script
+# Step 10: Build and deploy to gh-pages using existing script
 # ===============================================================
 log_step "10. Building and deploying to gh-pages..."
 if [ ! -f "scripts/mkbld.sh" ]; then
@@ -322,7 +351,7 @@ if [ ! -f "scripts/mkbld.sh" ]; then
     exit 1
 fi
 
-if ! bash scripts/mkbld.sh; then
+if ! bash scripts/mkbld.sh --deploy; then
     log_error "Failed to build and deploy to gh-pages"
     exit 1
 fi
@@ -351,8 +380,45 @@ git push origin gh-pages
 log_info "Pushing tags..."
 git push origin --tags
 
+# ==============================================================
+# Step 13: Create build artifacts by compressing dist/ directory
+# ==============================================================
+log_step "13. Creating build artifacts..."
+if [ ! -d "dist" ]; then
+    log_error "dist directory not found"
+    exit 1
+fi
+
+# Check that zip command is available
+if ! command -v zip >/dev/null 2>&1; then
+    log_error "zip command not found. Please install zip utility."
+    exit 1
+fi
+
+FILE_VERSION_NUMBER=${VERSION_NUMBER//-rc/rc}
+ARTIFACT_NAME="${PROGRAMNAME}-${FILE_VERSION_NUMBER}-dist.zip"
+cd dist
+if zip -r "../${ARTIFACT_NAME}" . > /dev/null 2>&1; then
+    cd ..
+    print_sub_step "Validating artifact sizes..."
+    ARTIFACT_SIZE=$(stat -f%z "${ARTIFACT_NAME}" 2>/dev/null || stat -c%s "${ARTIFACT_NAME}" 2>/dev/null)
+    if [ ! -f "${ARTIFACT_NAME}" ] || [ ! -s "${ARTIFACT_NAME}" ] ; then
+        log_error "Build artifact creation failed"
+        exit 1
+    fi
+    if [[ "$ARTIFACT_SIZE" -lt 8192 ]]; then
+        print_error "Distribution artifact suspiciously small: $ARTIFACT_SIZE bytes"
+        exit 1
+    fi
+    log_info "✓ Created build artifact: ${ARTIFACT_NAME}"
+else
+    cd ..
+    log_error "Failed to create build artifact"
+    exit 1
+fi
+
 # ===============================================================
-# Step 13: Print summary and next steps
+# Step 14: Print summary and next steps
 # ===============================================================
 echo ""
 echo -e "${GREEN}=== Release v$VERSION completed successfully! ===${NC}"
@@ -370,3 +436,5 @@ echo "  - Verify the deployment at your GitHub Pages URL"
 echo "  - Create a GitHub release from the v$VERSION tag if desired"
 echo "  - Continue development on the develop branch"
 echo ""
+
+# End of script

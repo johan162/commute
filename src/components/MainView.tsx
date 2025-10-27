@@ -6,6 +6,7 @@ import { Card } from './Card';
 interface MainViewProps {
   onSaveCommute: (duration: number) => void;
   workLocation: Coordinates | null;
+  autoStopRadius: number;
 }
 
 const formatTime = (totalSeconds: number): string => {
@@ -15,10 +16,11 @@ const formatTime = (totalSeconds: number): string => {
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 };
 
-export const MainView: React.FC<MainViewProps> = ({ onSaveCommute, workLocation }) => {
+export const MainView: React.FC<MainViewProps> = ({ onSaveCommute, workLocation, autoStopRadius }) => {
   const { isRunning, elapsedTime, startTimer, stopTimer, statusMessage, distance } = useCommuteTimer({
     workLocation,
     onStop: onSaveCommute,
+    autoStopRadius,
   });
 
   const handleStart = () => {
