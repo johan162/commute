@@ -244,8 +244,9 @@ if [ ! -f "README.md" ]; then
     log_error "README.md not found"
     exit 1
 fi
+# ![Version](https://img.shields.io/badge/version-0.2.0-brightgreen.svg)
 # Update version badge using sed
-if sed -i.tmp "s/badge-version-[0-9]\+\.[0-9]\+\.[0-9]\+/badge-version-$VERSION/g" README.md; then
+if sed -i.tmp -E "s/badge\/version-[0-9]+\.[0-9]+\.[0-9]+/badge\/version-$VERSION/g" README.md; then
     rm -f README.md.tmp
     log_info "✓ Version badge updated to $VERSION in README.md"
 else
