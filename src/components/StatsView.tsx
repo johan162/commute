@@ -251,12 +251,12 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats }) => {
               <div className="flex justify-center items-center space-x-4">
                 <div className="bg-gray-800 p-4 rounded-lg">
                   <p className="text-sm text-gray-400">Low</p>
-                  <p className="text-2xl font-bold text-green-400">{formatDuration(confidenceInterval.low)}</p>
+                  <p className="text-2xl font-bold text-green-400">{formatDuration(confidenceIntervalRank.low)}</p>
                 </div>
                 <div className="text-gray-500 text-xl">-</div>
                 <div className="bg-gray-800 p-4 rounded-lg">
                   <p className="text-sm text-gray-400">High</p>
-                  <p className="text-2xl font-bold text-red-400">{formatDuration(confidenceInterval.high)}</p>
+                  <p className="text-2xl font-bold text-red-400">{formatDuration(confidenceIntervalRank.high)}</p>
                 </div>
               </div>
               <p className="text-xs text-gray-500 mt-4">
