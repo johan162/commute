@@ -228,6 +228,39 @@ export const exportToPDF = (
     const maxCount = Math.max(...sortedHistogramData.map(([, count]) => count));
     const barWidth = chartWidth / sortedHistogramData.length;
     
+    // Calculate appropriate scale intervals first
+    const calculateHistogramScaleValues = (maxValue: number, divisions: number = 4): number[] => {
+        if (maxValue === 0) return [0, 0, 0, 0, 0];
+        
+        // If maxValue is small, use decimals to avoid duplicates
+        if (maxValue <= divisions) {
+            const step = maxValue / divisions;
+            return Array.from({ length: divisions + 1 }, (_, i) => +(step * i).toFixed(1));
+        }
+        
+        // For larger values, calculate nice round intervals
+        const roughStep = maxValue / divisions;
+        const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
+        const normalizedStep = roughStep / magnitude;
+        
+        let niceStep: number;
+        if (normalizedStep <= 1) niceStep = 1;
+        else if (normalizedStep <= 2) niceStep = 2;
+        else if (normalizedStep <= 5) niceStep = 5;
+        else niceStep = 10;
+        
+        const finalStep = niceStep * magnitude;
+        const scaleMax = Math.ceil(maxValue / finalStep) * finalStep;
+        
+        const values: number[] = [];
+        for (let i = 0; i <= divisions; i++) {
+            values.push((scaleMax * i) / divisions);
+        }
+        return values;
+    };
+    
+    const histogramScaleValues = calculateHistogramScaleValues(maxCount);
+    
     // Draw chart background
     doc.setFillColor(249, 250, 251);
     doc.rect(chartX, chartY, chartWidth, chartHeight, 'F');
@@ -247,9 +280,11 @@ export const exportToPDF = (
     
     // Draw bars with gradient effect
     sortedHistogramData.forEach(([range, count], index) => {
-        const barHeight = (count / maxCount) * (chartHeight - 10);
+        // Calculate bar height based on the actual scale maximum, not the data maximum
+        const scaleMax = histogramScaleValues[4]; // Get the maximum from our calculated scale
+        const barHeight = scaleMax > 0 ? (count / scaleMax) * chartHeight : 0;
         const barX = chartX + (index * barWidth) + 2;
-        const barY = chartY + chartHeight - barHeight - 5;
+        const barY = chartY + chartHeight - barHeight; // Bars now touch the X-axis
         
         // Bar shadow
         doc.setFillColor(200, 200, 200);
@@ -283,39 +318,6 @@ export const exportToPDF = (
     doc.setTextColor(100, 100, 100);
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
-    
-    // Calculate appropriate scale intervals
-    const calculateHistogramScaleValues = (maxValue: number, divisions: number = 4): number[] => {
-        if (maxValue === 0) return [0, 0, 0, 0, 0];
-        
-        // If maxValue is small, use decimals to avoid duplicates
-        if (maxValue <= divisions) {
-            const step = maxValue / divisions;
-            return Array.from({ length: divisions + 1 }, (_, i) => +(step * i).toFixed(1));
-        }
-        
-        // For larger values, calculate nice round intervals
-        const roughStep = maxValue / divisions;
-        const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
-        const normalizedStep = roughStep / magnitude;
-        
-        let niceStep: number;
-        if (normalizedStep <= 1) niceStep = 1;
-        else if (normalizedStep <= 2) niceStep = 2;
-        else if (normalizedStep <= 5) niceStep = 5;
-        else niceStep = 10;
-        
-        const finalStep = niceStep * magnitude;
-        const scaleMax = Math.ceil(maxValue / finalStep) * finalStep;
-        
-        const values: number[] = [];
-        for (let i = 0; i <= divisions; i++) {
-            values.push((scaleMax * i) / divisions);
-        }
-        return values;
-    };
-    
-    const histogramScaleValues = calculateHistogramScaleValues(maxCount);
     
     for (let i = 0; i <= 4; i++) {
         const scaleValue = histogramScaleValues[i];
@@ -411,6 +413,39 @@ export const exportToPDF = (
     const orderedTimeData = timeSlotOrder.map(slot => [slot, timeOfDayData[slot]]);
     const maxTimeCount = Math.max(...orderedTimeData.map(([, count]) => count as number));
     
+    // Calculate appropriate scale intervals for time chart
+    const calculateTimeScaleValues = (maxValue: number, divisions: number = 4): number[] => {
+        if (maxValue === 0) return [0, 0, 0, 0, 0];
+        
+        // If maxValue is small, use decimals to avoid duplicates
+        if (maxValue <= divisions) {
+            const step = maxValue / divisions;
+            return Array.from({ length: divisions + 1 }, (_, i) => +(step * i).toFixed(1));
+        }
+        
+        // For larger values, calculate nice round intervals
+        const roughStep = maxValue / divisions;
+        const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
+        const normalizedStep = roughStep / magnitude;
+        
+        let niceStep: number;
+        if (normalizedStep <= 1) niceStep = 1;
+        else if (normalizedStep <= 2) niceStep = 2;
+        else if (normalizedStep <= 5) niceStep = 5;
+        else niceStep = 10;
+        
+        const finalStep = niceStep * magnitude;
+        const scaleMax = Math.ceil(maxValue / finalStep) * finalStep;
+        
+        const values: number[] = [];
+        for (let i = 0; i <= divisions; i++) {
+            values.push((scaleMax * i) / divisions);
+        }
+        return values;
+    };
+    
+    const timeScaleValues = calculateTimeScaleValues(maxTimeCount);
+    
     // Draw time of day chart - 10% narrower and centered
     const timeChartWidth = 153; // 170 * 0.9 = 10% less width
     const timeChartX = (pageWidth - timeChartWidth) / 2; // Center on page
@@ -437,9 +472,11 @@ export const exportToPDF = (
     
     // Draw bars with different colors for each time period
     orderedTimeData.forEach(([timeSlot, count], index) => {
-        const barHeight = maxTimeCount > 0 ? ((count as number) / maxTimeCount) * (timeChartHeight - 10) : 0;
+        // Calculate bar height based on the actual scale maximum, not the data maximum
+        const scaleMax = timeScaleValues[4]; // Get the maximum from our calculated scale
+        const barHeight = scaleMax > 0 ? ((count as number) / scaleMax) * timeChartHeight : 0;
         const barX = timeChartX + (index * timeBarWidth) + 4;
-        const barY = timeChartY + timeChartHeight - barHeight - 5;
+        const barY = timeChartY + timeChartHeight - barHeight; // Bars now touch the X-axis
         
         // Bar shadow
         doc.setFillColor(200, 200, 200);
@@ -477,41 +514,8 @@ export const exportToPDF = (
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     
-    // Calculate appropriate scale intervals
-    const calculateScaleValues = (maxValue: number, divisions: number = 4): number[] => {
-        if (maxValue === 0) return [0, 0, 0, 0, 0];
-        
-        // If maxValue is small, use decimals to avoid duplicates
-        if (maxValue <= divisions) {
-            const step = maxValue / divisions;
-            return Array.from({ length: divisions + 1 }, (_, i) => +(step * i).toFixed(1));
-        }
-        
-        // For larger values, calculate nice round intervals
-        const roughStep = maxValue / divisions;
-        const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
-        const normalizedStep = roughStep / magnitude;
-        
-        let niceStep: number;
-        if (normalizedStep <= 1) niceStep = 1;
-        else if (normalizedStep <= 2) niceStep = 2;
-        else if (normalizedStep <= 5) niceStep = 5;
-        else niceStep = 10;
-        
-        const finalStep = niceStep * magnitude;
-        const scaleMax = Math.ceil(maxValue / finalStep) * finalStep;
-        
-        const values: number[] = [];
-        for (let i = 0; i <= divisions; i++) {
-            values.push((scaleMax * i) / divisions);
-        }
-        return values;
-    };
-    
-    const scaleValues = calculateScaleValues(maxTimeCount);
-    
     for (let i = 0; i <= 4; i++) {
-        const scaleValue = scaleValues[i];
+        const scaleValue = timeScaleValues[i];
         const scaleY = timeChartY + timeChartHeight - (timeChartHeight * i) / 4;
         const displayValue = scaleValue % 1 === 0 ? scaleValue.toString() : scaleValue.toFixed(1);
         doc.text(displayValue, timeChartX - 5, scaleY + 1, { align: 'right' });
