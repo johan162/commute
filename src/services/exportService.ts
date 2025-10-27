@@ -223,7 +223,7 @@ export const exportToPDF = (
     const pageWidth = 210; // A4 width in mm
     const chartWidth = 153; // 170 * 0.9 = 10% less width
     const chartX = (pageWidth - chartWidth) / 2; // Center on page
-    const chartY = 55;
+    const chartY = 60; // Moved down one text line for spacing
     const chartHeight = 80;
     const maxCount = Math.max(...sortedHistogramData.map(([, count]) => count));
     const barWidth = chartWidth / sortedHistogramData.length;
@@ -414,7 +414,7 @@ export const exportToPDF = (
     // Draw time of day chart - 10% narrower and centered
     const timeChartWidth = 153; // 170 * 0.9 = 10% less width
     const timeChartX = (pageWidth - timeChartWidth) / 2; // Center on page
-    const timeChartY = currentY + 20;
+    const timeChartY = currentY + 25; // Moved down one text line for spacing
     const timeChartHeight = 70;
     const timeBarWidth = timeChartWidth / orderedTimeData.length;
     
@@ -585,9 +585,9 @@ export const exportToPDF = (
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
     doc.text("This section shows your most recent commute records in chronological order.", 14, 45);
-    
-    // Get more recent records for dedicated page (up to 20 instead of 10)
-    const recentRecords = records.slice(0, 20);
+
+    // Get more recent records for dedicated page (up to 25 instead of 10)
+    const recentRecords = records.slice(0, 25);
     
     currentY = 55;
     autoTable(doc, {
