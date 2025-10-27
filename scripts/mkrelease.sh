@@ -342,7 +342,7 @@ git commit -m "Release: v$VERSION"
 log_info "✓ Merged develop to main with release commit"
 
 # ===============================================================
-# Step 10: Build and push to gh-pages using existing script
+# Step 10: Build and deploy to gh-pages using existing script
 # ===============================================================
 log_step "10. Building and deploying to gh-pages..."
 if [ ! -f "scripts/mkbld.sh" ]; then
@@ -350,7 +350,7 @@ if [ ! -f "scripts/mkbld.sh" ]; then
     exit 1
 fi
 
-if ! bash scripts/mkbld.sh; then
+if ! bash scripts/mkbld.sh --deploy; then
     log_error "Failed to build and deploy to gh-pages"
     exit 1
 fi
