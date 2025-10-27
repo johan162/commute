@@ -12,7 +12,7 @@
 #   --pre-release   Force marking the release as a pre-release
 #   --dry-run       Show commands without executing them
 
-set -e
+set -eu   # Exit on error, undefined variables
 
 # =====================================
 # COLOR CODES
