@@ -109,9 +109,8 @@ echo -e "${BLUE}=== Commute Tracker Release Script ===${NC}"
 
 
 # Parse arguments
-VERSION=""
-RELEASE_TYPE="minor"
-DRY_RUN=false
+declare VERSION=""
+declare RELEASE_TYPE="minor"
 
 for arg in "$@"; do
     case $arg in
@@ -120,7 +119,7 @@ for arg in "$@"; do
             exit 0
             ;;
         -*)
-            print_error_colored "Unknown option: $arg"
+            log_error "Unknown option: $arg"
             echo "Usage: $0 <version> [major|minor|patch] [--help]"
             echo "Run '$0 --help' for detailed information"
             exit 1
@@ -137,7 +136,7 @@ for arg in "$@"; do
 done
 
 if [[ -z "$VERSION" ]]; then
-    print_error_colored "Error: Version required"
+    log_error "Error: Version required"
     echo ""
     echo "Usage: $0 <version> [major|minor|patch] [--help]"
     echo ""
