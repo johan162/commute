@@ -1,7 +1,7 @@
 # Commute Time Tracker PWA
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-0.3.1-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-0.3.2-brightgreen.svg)
 ![Language](https://img.shields.io/badge/language-TypeScript-orange.svg)
 
 A simple and efficient Progressive Web App (PWA) to track your commute time to work. It provides detailed statistics and visualizations to help you understand your travel patterns.
@@ -31,6 +31,10 @@ A simple and efficient Progressive Web App (PWA) to track your commute time to w
 - Click the share-icon (top-right corner of browser)
 - Scroll down and select "Add to Home Screen"
 
+### Desktop Chrome
+- Clicke the extended menu (three vertical dots)
+- Select "Cast, save and share"
+- Click "Install page as app..."
 
 **Done!**
 

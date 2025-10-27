@@ -309,7 +309,7 @@ read -r
 # Step 6: Stage and commit the updated src/App.tsx and CHANGELOG.md files
 # ===============================================================
 log_step "6. Committing version update and CHANGELOG.md..."
-git add src/App.tsx CHANGELOG.md
+git add src/App.tsx CHANGELOG.md README.md
 git commit -m "Bump version to $VERSION"
 log_info "✓ Version update committed"
 

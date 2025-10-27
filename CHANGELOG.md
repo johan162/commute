@@ -1,3 +1,10 @@
+## [0.3.2] - 2025-10-28
+
+Release type: patch
+
+### 🛠 Internal
+- [chore] Add instruction for app install in Chrome
+
 ## [0.3.1] - 2025-10-27
 
 Release type: patch
