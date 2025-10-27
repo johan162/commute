@@ -201,29 +201,38 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats }) => {
         </div>
       </Card>
 
-      {confidenceInterval && (
-        <Card title="90% Confidence Interval">
-          <div className="text-center">
-            <p className="text-sm text-gray-400 mb-4">
-              90% of your commutes fall within this time range (excludes top and bottom 5%)
-            </p>
-            <div className="flex justify-center items-center space-x-4">
-              <div className="bg-gray-800 p-4 rounded-lg">
-                <p className="text-sm text-gray-400">Low</p>
-                <p className="text-2xl font-bold text-green-400">{formatDuration(confidenceInterval.low)}</p>
+      <Card title="90% Confidence Interval">
+        <div className="text-center">
+          {confidenceInterval ? (
+            <>
+              <p className="text-sm text-gray-400 mb-4">
+                90% of your commutes fall within this time range (excludes top and bottom 5%)
+              </p>
+              <div className="flex justify-center items-center space-x-4">
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <p className="text-sm text-gray-400">Low</p>
+                  <p className="text-2xl font-bold text-green-400">{formatDuration(confidenceInterval.low)}</p>
+                </div>
+                <div className="text-gray-500 text-xl">-</div>
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <p className="text-sm text-gray-400">High</p>
+                  <p className="text-2xl font-bold text-red-400">{formatDuration(confidenceInterval.high)}</p>
+                </div>
               </div>
-              <div className="text-gray-500 text-xl">-</div>
-              <div className="bg-gray-800 p-4 rounded-lg">
-                <p className="text-sm text-gray-400">High</p>
-                <p className="text-2xl font-bold text-red-400">{formatDuration(confidenceInterval.high)}</p>
-              </div>
+              <p className="text-xs text-gray-500 mt-4">
+                Based on {records.length} recorded commutes
+              </p>
+            </>
+          ) : (
+            <div className="py-8">
+              <p className="text-gray-400 text-lg">Needs 5 or more records to show 90% CI</p>
+              <p className="text-xs text-gray-500 mt-2">
+                Currently {records.length} of 5 required
+              </p>
             </div>
-            <p className="text-xs text-gray-500 mt-4">
-              Based on {records.length} recorded commutes
-            </p>
-          </div>
-        </Card>
-      )}
+          )}
+        </div>
+      </Card>
 
       <Card title="Total Commute Time">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
