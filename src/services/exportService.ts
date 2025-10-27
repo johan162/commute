@@ -228,18 +228,41 @@ export const exportToPDF = (
     const maxCount = Math.max(...sortedHistogramData.map(([, count]) => count));
     const barWidth = chartWidth / sortedHistogramData.length;
     
-    // Calculate appropriate scale intervals first
-    const calculateHistogramScaleValues = (maxValue: number, divisions: number = 4): number[] => {
-        if (maxValue === 0) return [0, 0, 0, 0, 0];
+    // Calculate appropriate scale intervals with preference for even numbers and multiples of 5
+    const calculateHistogramScaleValues = (maxValue: number): { values: number[], numDivisions: number } => {
+        if (maxValue === 0) return { values: [0, 0, 0, 0, 0], numDivisions: 4 };
         
-        // If maxValue is small, use decimals to avoid duplicates
-        if (maxValue <= divisions) {
-            const step = maxValue / divisions;
-            return Array.from({ length: divisions + 1 }, (_, i) => +(step * i).toFixed(1));
+        // Priority 1: Try even numbers (2, 4, 6, 8, 10, 20, 40, 60, 80, 100)
+        const evenSteps = [2, 4, 6, 8, 10, 20, 40, 60, 80, 100, 200];
+        for (const step of evenSteps) {
+            const numDivisions = Math.ceil(maxValue / step);
+            if (numDivisions >= 3 && numDivisions <= 6) {
+                const values: number[] = [];
+                const scaleMax = numDivisions * step;
+                for (let i = 0; i <= numDivisions; i++) {
+                    values.push((scaleMax * i) / numDivisions);
+                }
+                return { values, numDivisions };
+            }
         }
         
-        // For larger values, calculate nice round intervals
-        const roughStep = maxValue / divisions;
+        // Priority 2: Try multiples of 5 (5, 15, 25, 50, 150, 250)
+        const fiveSteps = [5, 15, 25, 50, 150, 250];
+        for (const step of fiveSteps) {
+            const numDivisions = Math.ceil(maxValue / step);
+            if (numDivisions >= 3 && numDivisions <= 6) {
+                const values: number[] = [];
+                const scaleMax = numDivisions * step;
+                for (let i = 0; i <= numDivisions; i++) {
+                    values.push((scaleMax * i) / numDivisions);
+                }
+                return { values, numDivisions };
+            }
+        }
+        
+        // Fallback: Use 4 divisions with calculated nice intervals
+        const numDivisions = 4;
+        const roughStep = maxValue / numDivisions;
         const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
         const normalizedStep = roughStep / magnitude;
         
@@ -253,13 +276,15 @@ export const exportToPDF = (
         const scaleMax = Math.ceil(maxValue / finalStep) * finalStep;
         
         const values: number[] = [];
-        for (let i = 0; i <= divisions; i++) {
-            values.push((scaleMax * i) / divisions);
+        for (let i = 0; i <= numDivisions; i++) {
+            values.push((scaleMax * i) / numDivisions);
         }
-        return values;
+        return { values, numDivisions };
     };
     
-    const histogramScaleValues = calculateHistogramScaleValues(maxCount);
+    const histogramScale = calculateHistogramScaleValues(maxCount);
+    const histogramScaleValues = histogramScale.values;
+    const numDivisions = histogramScale.numDivisions;
     
     // Draw chart background
     doc.setFillColor(249, 250, 251);
@@ -270,18 +295,18 @@ export const exportToPDF = (
     doc.setLineWidth(0.5);
     doc.rect(chartX, chartY, chartWidth, chartHeight, 'S');
     
-    // Draw grid lines
+    // Draw grid lines - aligned with Y-axis scale
     doc.setDrawColor(200, 200, 200);
     doc.setLineWidth(0.25);
-    for (let i = 1; i <= 4; i++) {
-        const gridY = chartY + (chartHeight * i) / 5;
+    for (let i = 1; i < numDivisions; i++) {
+        const gridY = chartY + chartHeight - (chartHeight * i) / numDivisions;
         doc.line(chartX, gridY, chartX + chartWidth, gridY);
     }
     
     // Draw bars with gradient effect
     sortedHistogramData.forEach(([range, count], index) => {
         // Calculate bar height based on the actual scale maximum, not the data maximum
-        const scaleMax = histogramScaleValues[4]; // Get the maximum from our calculated scale
+        const scaleMax = histogramScaleValues[histogramScaleValues.length - 1]; // Get the maximum from our calculated scale
         const barHeight = scaleMax > 0 ? (count / scaleMax) * chartHeight : 0;
         const barX = chartX + (index * barWidth) + 2;
         const barY = chartY + chartHeight - barHeight; // Bars now touch the X-axis
@@ -314,14 +339,14 @@ export const exportToPDF = (
         }
     });
     
-    // Draw Y-axis scale with smart scaling to avoid duplicates
+    // Draw Y-axis scale - aligned with gridlines
     doc.setTextColor(100, 100, 100);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     
-    for (let i = 0; i <= 4; i++) {
+    for (let i = 0; i <= numDivisions; i++) {
         const scaleValue = histogramScaleValues[i];
-        const scaleY = chartY + chartHeight - (chartHeight * i) / 4;
+        const scaleY = chartY + chartHeight - (chartHeight * i) / numDivisions;
         const displayValue = scaleValue % 1 === 0 ? scaleValue.toString() : scaleValue.toFixed(1);
         doc.text(displayValue, chartX - 5, scaleY + 1, { align: 'right' });
     }
