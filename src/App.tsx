@@ -59,6 +59,10 @@ const App: React.FC = () => {
     setWorkLocations(prev => [...prev, location]);
   };
   
+  const deleteCommuteRecords = (recordIds: number[]) => {
+    setCommuteRecords(prev => prev.filter(record => !recordIds.includes(record.id)));
+  };
+
   const clearAllData = () => {
     if(window.confirm('Are you sure you want to delete all commute records and work locations? This action cannot be undone.')){
         setCommuteRecords([]);
@@ -72,7 +76,7 @@ const App: React.FC = () => {
       case 'stats':
         return <StatsView records={commuteRecords} stats={stats} />;
       case 'history':
-        return <HistoryView records={commuteRecords} median={stats?.median} />;
+        return <HistoryView records={commuteRecords} median={stats?.median} onDeleteRecords={deleteCommuteRecords} />;
       case 'settings':
         return <SettingsView 
           onAddLocation={addWorkLocation} 

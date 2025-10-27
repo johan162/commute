@@ -3,7 +3,6 @@
 
 ## ✨ FEATURES
 - Make it possible to protect history & statistics with password. This can be enabled/disabled in the "Settings" tab
-- Make it possible to delete individual old records that may have been recorded in error
 - Make it possible (via setting in "Settings" tab) to automatically record the position when the timer is stopped as the work location
 
 
@@ -23,6 +22,7 @@
 
 # Completed features/fixes
 
+- [feat] Make it possible to delete individual old records that may have been recorded in error
 - [feat] Make it optional for the GPS GeoFence auto-turn off by a setting in them "Settings" tab
 - [feat] Make it possible to set the proximity zone for arriving at work location in the "Settings" tab
 - [feat] Add 90% CI to PDF Report
