@@ -31,6 +31,10 @@ A simple and efficient Progressive Web App (PWA) to track your commute time to w
 - Click the share-icon (top-right corner of browser)
 - Scroll down and select "Add to Home Screen"
 
+### Desktop Chrome
+- Clicke the extended menu (three vertical dots)
+- Select "Cast, save and share"
+- Click "Install page as app..."
 
 **Done!**
 
