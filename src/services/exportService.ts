@@ -1,6 +1,7 @@
 import type { CommuteRecord } from '../types';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { getConfidenceInterval, getConfidenceIntervalRank } from './statsService';
 
 const formatDuration = (seconds: number): string => {
     if (isNaN(seconds) || seconds < 0) return "N/A";
@@ -66,18 +67,39 @@ export const exportToPDF = (
     doc.setFont('helvetica', 'bold');
     doc.text("Statistics Summary", 14, 35);
     
+    // Calculate confidence intervals
+    const durations = records.map(record => record.duration);
+    const confidenceInterval = records.length >= 5 ? getConfidenceInterval(durations, 90) : null;
+    const confidenceIntervalRank = records.length >= 5 ? getConfidenceIntervalRank(durations, 90) : null;
+    
+    const statsTableData = [
+        ['Total Trips', records.length.toString()],
+        ['Min Duration', formatDuration(stats.min)],
+        ['Max Duration', formatDuration(stats.max)],
+        ['Mean (Average)', formatDuration(stats.mean)],
+        ['Median', formatDuration(stats.median)],
+        ['Standard Deviation', formatDuration(stats.stdDev)],
+    ];
+    
+    // Add confidence intervals if we have enough data
+    if (confidenceInterval && confidenceIntervalRank) {
+        statsTableData.push(['', '']); // Empty row for spacing
+        statsTableData.push(['90% Confidence Interval (Interpolated)', '']);
+        statsTableData.push(['  • Low (5th percentile)', formatDuration(confidenceInterval.low)]);
+        statsTableData.push(['  • High (95th percentile)', formatDuration(confidenceInterval.high)]);
+        statsTableData.push(['90% Confidence Interval (Nearest Rank)', '']);
+        statsTableData.push(['  • Low (5th percentile)', formatDuration(confidenceIntervalRank.low)]);
+        statsTableData.push(['  • High (95th percentile)', formatDuration(confidenceIntervalRank.high)]);
+    } else {
+        statsTableData.push(['', '']);
+        statsTableData.push(['90% Confidence Intervals', 'Requires 5+ records']);
+    }
+    
     doc.setFont('helvetica', 'normal');
     autoTable(doc, {
         startY: 40,
         head: [['Metric', 'Value']],
-        body: [
-            ['Total Trips', records.length.toString()],
-            ['Min Duration', formatDuration(stats.min)],
-            ['Max Duration', formatDuration(stats.max)],
-            ['Mean (Average)', formatDuration(stats.mean)],
-            ['Median', formatDuration(stats.median)],
-            ['Standard Deviation', formatDuration(stats.stdDev)],
-        ],
+        body: statsTableData,
         theme: 'striped',
         headStyles: { fillColor: [25, 51, 102], textColor: [255, 255, 255], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [249, 250, 251] },
