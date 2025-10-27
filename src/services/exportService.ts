@@ -316,7 +316,7 @@ export const exportToPDF = (
     
     // Draw Y-axis scale with smart scaling to avoid duplicates
     doc.setTextColor(100, 100, 100);
-    doc.setFontSize(7);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     
     for (let i = 0; i <= 4; i++) {
@@ -328,7 +328,7 @@ export const exportToPDF = (
     
     // Draw axis labels
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(7);
+    doc.setFontSize(9);
     sortedHistogramData.forEach(([range], index) => {
         const labelX = chartX + (index * barWidth) + barWidth / 2;
         const labelY = chartY + chartHeight + 8;
@@ -336,7 +336,7 @@ export const exportToPDF = (
     });
     
     // Y-axis label
-    doc.setFontSize(9);
+    doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.text('Number of Commutes', chartX - 10, chartY + chartHeight / 2, { align: 'center', angle: 90 });
     
@@ -523,7 +523,7 @@ export const exportToPDF = (
     
     // Draw axis labels
     doc.setTextColor(0, 0, 0);
-    doc.setFontSize(8);
+    doc.setFontSize(9);
     orderedTimeData.forEach(([timeSlot], index) => {
         const labelX = timeChartX + (index * timeBarWidth) + timeBarWidth / 2;
         const labelY = timeChartY + timeChartHeight + 8;
