@@ -10,7 +10,6 @@
 # Options:
 #   --help          Show this help message
 #   --pre-release   Force marking the release as a pre-release
-#   --dry-run       Show commands without executing them
 
 set -eu   # Exit on error, undefined variables
 
@@ -43,7 +42,6 @@ declare RELEASE_NOTES_FILE=".github_release_notes.tmp"
 # COMMAND LINE OPTIONS
 # =====================================
 
-DRY_RUN=false
 FORCE_PRE_RELEASE=false
 SHOW_HELP=false
 
@@ -55,10 +53,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         --pre-release)
             FORCE_PRE_RELEASE=true
-            shift
-            ;;
-        --dry-run)
-            DRY_RUN=true
             shift
             ;;
         *)
@@ -149,8 +143,6 @@ OPTIONS:
     --help          Show this help message and exit
     --pre-release   Force the release to be marked as a pre-release
                     (overrides automatic detection based on tag name)
-    --dry-run       Show what commands would be executed without actually
-                    running them
 
 PREREQUISITES:
     1. GitHub CLI (gh) version ${REQUIRED_GH_VERSION} or higher installed
@@ -186,9 +178,6 @@ EXAMPLES:
 
     # Force as pre-release regardless of tag
     $0 --pre-release
-
-    # Preview what would be done
-    $0 --dry-run
 
 SEE ALSO:
     - scripts/mkrelease.sh    (Run this first to create the release)
@@ -242,29 +231,6 @@ compare_versions() {
     return 0
 }
 
-run_command() {
-    local cmd=$1
-    local description=$2
-
-    if [[ "$DRY_RUN" == "true" ]]; then
-        print_warning "[DRY-RUN] Would execute: $cmd"
-        if [[ -n "$description" ]]; then
-            echo "  Description: $description"
-        fi
-        return 0
-    else
-        if [[ -n "$description" ]]; then
-            print_sub_step "$description"
-        fi
-        if eval "$cmd"; then
-            return 0
-        else
-            print_error_colored "$description failed"
-            return 1
-        fi
-    fi
-}
-
 # =====================================
 # MAIN SCRIPT
 # =====================================
@@ -276,9 +242,6 @@ echo "=========================================="
 echo "Repository: ${PROGRAMNAME}"
 echo "Branch: $(git branch --show-current)"
 echo "Commit: $(git rev-parse --short HEAD)"
-if [[ "$DRY_RUN" == "true" ]]; then
-    print_warning "DRY-RUN MODE: Commands will be printed but not executed"
-fi
 if [[ "$FORCE_PRE_RELEASE" == "true" ]]; then
     print_info "Pre-release mode: FORCED"
 fi
@@ -293,7 +256,7 @@ print_step_colored "🔍 PHASE 1: Prerequisites Check"
 print_step_colored ""
 
 # Check if we're in the root directory (LICENSE must exist)
-run_command "test -f LICENSE" "Build script must be run from project root."
+test -f LICENSE || { print_error "Build script must be run from project root."; exit 1; }
 
 # 1.1: Check if gh CLI is installed
 print_sub_step "Checking for GitHub CLI (gh)..."
@@ -566,11 +529,7 @@ read -r
 # Determine editor
 EDITOR=${EDITOR:-${VISUAL:-nano}}
 
-if [[ "$DRY_RUN" == "true" ]]; then
-    print_warning "[DRY-RUN] Would open $EDITOR to edit $RELEASE_NOTES_FILE"
-else
-    "$EDITOR" "$RELEASE_NOTES_FILE"
-fi
+"$EDITOR" "$RELEASE_NOTES_FILE"
 
 # 5.3: Check if user aborted
 if [[ ! -s "$RELEASE_NOTES_FILE" ]]; then
@@ -602,21 +561,14 @@ fi
 
 # 6.2: Create the release
 print_sub_step "Creating GitHub release $LATEST_TAG..."
-if [[ "$DRY_RUN" == "true" ]]; then
-    print_warning "[DRY-RUN] Would execute:"
-    echo "$GH_RELEASE_CMD"
-    echo ""
-    print_warning "[DRY-RUN] Release notes content:"
-    cat "$RELEASE_NOTES_FILE"
+if eval "$GH_RELEASE_CMD"; then
+    print_success "GitHub release created successfully!"
 else
-    if eval "$GH_RELEASE_CMD"; then
-        print_success "GitHub release created successfully!"
-    else
-        print_error "Failed to create GitHub release"
-        print_warning "Release notes file preserved at: $RELEASE_NOTES_FILE"
-        exit 1
-    fi
+    print_error "Failed to create GitHub release"
+    print_warning "Release notes file preserved at: $RELEASE_NOTES_FILE"
+    exit 1
 fi
+
 
 # =====================================
 # PHASE 7: CLEANUP
@@ -627,47 +579,34 @@ print_step_colored ""
 print_step_colored "🧹 PHASE 7: Cleanup"
 print_step_colored ""
 
+print_step "Removing temporary release notes file..."
+rm -f "$RELEASE_NOTES_FILE"
+print_success "Cleanup complete"
 
-if [[ "$DRY_RUN" == "false" ]]; then
-    print_step "Removing temporary release notes file..."
-    rm -f "$RELEASE_NOTES_FILE"
-    print_success "Cleanup complete"
-else
-    print_warning "[DRY-RUN] Would remove: $RELEASE_NOTES_FILE"
-fi
 
 # =====================================
 # RELEASE COMPLETE
 # =====================================
 
 echo ""
-if [[ "$DRY_RUN" == "true" ]]; then
-    echo "=========================================="
-    echo "  DRY-RUN COMPLETE"
-    echo "=========================================="
-    echo ""
-    echo "No changes were made. Review the output above."
-    echo "Run without --dry-run to create the actual release."
-else
-    echo "=========================================="
-    echo "  ✅ GITHUB RELEASE COMPLETE!"
-    echo "=========================================="
-    echo ""
-    echo "Release: $LATEST_TAG ($RELEASE_TYPE)"
-    echo "View:    gh release view $LATEST_TAG"
-    echo "URL:     https://github.com/${GITHUB_USER}/${PROGRAMNAME}/releases/tag/$LATEST_TAG"
-    echo ""
-    echo "Artifacts uploaded:"
-    echo "  - $(basename "$WHEEL_FILE")"
-    echo "  - $(basename "$SDIST_FILE")"
-    echo ""
-    echo "Next steps:"
-    echo "  1. Verify release on GitHub:"
-    echo "     https://github.com/${GITHUB_USER}/${PROGRAMNAME}/releases"
-    echo "  2. Verify that PyPI upload has been done or is in progress (via GitHub Actions):"
-    echo "     https://github.com/${GITHUB_USER}/${PROGRAMNAME}/actions"
-    echo "  3. Announce release to users"
-    echo ""
-fi
+echo "=========================================="
+echo "  ✅ GITHUB RELEASE COMPLETE!"
+echo "=========================================="
+echo ""
+echo "Release: $LATEST_TAG ($RELEASE_TYPE)"
+echo "View:    gh release view $LATEST_TAG"
+echo "URL:     https://github.com/${GITHUB_USER}/${PROGRAMNAME}/releases/tag/$LATEST_TAG"
+echo ""
+echo "Artifacts uploaded:"
+echo "  - $(basename "$WHEEL_FILE")"
+echo "  - $(basename "$SDIST_FILE")"
+echo ""
+echo "Next steps:"
+echo "  1. Verify release on GitHub:"
+echo "     https://github.com/${GITHUB_USER}/${PROGRAMNAME}/releases"
+echo "  2. Verify that PyPI upload has been done or is in progress (via GitHub Actions):"
+echo "     https://github.com/${GITHUB_USER}/${PROGRAMNAME}/actions"
+echo "  3. Announce release to users"
+echo ""
 
 # End of script
