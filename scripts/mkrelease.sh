@@ -13,6 +13,12 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# =====================================
+# CONFIGURATION
+# =====================================
+
+declare GITHUB_USER="johan162"
+declare SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 declare PROGRAMNAME="commute"
 declare PROGRAMNAME_PRETTY="Commute Tracker"
 
@@ -99,7 +105,7 @@ EOF
 trap cleanup EXIT
 
 # Main script starts here
-echo -e "${GREEN}=== Commute Tracker Release Script ===${NC}"
+echo -e "${BLUE}=== Commute Tracker Release Script ===${NC}"
 
 
 # Parse arguments
@@ -430,3 +436,5 @@ echo "  - Verify the deployment at your GitHub Pages URL"
 echo "  - Create a GitHub release from the v$VERSION tag if desired"
 echo "  - Continue development on the develop branch"
 echo ""
+
+# End of script
