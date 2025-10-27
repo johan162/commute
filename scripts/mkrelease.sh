@@ -43,7 +43,7 @@ log_step() {
 validate_version() {
     local version=$1
     if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        log_error "Invalid version format. Expected: x.y.z (e.g., 0.1.0)"
+        log_error "Invalid version format. Expected: x.y.z (e.g., 0.1.0). Only numeric versions allowed."
         exit 1
     fi
 }
