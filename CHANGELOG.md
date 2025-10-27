@@ -1,3 +1,11 @@
+## [0.3.1] - 2025-10-27
+
+Release type: patch
+
+### 🛠 Internal
+- [chore] Ignore the `.vite` directory 
+- [chore] Ignore the artifacts in the `gh-pages` directories `.gitignore` file
+
 ## [0.3.0] - 2025-10-27
 
 Release type: minor
