@@ -202,7 +202,7 @@ fi
 log_info "✓ Build successful"
 
 # ===============================================================
-# Step 5: Update the version number string in src/App.tsx
+# Step 5: Update the version number string in src/App.tsx and README.md
 # ===============================================================
 log_step "5. Updating version in src/App.tsx..."
 if [ ! -f "src/App.tsx" ]; then
@@ -231,14 +231,37 @@ if ! grep -q "const version = '$VERSION';" src/App.tsx; then
     exit 1
 fi
 
-# Step 5.1: Updated CHANGELOG.md
-log_step "5.1 Updating CHANGELOG.md..."
-# 3.2: Generate changelog entry
+# --------------------------------------------------------------
+# Step 5.1: Update version number in badge in README.md
+# --------------------------------------------------------------
+log_step "5.1 Updating version badge in README.md..."
+if [ ! -f "README.md" ]; then
+    log_error "README.md not found"
+    exit 1
+fi
+# Update version badge using sed
+if sed -i.tmp "s/badge-version-[0-9]\+\.[0-9]\+\.[0-9]\+/badge-version-$VERSION/g" README.md; then
+    rm -f README.md.tmp
+    log_info "✓ Version badge updated to $VERSION in README.md"
+else
+    rm -f README.md.tmp
+    log_error "Failed to update version badge in README.md"
+    exit 1
+fi
+# Verify the change was made
+if ! grep -q "badge-version-$VERSION" README.md; then
+    log_error "Version badge update verification failed"
+    exit 1
+fi
 
+# --------------------------------------------------------------
+# Step 5.2: Updated CHANGELOG.md
+# --------------------------------------------------------------
+log_step "5.2 Updating CHANGELOG.md..."
     echo "  ✓ Preparing changelog..."
     CHANGELOG_DATE=$(date +%Y-%m-%d)
 
-    # Create temporary changelog entry (customize as needed)
+    # Create temporary changelog entry 
     cat > CHANGELOG_ENTRY.tmp << EOF
 ## [$VERSION] - $CHANGELOG_DATE
 
