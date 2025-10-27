@@ -342,8 +342,22 @@ export const exportToPDF = (
     doc.setFontSize(10);
     doc.text("This section shows when you typically commute throughout the day.", 14, currentY + 10);
     
-    // Create time of day data
+    // Create time of day data with consistent ordering
+    const timeSlotOrder = ['Early Morning (5-9)', 'Morning (9-12)', 'Afternoon (12-17)', 'Evening (17-21)', 'Night (21-5)'];
+    const timeSlotColors = [
+        [216, 191, 140], // Early Morning - soft warm beige
+        [147, 171, 129], // Morning - muted sage green
+        [108, 141, 162], // Afternoon - professional blue-gray
+        [133, 119, 144], // Evening - subtle lavender-gray
+        [89, 107, 125]   // Night - deep blue-gray
+    ];
+    
     const timeOfDayData: { [key: string]: number } = {};
+    
+    // Initialize all time slots to 0
+    timeSlotOrder.forEach(slot => {
+        timeOfDayData[slot] = 0;
+    });
     
     records.forEach(record => {
         const hour = new Date(record.date).getHours();
@@ -357,20 +371,123 @@ export const exportToPDF = (
         timeOfDayData[timeSlot] = (timeOfDayData[timeSlot] || 0) + 1;
     });
     
-    const timeOfDayTableData = Object.entries(timeOfDayData)
-        .sort(([,a], [,b]) => b - a) // Sort by count descending
-        .map(([timeSlot, count]) => [timeSlot, count.toString()]);
+    // Create ordered data for chart
+    const orderedTimeData = timeSlotOrder.map(slot => [slot, timeOfDayData[slot]]);
+    const maxTimeCount = Math.max(...orderedTimeData.map(([, count]) => count as number));
     
-    currentY = currentY + 20;
-    autoTable(doc, {
-        startY: currentY,
-        head: [['Time Period', 'Number of Commutes']],
-        body: timeOfDayTableData,
-        theme: 'striped',
-        headStyles: { fillColor: [25, 51, 102], textColor: [255, 255, 255], fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [249, 250, 251] },
-        margin: { left: 14, right: 14 }
+    // Draw time of day chart
+    const timeChartX = 14;
+    const timeChartY = currentY + 20;
+    const timeChartWidth = 170;
+    const timeChartHeight = 70;
+    const timeBarWidth = timeChartWidth / orderedTimeData.length;
+    
+    // Draw chart background
+    doc.setFillColor(249, 250, 251);
+    doc.rect(timeChartX, timeChartY, timeChartWidth, timeChartHeight, 'F');
+    
+    // Draw chart border
+    doc.setDrawColor(156, 163, 175);
+    doc.setLineWidth(0.5);
+    doc.rect(timeChartX, timeChartY, timeChartWidth, timeChartHeight, 'S');
+    
+    // Draw grid lines
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.25);
+    for (let i = 1; i <= 4; i++) {
+        const gridY = timeChartY + (timeChartHeight * i) / 5;
+        doc.line(timeChartX, gridY, timeChartX + timeChartWidth, gridY);
+    }
+    
+    // Draw bars with different colors for each time period
+    orderedTimeData.forEach(([timeSlot, count], index) => {
+        const barHeight = maxTimeCount > 0 ? ((count as number) / maxTimeCount) * (timeChartHeight - 10) : 0;
+        const barX = timeChartX + (index * timeBarWidth) + 4;
+        const barY = timeChartY + timeChartHeight - barHeight - 5;
+        
+        // Bar shadow
+        doc.setFillColor(200, 200, 200);
+        doc.rect(barX + 1, barY + 1, timeBarWidth - 8, barHeight, 'F');
+        
+        // Main bar with time-specific color
+        const [r, g, b] = timeSlotColors[index];
+        doc.setFillColor(r, g, b);
+        doc.rect(barX, barY, timeBarWidth - 8, barHeight, 'F');
+        
+        // Bar border
+        doc.setDrawColor(r * 0.7, g * 0.7, b * 0.7);
+        doc.setLineWidth(0.5);
+        doc.rect(barX, barY, timeBarWidth - 8, barHeight, 'S');
+        
+        // Value label on or above bar
+        const countNum = count as number;
+        if (countNum > 0) {
+            if (barHeight > 15) {
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(255, 255, 255);
+                doc.text(countNum.toString(), barX + (timeBarWidth - 8) / 2, barY + barHeight / 2, { align: 'center' });
+            } else {
+                doc.setFontSize(9);
+                doc.setFont('helvetica', 'normal');
+                doc.setTextColor(0, 0, 0);
+                doc.text(countNum.toString(), barX + (timeBarWidth - 8) / 2, barY - 2, { align: 'center' });
+            }
+        }
     });
+    
+    // Draw Y-axis scale
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    for (let i = 0; i <= 4; i++) {
+        const scaleValue = Math.round((maxTimeCount * i) / 4);
+        const scaleY = timeChartY + timeChartHeight - (timeChartHeight * i) / 4;
+        doc.text(scaleValue.toString(), timeChartX - 8, scaleY + 1, { align: 'right' });
+    }
+    
+    // Draw axis labels
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(8);
+    orderedTimeData.forEach(([timeSlot], index) => {
+        const labelX = timeChartX + (index * timeBarWidth) + timeBarWidth / 2;
+        const labelY = timeChartY + timeChartHeight + 8;
+        const shortLabel = (timeSlot as string).split(' ')[0] + '\n' + (timeSlot as string).match(/\(([^)]+)\)/)?.[1];
+        doc.text(shortLabel, labelX, labelY, { align: 'center' });
+    });
+    
+    // Y-axis label
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Number of Commutes', timeChartX - 5, timeChartY + timeChartHeight / 2, { align: 'center', angle: 90 });
+    
+    // X-axis label
+    doc.text('Time of Day', timeChartX + timeChartWidth / 2, timeChartY + timeChartHeight + 22, { align: 'center' });
+    
+    // Chart title
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Commute Time Distribution by Period', timeChartX + timeChartWidth / 2, timeChartY - 5, { align: 'center' });
+    
+    // Add summary table below chart
+    const timeOfDayTableData = orderedTimeData
+        .filter(([, count]) => (count as number) > 0)  // Only show periods with data
+        .sort(([,a], [,b]) => (b as number) - (a as number))  // Sort by count descending
+        .map(([timeSlot, count]) => [timeSlot as string, (count as number).toString()]);
+    
+    currentY = timeChartY + timeChartHeight + 35;
+    if (timeOfDayTableData.length > 0) {
+        autoTable(doc, {
+            startY: currentY,
+            head: [['Time Period', 'Number of Commutes']],
+            body: timeOfDayTableData,
+            theme: 'striped',
+            headStyles: { fillColor: [25, 51, 102], textColor: [255, 255, 255], fontStyle: 'bold' },
+            alternateRowStyles: { fillColor: [249, 250, 251] },
+            margin: { left: 14, right: 14 },
+            styles: { fontSize: 8 }
+        });
+    }
     
     // Add third page for Recent Commute Records
     doc.addPage();
