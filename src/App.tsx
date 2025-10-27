@@ -15,6 +15,7 @@ const App: React.FC = () => {
   const [commuteRecords, setCommuteRecords] = useLocalStorage<CommuteRecord[]>('commuteRecords', []);
   const [workLocations, setWorkLocations] = useLocalStorage<Coordinates[]>('workLocations', []);
   const [autoStopRadius, setAutoStopRadius] = useLocalStorage<number>('autoStopRadius', 50);
+  const [autoStopEnabled, setAutoStopEnabled] = useLocalStorage<boolean>('autoStopEnabled', true);
   const version = '0.2.0';
 
   const averageWorkLocation = useMemo<Coordinates | null>(() => {
@@ -79,10 +80,16 @@ const App: React.FC = () => {
           onClearAllData={clearAllData}
           autoStopRadius={autoStopRadius}
           onAutoStopRadiusChange={setAutoStopRadius}
+          autoStopEnabled={autoStopEnabled}
+          onAutoStopEnabledChange={setAutoStopEnabled}
         />;
       case 'main':
       default:
-        return <MainView onSaveCommute={addCommuteRecord} workLocation={averageWorkLocation} autoStopRadius={autoStopRadius} />;
+        return <MainView 
+          onSaveCommute={addCommuteRecord} 
+          workLocation={autoStopEnabled ? averageWorkLocation : null} 
+          autoStopRadius={autoStopRadius} 
+        />;
     }
   };
 
