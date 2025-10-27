@@ -219,10 +219,11 @@ export const exportToPDF = (
     const sortedHistogramData = Object.entries(histogramData)
         .sort(([a], [b]) => parseInt(a.split('-')[0]) - parseInt(b.split('-')[0]));
     
-    // Draw histogram chart
-    const chartX = 14;
+    // Draw histogram chart - 10% narrower and centered
+    const pageWidth = 210; // A4 width in mm
+    const chartWidth = 153; // 170 * 0.9 = 10% less width
+    const chartX = (pageWidth - chartWidth) / 2; // Center on page
     const chartY = 55;
-    const chartWidth = 170;
     const chartHeight = 80;
     const maxCount = Math.max(...sortedHistogramData.map(([, count]) => count));
     const barWidth = chartWidth / sortedHistogramData.length;
@@ -320,7 +321,7 @@ export const exportToPDF = (
         const scaleValue = histogramScaleValues[i];
         const scaleY = chartY + chartHeight - (chartHeight * i) / 4;
         const displayValue = scaleValue % 1 === 0 ? scaleValue.toString() : scaleValue.toFixed(1);
-        doc.text(displayValue, chartX - 8, scaleY + 1, { align: 'right' });
+        doc.text(displayValue, chartX - 5, scaleY + 1, { align: 'right' });
     }
     
     // Draw axis labels
@@ -335,7 +336,7 @@ export const exportToPDF = (
     // Y-axis label
     doc.setFontSize(9);
     doc.setFont('helvetica', 'normal');
-    doc.text('Number of Commutes', chartX - 5, chartY + chartHeight / 2, { align: 'center', angle: 90 });
+    doc.text('Number of Commutes', chartX - 10, chartY + chartHeight / 2, { align: 'center', angle: 90 });
     
     // X-axis label
     doc.text('Duration Range (minutes)', chartX + chartWidth / 2, chartY + chartHeight + 20, { align: 'center' });
@@ -410,10 +411,10 @@ export const exportToPDF = (
     const orderedTimeData = timeSlotOrder.map(slot => [slot, timeOfDayData[slot]]);
     const maxTimeCount = Math.max(...orderedTimeData.map(([, count]) => count as number));
     
-    // Draw time of day chart
-    const timeChartX = 14;
+    // Draw time of day chart - 10% narrower and centered
+    const timeChartWidth = 153; // 170 * 0.9 = 10% less width
+    const timeChartX = (pageWidth - timeChartWidth) / 2; // Center on page
     const timeChartY = currentY + 20;
-    const timeChartWidth = 170;
     const timeChartHeight = 70;
     const timeBarWidth = timeChartWidth / orderedTimeData.length;
     
@@ -513,7 +514,7 @@ export const exportToPDF = (
         const scaleValue = scaleValues[i];
         const scaleY = timeChartY + timeChartHeight - (timeChartHeight * i) / 4;
         const displayValue = scaleValue % 1 === 0 ? scaleValue.toString() : scaleValue.toFixed(1);
-        doc.text(displayValue, timeChartX - 8, scaleY + 1, { align: 'right' });
+        doc.text(displayValue, timeChartX - 5, scaleY + 1, { align: 'right' });
     }
     
     // Draw axis labels
@@ -529,7 +530,7 @@ export const exportToPDF = (
     // Y-axis label
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text('Number of Commutes', timeChartX - 5, timeChartY + timeChartHeight / 2, { align: 'center', angle: 90 });
+    doc.text('Number of Commutes', timeChartX - 10, timeChartY + timeChartHeight / 2, { align: 'center', angle: 90 });
     
     // X-axis label
     doc.text('Time of Day', timeChartX + timeChartWidth / 2, timeChartY + timeChartHeight + 22, { align: 'center' });
