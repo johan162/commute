@@ -144,15 +144,6 @@ if [[ -z "$VERSION" ]]; then
     exit 1
 fi
 
-
-# Step 0: Check parameters
-if [ $# -ne 1 ]; then
-    log_error "Usage: $0 <version>"
-    log_error "Example: $0 0.2.0"
-    exit 1
-fi
-
-VERSION=$1
 validate_version "$VERSION"
 log_info "Creating release for version: $VERSION"
 
