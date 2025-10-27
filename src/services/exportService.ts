@@ -278,14 +278,49 @@ export const exportToPDF = (
         }
     });
     
-    // Draw Y-axis scale
+    // Draw Y-axis scale with smart scaling to avoid duplicates
     doc.setTextColor(100, 100, 100);
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
+    
+    // Calculate appropriate scale intervals
+    const calculateHistogramScaleValues = (maxValue: number, divisions: number = 4): number[] => {
+        if (maxValue === 0) return [0, 0, 0, 0, 0];
+        
+        // If maxValue is small, use decimals to avoid duplicates
+        if (maxValue <= divisions) {
+            const step = maxValue / divisions;
+            return Array.from({ length: divisions + 1 }, (_, i) => +(step * i).toFixed(1));
+        }
+        
+        // For larger values, calculate nice round intervals
+        const roughStep = maxValue / divisions;
+        const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
+        const normalizedStep = roughStep / magnitude;
+        
+        let niceStep: number;
+        if (normalizedStep <= 1) niceStep = 1;
+        else if (normalizedStep <= 2) niceStep = 2;
+        else if (normalizedStep <= 5) niceStep = 5;
+        else niceStep = 10;
+        
+        const finalStep = niceStep * magnitude;
+        const scaleMax = Math.ceil(maxValue / finalStep) * finalStep;
+        
+        const values: number[] = [];
+        for (let i = 0; i <= divisions; i++) {
+            values.push((scaleMax * i) / divisions);
+        }
+        return values;
+    };
+    
+    const histogramScaleValues = calculateHistogramScaleValues(maxCount);
+    
     for (let i = 0; i <= 4; i++) {
-        const scaleValue = Math.round((maxCount * i) / 4);
+        const scaleValue = histogramScaleValues[i];
         const scaleY = chartY + chartHeight - (chartHeight * i) / 4;
-        doc.text(scaleValue.toString(), chartX - 8, scaleY + 1, { align: 'right' });
+        const displayValue = scaleValue % 1 === 0 ? scaleValue.toString() : scaleValue.toFixed(1);
+        doc.text(displayValue, chartX - 8, scaleY + 1, { align: 'right' });
     }
     
     // Draw axis labels
@@ -436,14 +471,49 @@ export const exportToPDF = (
         }
     });
     
-    // Draw Y-axis scale
+    // Draw Y-axis scale with smart scaling to avoid duplicates
     doc.setTextColor(100, 100, 100);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
+    
+    // Calculate appropriate scale intervals
+    const calculateScaleValues = (maxValue: number, divisions: number = 4): number[] => {
+        if (maxValue === 0) return [0, 0, 0, 0, 0];
+        
+        // If maxValue is small, use decimals to avoid duplicates
+        if (maxValue <= divisions) {
+            const step = maxValue / divisions;
+            return Array.from({ length: divisions + 1 }, (_, i) => +(step * i).toFixed(1));
+        }
+        
+        // For larger values, calculate nice round intervals
+        const roughStep = maxValue / divisions;
+        const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
+        const normalizedStep = roughStep / magnitude;
+        
+        let niceStep: number;
+        if (normalizedStep <= 1) niceStep = 1;
+        else if (normalizedStep <= 2) niceStep = 2;
+        else if (normalizedStep <= 5) niceStep = 5;
+        else niceStep = 10;
+        
+        const finalStep = niceStep * magnitude;
+        const scaleMax = Math.ceil(maxValue / finalStep) * finalStep;
+        
+        const values: number[] = [];
+        for (let i = 0; i <= divisions; i++) {
+            values.push((scaleMax * i) / divisions);
+        }
+        return values;
+    };
+    
+    const scaleValues = calculateScaleValues(maxTimeCount);
+    
     for (let i = 0; i <= 4; i++) {
-        const scaleValue = Math.round((maxTimeCount * i) / 4);
+        const scaleValue = scaleValues[i];
         const scaleY = timeChartY + timeChartHeight - (timeChartHeight * i) / 4;
-        doc.text(scaleValue.toString(), timeChartX - 8, scaleY + 1, { align: 'right' });
+        const displayValue = scaleValue % 1 === 0 ? scaleValue.toString() : scaleValue.toFixed(1);
+        doc.text(displayValue, timeChartX - 8, scaleY + 1, { align: 'right' });
     }
     
     // Draw axis labels
