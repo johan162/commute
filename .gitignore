@@ -13,3 +13,4 @@ coverage
 *.swp
 build
 commute-*.zip
+.vite/
