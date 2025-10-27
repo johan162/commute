@@ -14,6 +14,7 @@ const App: React.FC = () => {
   const [view, setView] = useState<View>('main');
   const [commuteRecords, setCommuteRecords] = useLocalStorage<CommuteRecord[]>('commuteRecords', []);
   const [workLocations, setWorkLocations] = useLocalStorage<Coordinates[]>('workLocations', []);
+  const version = '0.2.0';
 
   const averageWorkLocation = useMemo<Coordinates | null>(() => {
     if (workLocations.length === 0) return null;
@@ -85,7 +86,7 @@ const App: React.FC = () => {
         {renderView()}
       </main>
       <footer className="text-center p-4 text-xs text-gray-500">
-        <p>Commute Tracker &copy; Joahn Persson 2025</p>
+        <p>Commute Tracker v{version}, &copy; Johan Persson 2025</p>
       </footer>
     </div>
   );
