@@ -178,38 +178,6 @@ export const exportToPDF = (
         margin: { left: 14, right: 14 }
     });
     
-    // Recent Commute Records (last 10)
-    currentY = (doc as any).lastAutoTable.finalY + 15;
-    
-    // Check if we need a new page
-    if (currentY > 250) {
-        doc.addPage();
-        currentY = 20;
-    }
-    
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text("Recent Commute Records", 14, currentY);
-    
-    const recentRecords = records.slice(0, 10);
-    doc.setFont('helvetica', 'normal');
-    autoTable(doc, {
-        startY: currentY + 5,
-        head: [['Date', 'Time', 'Duration']],
-        body: recentRecords.map(r => {
-            const date = new Date(r.date);
-            return [
-                date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-                date.toLocaleTimeString('en-GB', { hour12: false }),
-                formatDuration(r.duration)
-            ];
-        }),
-        theme: 'striped',
-        headStyles: { fillColor: [25, 51, 102], textColor: [255, 255, 255], fontStyle: 'bold' },
-        alternateRowStyles: { fillColor: [249, 250, 251] },
-        margin: { left: 14, right: 14 }
-    });
-    
     // Add second page for charts
     doc.addPage();
     
@@ -304,6 +272,53 @@ export const exportToPDF = (
         startY: currentY,
         head: [['Time Period', 'Number of Commutes']],
         body: timeOfDayTableData,
+        theme: 'striped',
+        headStyles: { fillColor: [25, 51, 102], textColor: [255, 255, 255], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [249, 250, 251] },
+        margin: { left: 14, right: 14 }
+    });
+    
+    // Add third page for Recent Commute Records
+    doc.addPage();
+    
+    // Page 3 Header
+    doc.setFontSize(24);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Recent Commute Records", 14, 20);
+    
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    const page3DateText = `Report Date: ${reportDate}`;
+    const page3DateWidth = doc.getTextWidth(page3DateText);
+    doc.text(page3DateText, 210 - 14 - page3DateWidth, 20);
+    
+    doc.setLineWidth(0.5);
+    doc.line(14, 25, 196, 25);
+    
+    // Recent Commute Records Section
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    doc.text("Latest Commute Records", 14, 35);
+    
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text("This section shows your most recent commute records in chronological order.", 14, 45);
+    
+    // Get more recent records for dedicated page (up to 20 instead of 10)
+    const recentRecords = records.slice(0, 20);
+    
+    currentY = 55;
+    autoTable(doc, {
+        startY: currentY,
+        head: [['Date', 'Time', 'Duration']],
+        body: recentRecords.map(r => {
+            const date = new Date(r.date);
+            return [
+                date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+                date.toLocaleTimeString('en-GB', { hour12: false }),
+                formatDuration(r.duration)
+            ];
+        }),
         theme: 'striped',
         headStyles: { fillColor: [25, 51, 102], textColor: [255, 255, 255], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [249, 250, 251] },

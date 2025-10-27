@@ -22,6 +22,7 @@
 
 # Completed features/fixes
 
+- [chan] Reorder the PDF export to move recent records last to its own page
 - [feat] Make it possible to delete individual old records that may have been recorded in error
 - [feat] Make it optional for the GPS GeoFence auto-turn off by a setting in them "Settings" tab
 - [feat] Make it possible to set the proximity zone for arriving at work location in the "Settings" tab
