@@ -14,7 +14,7 @@ const App: React.FC = () => {
   const [view, setView] = useState<View>('main');
   const [commuteRecords, setCommuteRecords] = useLocalStorage<CommuteRecord[]>('commuteRecords', []);
   const [workLocations, setWorkLocations] = useLocalStorage<Coordinates[]>('workLocations', []);
-  const version = '0.1.0';
+  const version = '0.2.0';
 
   const averageWorkLocation = useMemo<Coordinates | null>(() => {
     if (workLocations.length === 0) return null;
