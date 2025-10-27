@@ -22,6 +22,7 @@
 
 # Completed features/fixes
 
+- [feat] Add proper histogram charts for commute duration
 - [chan] Reorder the PDF export to move recent records last to its own page
 - [feat] Make it possible to delete individual old records that may have been recorded in error
 - [feat] Make it optional for the GPS GeoFence auto-turn off by a setting in them "Settings" tab

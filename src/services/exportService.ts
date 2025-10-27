@@ -204,7 +204,7 @@ export const exportToPDF = (
     doc.setFontSize(10);
     doc.text("This section shows how your commute times are distributed across different duration ranges.", 14, 45);
     
-    // Create histogram data (simplified representation)
+    // Create histogram data
     const binSize = 5; // minutes
     const histogramData: { [key: string]: number } = {};
     
@@ -216,11 +216,104 @@ export const exportToPDF = (
         histogramData[binName] = (histogramData[binName] || 0) + 1;
     });
     
-    const histogramTableData = Object.entries(histogramData)
-        .sort(([a], [b]) => parseInt(a.split('-')[0]) - parseInt(b.split('-')[0]))
-        .map(([range, count]) => [range + ' min', count.toString()]);
+    const sortedHistogramData = Object.entries(histogramData)
+        .sort(([a], [b]) => parseInt(a.split('-')[0]) - parseInt(b.split('-')[0]));
     
-    currentY = 55;
+    // Draw histogram chart
+    const chartX = 14;
+    const chartY = 55;
+    const chartWidth = 170;
+    const chartHeight = 80;
+    const maxCount = Math.max(...sortedHistogramData.map(([, count]) => count));
+    const barWidth = chartWidth / sortedHistogramData.length;
+    
+    // Draw chart background
+    doc.setFillColor(249, 250, 251);
+    doc.rect(chartX, chartY, chartWidth, chartHeight, 'F');
+    
+    // Draw chart border
+    doc.setDrawColor(156, 163, 175);
+    doc.setLineWidth(0.5);
+    doc.rect(chartX, chartY, chartWidth, chartHeight, 'S');
+    
+    // Draw grid lines
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.25);
+    for (let i = 1; i <= 4; i++) {
+        const gridY = chartY + (chartHeight * i) / 5;
+        doc.line(chartX, gridY, chartX + chartWidth, gridY);
+    }
+    
+    // Draw bars with gradient effect
+    sortedHistogramData.forEach(([range, count], index) => {
+        const barHeight = (count / maxCount) * (chartHeight - 10);
+        const barX = chartX + (index * barWidth) + 2;
+        const barY = chartY + chartHeight - barHeight - 5;
+        
+        // Bar shadow
+        doc.setFillColor(200, 200, 200);
+        doc.rect(barX + 1, barY + 1, barWidth - 4, barHeight, 'F');
+        
+        // Main bar
+        doc.setFillColor(25, 51, 102);
+        doc.rect(barX, barY, barWidth - 4, barHeight, 'F');
+        
+        // Bar border
+        doc.setDrawColor(15, 35, 70);
+        doc.setLineWidth(0.5);
+        doc.rect(barX, barY, barWidth - 4, barHeight, 'S');
+        
+        // Value label on top of bar
+        if (barHeight > 15) {
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(255, 255, 255);
+            doc.text(count.toString(), barX + (barWidth - 4) / 2, barY + barHeight / 2, { align: 'center' });
+        } else if (barHeight > 5) {
+            // Put label above bar if bar is too short
+            doc.setFontSize(7);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(0, 0, 0);
+            doc.text(count.toString(), barX + (barWidth - 4) / 2, barY - 2, { align: 'center' });
+        }
+    });
+    
+    // Draw Y-axis scale
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+    for (let i = 0; i <= 4; i++) {
+        const scaleValue = Math.round((maxCount * i) / 4);
+        const scaleY = chartY + chartHeight - (chartHeight * i) / 4;
+        doc.text(scaleValue.toString(), chartX - 8, scaleY + 1, { align: 'right' });
+    }
+    
+    // Draw axis labels
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(7);
+    sortedHistogramData.forEach(([range], index) => {
+        const labelX = chartX + (index * barWidth) + barWidth / 2;
+        const labelY = chartY + chartHeight + 8;
+        doc.text(range.replace('-', '–') + 'm', labelX, labelY, { align: 'center', angle: 45 });
+    });
+    
+    // Y-axis label
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Number of Commutes', chartX - 5, chartY + chartHeight / 2, { align: 'center', angle: 90 });
+    
+    // X-axis label
+    doc.text('Duration Range (minutes)', chartX + chartWidth / 2, chartY + chartHeight + 20, { align: 'center' });
+    
+    // Chart title
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Commute Duration Histogram', chartX + chartWidth / 2, chartY - 5, { align: 'center' });
+    
+    // Add summary table below chart
+    const histogramTableData = sortedHistogramData.map(([range, count]) => [range + ' min', count.toString()]);
+    
+    currentY = chartY + chartHeight + 35;
     autoTable(doc, {
         startY: currentY,
         head: [['Duration Range', 'Number of Commutes']],
@@ -228,7 +321,8 @@ export const exportToPDF = (
         theme: 'striped',
         headStyles: { fillColor: [25, 51, 102], textColor: [255, 255, 255], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [249, 250, 251] },
-        margin: { left: 14, right: 14 }
+        margin: { left: 14, right: 14 },
+        styles: { fontSize: 8 }
     });
     
     // Time of Day Analysis Section
