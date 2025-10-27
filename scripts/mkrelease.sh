@@ -18,7 +18,7 @@ declare PROGRAMNAME_PRETTY="Commute Tracker"
 
 # Function to print colored output
 log_info() {
-    echo -e "${GREEN}ℹ️ [INFO]${NC} $1"
+    echo -e "${GREEN}    [INFO]${NC} $1"
 }
 
 log_warn() {
