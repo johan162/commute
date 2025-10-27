@@ -374,8 +374,45 @@ git push origin gh-pages
 log_info "Pushing tags..."
 git push origin --tags
 
+# ==============================================================
+# Step 13: Create build artifacts by compressing dist/ directory
+# ==============================================================
+log_step "13. Creating build artifacts..."
+if [ ! -d "dist" ]; then
+    log_error "dist directory not found"
+    exit 1
+fi
+
+# Check that zip command is available
+if ! command -v zip >/dev/null 2>&1; then
+    log_error "zip command not found. Please install zip utility."
+    exit 1
+fi
+
+FILE_VERSION_NUMBER=${VERSION_NUMBER//-rc/rc}
+ARTIFACT_NAME="${PROGRAMNAME}-${FILE_VERSION_NUMBER}-dist.zip"
+cd dist
+if zip -r "../${ARTIFACT_NAME}" . > /dev/null 2>&1; then
+    cd ..
+    print_sub_step "Validating artifact sizes..."
+    ARTIFACT_SIZE=$(stat -f%z "${ARTIFACT_NAME}" 2>/dev/null || stat -c%s "${ARTIFACT_NAME}" 2>/dev/null)
+    if [ ! -f "${ARTIFACT_NAME}" ] || [ ! -s "${ARTIFACT_NAME}" ] ; then
+        log_error "Build artifact creation failed"
+        exit 1
+    fi
+    if [[ "$ARTIFACT_SIZE" -lt 8192 ]]; then
+        print_error "Distribution artifact suspiciously small: $ARTIFACT_SIZE bytes"
+        exit 1
+    fi
+    log_info "✓ Created build artifact: ${ARTIFACT_NAME}"
+else
+    cd ..
+    log_error "Failed to create build artifact"
+    exit 1
+fi
+
 # ===============================================================
-# Step 13: Print summary and next steps
+# Step 14: Print summary and next steps
 # ===============================================================
 echo ""
 echo -e "${GREEN}=== Release v$VERSION completed successfully! ===${NC}"

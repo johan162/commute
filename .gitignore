@@ -12,3 +12,4 @@ coverage
 *.bak
 *.swp
 build
+commute-*.zip
