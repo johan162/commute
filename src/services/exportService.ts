@@ -46,6 +46,11 @@ export const exportToPDF = (
         day: 'numeric' 
     });
     
+    // =============================================
+    // PAGE 1
+    // Statistics Summary Section
+    // =============================================
+
     // Header with title and date
     doc.setFontSize(24);
     doc.setFont('helvetica', 'bold');
@@ -62,7 +67,9 @@ export const exportToPDF = (
     doc.setLineWidth(0.5);
     doc.line(14, 25, 196, 25);
     
+    // =============================================
     // Statistics Summary Section
+    // =============================================
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
     doc.text("Statistics Summary", 14, 35);
@@ -178,7 +185,10 @@ export const exportToPDF = (
         margin: { left: 14, right: 14 }
     });
     
+    // =============================================
+    // PAGE 2
     // Add second page for charts
+    // =============================================
     doc.addPage();
     
     // Page 2 Header
@@ -195,7 +205,9 @@ export const exportToPDF = (
     doc.setLineWidth(0.5);
     doc.line(14, 25, 196, 25);
     
+    // =============================================
     // Histogram Data Section
+    // ============================================
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
     doc.text("Commute Duration Distribution", 14, 35);
@@ -385,10 +397,13 @@ export const exportToPDF = (
         headStyles: { fillColor: [25, 51, 102], textColor: [255, 255, 255], fontStyle: 'bold' },
         alternateRowStyles: { fillColor: [249, 250, 251] },
         margin: { left: 14, right: 14 },
-        styles: { fontSize: 8 }
+        styles: { fontSize: 10 }
     });
-    
+
+    // ============================================= 
     // Time of Day Analysis Section
+    // ============================================= 
+    
     currentY = (doc as any).lastAutoTable.finalY + 15;
     
     // Check if we need to move to next section or new page
@@ -610,11 +625,14 @@ export const exportToPDF = (
             headStyles: { fillColor: [25, 51, 102], textColor: [255, 255, 255], fontStyle: 'bold' },
             alternateRowStyles: { fillColor: [249, 250, 251] },
             margin: { left: 14, right: 14 },
-            styles: { fontSize: 8 }
+            styles: { fontSize: 10 }
         });
     }
     
+    // =============================================
+    // PAGE 3
     // Add third page for Recent Commute Records
+    // =============================================
     doc.addPage();
     
     // Page 3 Header
@@ -665,7 +683,7 @@ export const exportToPDF = (
     const pageCount = (doc as any).internal.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
-        doc.setFontSize(8);
+        doc.setFontSize(10);
         doc.setFont('helvetica', 'italic');
         doc.text(
             `Page ${i} of ${pageCount}`,
