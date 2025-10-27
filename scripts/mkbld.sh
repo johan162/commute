@@ -3,7 +3,7 @@
 # Build and Deploy Script for PWA to gh-pages branch
 # This script builds the app and deploys it to the gh-pages branch
 
-set -e  # Exit on error
+set -eu  # Exit on error, undefined variables
 
 # Colors for output
 RED='\033[0;31m'
@@ -100,11 +100,17 @@ echo -e "${GREEN}Committing changes...${NC}"
 git commit -m "Deploy build - $BUILD_DATE"
 
 echo -e "${GREEN}Deployment committed successfully!${NC}"
-echo -e "${YELLOW}To push to remote, run: git push origin gh-pages${NC}"
+
+# Push to gh-pages branch
+if git push origin gh-pages; then
+    echo -e "${GREEN}Pushed to remote gh-pages branch successfully!${NC}"
+else
+    echo -e "${RED}Error: Failed to push to remote gh-pages branch${NC}"
+    echo -e "${YELLOW}You may need to push manually: git push origin gh-pages${NC}"
+fi
 
 # Switch back to original branch
 echo -e "${GREEN}Switching back to ${CURRENT_BRANCH}...${NC}"
 git checkout "$CURRENT_BRANCH"
 
 echo -e "${GREEN}Done! Build and deploy completed successfully.${NC}"
-echo -e "${YELLOW}Remember to push: git push origin gh-pages${NC}"
