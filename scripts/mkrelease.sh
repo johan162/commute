@@ -255,7 +255,7 @@ else
     exit 1
 fi
 # Verify the change was made
-if ! grep -q "badge-version-$VERSION" README.md; then
+if ! grep -q "badge/version-$VERSION" README.md; then
     log_error "Version badge update verification failed"
     exit 1
 fi
