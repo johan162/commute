@@ -1,50 +1,17 @@
-## [0.3.6] - 2025-10-28
+## [0.3.1 - 0.3.7] - 2025-10-28
 
 Release type: patch
 
-### 🛠 Internal
-- [chore] Make release script less verbose
+### 📋 Summary 
+- A series of internal releases to fine-tune the release process and scripts.
 
-
-## [0.3.5] - 2025-10-28
-
-Release type: patch
+### Docs 
+- [upd] Add instruction to install App on Desktop Chromg in README.md
 
 ### 🛠 Internal
-- [bug] Cleanup release script and fix BSD vs. GNU sed issue
-
-
-## [0.3.4] - 2025-10-28
-
-Release type: patch
-
-### 🛠 Internal
-- [bug] More fixes in release script
-
-
-## [0.3.3] - 2025-10-28
-
-Release type: patch
-
-### 🛠 Internal
+- [bug] Fix BSD vs. GNU sed issue in `mkrelease.sh`
+- [chore] Cleanup release script and also make it less verbose
 - [bug] Forgot merge back main into develop after squash merge of develop to main
-
-
-## [0.3.2] - 2025-10-28
-
-Release type: patch
-
-### 🛠 Internal
-- [chore] Add instruction for app install in Chrome
-
-
-## [0.3.1] - 2025-10-27
-
-Release type: patch
-
-### 🛠 Internal
-- [chore] Ignore the `.vite` directory 
-- [chore] Ignore the artifacts in the `gh-pages` directories `.gitignore` file
 
 
 ## [0.3.0] - 2025-10-27
