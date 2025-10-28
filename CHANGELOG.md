@@ -1,3 +1,11 @@
+## [0.3.4] - 2025-10-28
+
+Release type: patch
+
+### 🛠 Internal
+- [bug] More fixes in release script
+
+
 ## [0.3.3] - 2025-10-28
 
 Release type: patch

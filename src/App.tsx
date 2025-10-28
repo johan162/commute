@@ -16,7 +16,7 @@ const App: React.FC = () => {
   const [workLocations, setWorkLocations] = useLocalStorage<Coordinates[]>('workLocations', []);
   const [autoStopRadius, setAutoStopRadius] = useLocalStorage<number>('autoStopRadius', 50);
   const [autoStopEnabled, setAutoStopEnabled] = useLocalStorage<boolean>('autoStopEnabled', true);
-  const version = '0.3.3';
+  const version = '0.3.4';
 
   const averageWorkLocation = useMemo<Coordinates | null>(() => {
     if (workLocations.length === 0) return null;
