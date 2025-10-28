@@ -161,7 +161,7 @@ validate_version "$VERSION"
 log_info "Creating release for version: $VERSION"
 
 # Check if we're in a git repository
-if ! git rev-parse --git-dir >> "$RELEASE_LOGFILE" 2>&1; then
+if ! git rev-parse --git-dir > /dev/null 2>&1; then
     log_error "Not a git repository"
     exit 1
 fi
