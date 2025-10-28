@@ -333,29 +333,39 @@ read -r
 # ===============================================================
 log_step "6. Committing version update, README.md and CHANGELOG.md..."
 
-git add src/App.tsx CHANGELOG.md README.md
-git commit -m "[chore] Bump version to $VERSION on develop branch"
-log_info "✓ Version bump on develop"
+if git add src/App.tsx CHANGELOG.md README.md; then
+    log_info "✓ Staged src/App.tsx, CHANGELOG.md and README.md"
+else
+    log_error "Failed to stage src/App.tsx, CHANGELOG.md or README.md"
+    exit 1
+fi
+
+if git commit -m "[chore] Bump version to $VERSION on develop branch"; then
+    log_info "✓ Committed version bump ($VERSION) in files to develop branch"
+else
+    log_error "Failed to commit version bump"
+    exit 1
+fi
 
 # ===============================================================
 # Step 7: Switch to main branch and merge develop and tag main
 # ===============================================================
 log_step "7. Switching to main branch..."
 
-if ! git checkout main; then
+if ! git checkout main > /dev/null 2>&1; then
     log_error "Failed to checkout main branch. Directory dirty?"
     exit 1
 fi
 log_info "✓ Switched to main branch"
 
-if ! git merge --squash develop; then
+if ! git merge --squash develop > /dev/null 2>&1; then
     log_error "Failed to squash merge develop to main in. Possible conflicts?"
     exit 1
 fi
 
 # Commit the squash merge
 if git commit -m "[chore] Release: v$VERSION" > /dev/null 2>&1; then
-    log_info "✓ Committed squash merge to main"
+    log_info "✓ Merged and Committed squash merge to main"
 else
     log_error "Failed to commit squash merge to main"
     exit 1
