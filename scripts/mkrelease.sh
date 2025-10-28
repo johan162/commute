@@ -6,13 +6,6 @@
 
 set -eu  # Exit on error, undefined variables
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
 # =====================================
 # CONFIGURATION
 # =====================================
@@ -21,6 +14,18 @@ declare GITHUB_USER="johan162"
 declare SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 declare PROGRAMNAME="commute"
 declare PROGRAMNAME_PRETTY="Commute Tracker"
+
+# =====================================
+# FUNCTIONS AND HELPERS
+# =====================================
+
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
 
 # Function to print colored output
 log_info() {
@@ -58,6 +63,7 @@ cleanup() {
     exit $exit_code
 }
 
+# Function to show help message
 show_help() {
     cat << EOF
 🚀 ${PROGRAMNAME_PRETTY} Release Script
@@ -101,12 +107,14 @@ REQUIREMENTS:
 EOF
 }
 
-
 trap cleanup EXIT
+
+# =====================================
+# MAIN SCRIPT
+# =====================================
 
 # Main script starts here
 echo -e "${BLUE}=== Commute Tracker Release Script ===${NC}"
-
 
 # Parse arguments
 declare VERSION=""
@@ -173,6 +181,7 @@ log_info "✓ On develop branch"
 # Step 2: Check that the version does not already exist as a tag
 # ===============================================================
 log_step "2. Checking if tag already exists..."
+
 if git rev-parse "v$VERSION" >/dev/null 2>&1; then
     log_error "Tag v$VERSION already exists"
     exit 1
@@ -183,6 +192,7 @@ log_info "✓ Tag v$VERSION does not exist"
 # Step 3: Check that the branch is clean and no commits are waiting
 # ===============================================================
 log_step "3. Checking git status..."
+
 if ! git diff-index --quiet HEAD --; then
     log_error "Working directory is not clean. Please commit or stash your changes."
     git status --short
@@ -200,16 +210,25 @@ log_info "✓ Working directory is clean"
 # Step 4: Check that a build can be made without errors
 # ===============================================================
 log_step "4. Testing build..."
+
 if ! npm run build > /dev/null 2>&1; then
     log_error "Build failed. Please fix build errors before creating a release."
     exit 1
 fi
 log_info "✓ Build successful"
 
+# Check with npx for type errors
+if ! npx tsc --noEmit > /dev/null 2>&1; then
+    log_error "TypeScript type check failed. Please fix type errors before creating a release."
+    exit 1
+fi
+log_info "✓ TypeScript type check passed"
+
 # ===============================================================
 # Step 5: Update the version number string in src/App.tsx and README.md
 # ===============================================================
 log_step "5. Updating version in src/App.tsx..."
+
 if [ ! -f "src/App.tsx" ]; then
     log_error "src/App.tsx not found"
     exit 1
@@ -240,17 +259,19 @@ fi
 # Step 5.1: Update version number in badge in README.md
 # --------------------------------------------------------------
 log_step "5.1 Updating version badge in README.md..."
+
 if [ ! -f "README.md" ]; then
     log_error "README.md not found"
     exit 1
 fi
+
+# Example badge line:
 # ![Version](https://img.shields.io/badge/version-0.2.0-brightgreen.svg)
 # Update version badge using sed
-if sed -i.tmp -E "s/badge\/version-[0-9]+\.[0-9]+\.[0-9]+/badge\/version-$VERSION/g" README.md; then
-    rm -f README.md.tmp
+if sed -i '.bak' -E "s/badge\/version-[0-9]+\.[0-9]+\.[0-9]+/badge\/version-$VERSION/g" README.md; then
     log_info "✓ Version badge updated to $VERSION in README.md"
 else
-    rm -f README.md.tmp
+    mv README.md.bak README.md
     log_error "Failed to update version badge in README.md"
     exit 1
 fi
@@ -264,11 +285,12 @@ fi
 # Step 5.2: Updated CHANGELOG.md
 # --------------------------------------------------------------
 log_step "5.2 Updating CHANGELOG.md..."
-    echo "  ✓ Preparing changelog..."
-    CHANGELOG_DATE=$(date +%Y-%m-%d)
 
-    # Create temporary changelog entry 
-    cat > CHANGELOG_ENTRY.tmp << EOF
+echo "  ✓ Preparing changelog..."
+CHANGELOG_DATE=$(date +%Y-%m-%d)
+
+# Create temporary changelog entry 
+cat > CHANGELOG_ENTRY.tmp << EOF
 ## [$VERSION] - $CHANGELOG_DATE
 
 Release type: $RELEASE_TYPE
@@ -308,16 +330,16 @@ read -r
 # ===============================================================
 # Step 6: Stage and commit the updated src/App.tsx and CHANGELOG.md files
 # ===============================================================
-log_step "6. Committing version update and CHANGELOG.md..."
+log_step "6. Committing version update, README.md and CHANGELOG.md..."
 
 git add src/App.tsx CHANGELOG.md README.md
-git commit -m "Bump version to $VERSION on develop branch"
-log_info "✓ Version update committed to develop"
+git commit -m "[chore] Bump version to $VERSION on develop branch"
+log_info "✓ Version bump on develop"
 
 # ===============================================================
-# Step 7: Switch to main branch
+# Step 7: Switch to main branch and merge develop and tag main
 # ===============================================================
-log_step "8. Switching to main branch..."
+log_step "7. Switching to main branch..."
 
 if ! git checkout main; then
     log_error "Failed to checkout main branch. Directory dirty?"
@@ -325,72 +347,104 @@ if ! git checkout main; then
 fi
 log_info "✓ Switched to main branch"
 
-# ===============================================================
-# Step 9: Squash merge develop to main branch
-# ===============================================================
-log_step "9. Merging develop to main..."
-
 if ! git merge --squash develop; then
-    log_error "Failed to squash merge develop to main"
-    log_warn "You may need to resolve conflicts manually"
+    log_error "Failed to squash merge develop to main in. Possible conflicts?"
     exit 1
 fi
 
 # Commit the squash merge
-git commit -m "Release: v$VERSION"
-log_info "✓ Merged develop to main with release commit"
-
-# ===============================================================
-# Step 7: Tag the branch with the release version
-# ===============================================================
-log_step "7. Creating release tag on main..."
+if git commit -m "[chore] Release: v$VERSION"; then
+    log_info "✓ Committed squash merge to main"
+else
+    log_error "Failed to commit squash merge to main"
+    exit 1
+fi
 
 CHANGELOG_DATE=$(date +%Y-%m-%d)
-git tag -a "v$VERSION" -m "Release version $VERSION
+git tag -a "v$VERSION" -m "Release version v$VERSION
 
 Release Type: $RELEASE_TYPE
 Release Date: $CHANGELOG_DATE
 Changelog: See CHANGELOG.md for detailed changes"
 
-git push origin main
-git push origin "v$VERSION"
-log_info "✓ Created tag v$VERSION on main branch"
+if [ $? -ne 0 ]; then
+    log_error "Failed to create tag v$VERSION on main branch"
+    exit 1
+else
+    log_info "✓ Created tag v$VERSION on main branch"
+fi
+
+# Push main and tag to origin
+if git push origin main; then
+    log_info "✓ Pushed main branch to origin"
+else
+    log_error "Failed to push main branch to origin"
+    exit 1
+fi
+
+if git push origin "v$VERSION"; then
+    log_info "✓ Pushed tag v$VERSION to origin"
+else
+    log_error "Failed to push tag v$VERSION to origin"
+    exit 1
+fi
+
 
 # ===============================================================
-# Step 10: Build and deploy to gh-pages using existing script
+# Step 8: Build and deploy to gh-pages using existing script
 # ===============================================================
-log_step "10. Building and deploying to gh-pages..."
+log_step "8. Building and deploying to gh-pages..."
+
 if [ ! -f "scripts/mkbld.sh" ]; then
     log_error "scripts/mkbld.sh not found"
     exit 1
 fi
 
-if ! bash scripts/mkbld.sh --deploy; then
+if ! bash scripts/mkbld.sh --deploy > /dev/null 2>&1; then
     log_error "Failed to build and deploy to gh-pages"
     exit 1
+else
+    log_info "✓ Deployed app to gh-pages"
 fi
-log_info "✓ Built and deployed to gh-pages"
 
-log_info "Pushing gh-pages branch..."
-git push origin gh-pages
+if git push origin gh-pages; then
+    log_info "✓ Pushed gh-pages branch to origin"
+else
+    log_error "Failed to push gh-pages branch to origin"
+    exit 1
+fi
 
 # ===============================================================
-# Step 11: Switch back to develop branch
+# Step 9: Switch back to develop branch and merge back main
 # ===============================================================
-log_step "11. Switching back to develop branch..."
-git checkout develop
-log_info "✓ Switched back to develop branch"
+log_step "9. Switching back to develop branch..."
+
+if git checkout develop; then
+    log_info "✓ Switched back to develop branch"
+else
+    log_error "Failed to switch back to develop branch"
+    exit 1
+fi
 
 # Merge main into develop to reconcile squash merge
-log_info "Merging main into develop..."
-git merge --no-ff -m "chore: sync develop with main after release $VERSION" main
-git push origin develop
+if git merge --no-ff -m "[chore] sync develop with main after release $VERSION" main; then
+    log_info "✓ Merged main back into develop"
+else
+    log_error "Failed to merge main back into develop. Possible conflicts?"
+    exit 1
+fi
 
+if git push origin develop; then
+    log_info "✓ Pushed develop branch to origin after merge back from main"
+else
+    log_error "Failed to push develop branch to origin"
+    exit 1
+fi
 
 # ==============================================================
-# Step 12: Create build artifacts by compressing dist/ directory
+# Step 10: Create build artifacts by compressing dist/ directory
 # ==============================================================
-log_step "12. Creating build artifacts..."
+log_step "10. Creating build artifacts..."
 
 if [ ! -d "dist" ]; then
     log_error "dist directory not found"
@@ -403,8 +457,8 @@ if ! command -v zip >/dev/null 2>&1; then
     exit 1
 fi
 
-FILE_VERSION_NUMBER=${VERSION//-rc/rc}
-ARTIFACT_NAME="${PROGRAMNAME}-${FILE_VERSION_NUMBER}-dist.zip"
+FILE_VERSION=${VERSION//-rc/rc}
+ARTIFACT_NAME="${PROGRAMNAME}-${FILE_VERSION}-dist.zip"
 cd dist
 if zip -r "../${ARTIFACT_NAME}" . > /dev/null 2>&1; then
     cd ..
@@ -426,22 +480,22 @@ else
 fi
 
 # ===============================================================
-# Step 13: Print summary and next steps
+# Step 11: Print summary and next steps
 # ===============================================================
 echo ""
-echo -e "${GREEN}=== Release v$VERSION completed successfully! ===${NC}"
+echo -e "${GREEN}=====<< Release v$VERSION completed successfully! >>=====${NC}"
 echo ""
 echo "Summary of actions performed:"
-echo "  ✓ Updated version in src/App.tsx to $VERSION"
-echo "  ✓ Created commit with version bump on develop"
-echo "  ✓ Created tag v$VERSION"
-echo "  ✓ Squash merged develop to main"
-echo "  ✓ Built and deployed to gh-pages"
+echo "  ✓ Updated version in src/App.tsx, CHANGELOG.md, README.md to $VERSION"
+echo "  ✓ Created commit with version bump on develop branch"
+echo "  ✓ Created tag v$VERSION on main branch"
+echo "  ✓ Squash merged develop to main branch"
+echo "  ✓ Built and deployed to gh-pages branch"
 echo "  ✓ Pushed all changes to remote"
 echo ""
 echo "Next steps:"
-echo "  - Verify the deployment at your GitHub Pages URL"
-echo "  - Create a GitHub release from the v$VERSION tag if desired"
+echo "  - Verify the deployment at GitHub Pages URL https://${GITHUB_USER}.github.io/${PROGRAMNAME}/"
+echo "  - Create a GitHub release from the v$VERSION tag (using mkgrelease.sh)"
 echo "  - Continue development on the develop branch"
 echo ""
 
