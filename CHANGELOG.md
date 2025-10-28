@@ -1,25 +1,30 @@
-## [0.3.11 - 0.3.1] - 2025-10-28
+## [0.4.0] - 2025-10-28
 
-Release type: patch
+Release type: **minor**
 
 ### 📋 Summary 
-- A series of internal releases to fine-tune the release process and scripts.
+Minor feature enhancement release and many "under-the-hood" improvements to build and release management.
+
+### ✨ Additions
+- [feat] Add option for auto recording of GPS position when timer is stopped as work location
 
 ### 📖 Documentation
-- [upd] Add instruction to install App on Desktop Chromg in README.md
+ - [upd] Add instruction to install App on Desktop Chromg in README.md
+ - [upd] Added developer documentation `DEVELOPER_README.md`
 
 ### 🛠 Internal
 - [bug] Fix BSD vs. GNU sed issue in `mkrelease.sh`
-- [chore] Cleanup release script and also make it less verbose and log execution to file instead
+- [chore] Cleanup all release script and also make it less verbose and log execution to file instead
 - [bug] Forgot merge back main into develop after squash merge of develop to main
+- [chore] Hygiene bump of all relevant node and react libraries to latest release
 
 
 ## [0.3.0] - 2025-10-27
 
-Release type: minor
+Release type: **minor**
 
 ### 📋 Summary 
-- This release includes many major improvements in both application and PDF report.
+- This release includes many major feature improvements in both application and PDF report.
 
 ### ✨ Additions
 - [feat] Add proper charts for time of day breakdown in PDF export
@@ -46,7 +51,7 @@ Release type: minor
 
 ## [0.2.0] - 2025-10-27
 
-Release type: major
+Release type: **major**
 
 ### 📋 Summary 
 - First public release of Commute Tracker
