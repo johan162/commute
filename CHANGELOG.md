@@ -1,3 +1,11 @@
+## [0.3.5] - 2025-10-28
+
+Release type: patch
+
+### 🛠 Internal
+- [bug] Cleanup release script and fix BSD vs. GNU sed issue
+
+
 ## [0.3.4] - 2025-10-28
 
 Release type: patch
