@@ -403,12 +403,12 @@ if ! command -v zip >/dev/null 2>&1; then
     exit 1
 fi
 
-FILE_VERSION_NUMBER=${VERSION_NUMBER//-rc/rc}
+FILE_VERSION_NUMBER=${VERSION//-rc/rc}
 ARTIFACT_NAME="${PROGRAMNAME}-${FILE_VERSION_NUMBER}-dist.zip"
 cd dist
 if zip -r "../${ARTIFACT_NAME}" . > /dev/null 2>&1; then
     cd ..
-    print_sub_step "Validating artifact sizes..."
+    log_info "Validating artifact sizes..."
     ARTIFACT_SIZE=$(stat -f%z "${ARTIFACT_NAME}" 2>/dev/null || stat -c%s "${ARTIFACT_NAME}" 2>/dev/null)
     if [ ! -f "${ARTIFACT_NAME}" ] || [ ! -s "${ARTIFACT_NAME}" ] ; then
         log_error "Build artifact creation failed"
