@@ -1,9 +1,18 @@
+## [0.3.3] - 2025-10-28
+
+Release type: patch
+
+### 🛠 Internal
+- [bug] Forgot merge back main into develop after squash merge of develop to main
+
+
 ## [0.3.2] - 2025-10-28
 
 Release type: patch
 
 ### 🛠 Internal
 - [chore] Add instruction for app install in Chrome
+
 
 ## [0.3.1] - 2025-10-27
 
@@ -12,6 +21,7 @@ Release type: patch
 ### 🛠 Internal
 - [chore] Ignore the `.vite` directory 
 - [chore] Ignore the artifacts in the `gh-pages` directories `.gitignore` file
+
 
 ## [0.3.0] - 2025-10-27
 

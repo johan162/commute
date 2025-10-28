@@ -309,29 +309,27 @@ read -r
 # Step 6: Stage and commit the updated src/App.tsx and CHANGELOG.md files
 # ===============================================================
 log_step "6. Committing version update and CHANGELOG.md..."
+
 git add src/App.tsx CHANGELOG.md README.md
-git commit -m "Bump version to $VERSION"
-log_info "✓ Version update committed"
+git commit -m "Bump version to $VERSION on develop branch"
+log_info "✓ Version update committed to develop"
 
 # ===============================================================
-# Step 7: Tag the branch with the release number
-# ===============================================================
-log_step "7. Creating release tag..."
-git tag -a "v$VERSION" -m "Release version $VERSION"
-log_info "✓ Created tag v$VERSION"
-
-# ===============================================================
-# Step 8: Switch to main branch
+# Step 7: Switch to main branch
 # ===============================================================
 log_step "8. Switching to main branch..."
+
 if ! git checkout main; then
-    log_error "Failed to checkout main branch. Does it exist?"
+    log_error "Failed to checkout main branch. Directory dirty?"
     exit 1
 fi
 log_info "✓ Switched to main branch"
 
+# ===============================================================
 # Step 9: Squash merge develop to main branch
+# ===============================================================
 log_step "9. Merging develop to main..."
+
 if ! git merge --squash develop; then
     log_error "Failed to squash merge develop to main"
     log_warn "You may need to resolve conflicts manually"
@@ -341,6 +339,22 @@ fi
 # Commit the squash merge
 git commit -m "Release: v$VERSION"
 log_info "✓ Merged develop to main with release commit"
+
+# ===============================================================
+# Step 7: Tag the branch with the release version
+# ===============================================================
+log_step "7. Creating release tag on main..."
+
+CHANGELOG_DATE=$(date +%Y-%m-%d)
+git tag -a "v$VERSION" -m "Release version $VERSION
+
+Release Type: $RELEASE_TYPE
+Release Date: $CHANGELOG_DATE
+Changelog: See CHANGELOG.md for detailed changes"
+
+git push origin main
+git push origin "v$VERSION"
+log_info "✓ Created tag v$VERSION on main branch"
 
 # ===============================================================
 # Step 10: Build and deploy to gh-pages using existing script
@@ -357,6 +371,9 @@ if ! bash scripts/mkbld.sh --deploy; then
 fi
 log_info "✓ Built and deployed to gh-pages"
 
+log_info "Pushing gh-pages branch..."
+git push origin gh-pages
+
 # ===============================================================
 # Step 11: Switch back to develop branch
 # ===============================================================
@@ -364,26 +381,17 @@ log_step "11. Switching back to develop branch..."
 git checkout develop
 log_info "✓ Switched back to develop branch"
 
-# =============================================================
-# Step 12: Push tags and branches
-# =============================================================
-log_step "12. Pushing changes to remote..."
-log_info "Pushing develop branch..."
+# Merge main into develop to reconcile squash merge
+log_info "Merging main into develop..."
+git merge --no-ff -m "chore: sync develop with main after release $VERSION" main
 git push origin develop
 
-log_info "Pushing main branch..."
-git push origin main
-
-log_info "Pushing gh-pages branch..."
-git push origin gh-pages
-
-log_info "Pushing tags..."
-git push origin --tags
 
 # ==============================================================
-# Step 13: Create build artifacts by compressing dist/ directory
+# Step 12: Create build artifacts by compressing dist/ directory
 # ==============================================================
-log_step "13. Creating build artifacts..."
+log_step "12. Creating build artifacts..."
+
 if [ ! -d "dist" ]; then
     log_error "dist directory not found"
     exit 1
@@ -418,7 +426,7 @@ else
 fi
 
 # ===============================================================
-# Step 14: Print summary and next steps
+# Step 13: Print summary and next steps
 # ===============================================================
 echo ""
 echo -e "${GREEN}=== Release v$VERSION completed successfully! ===${NC}"
