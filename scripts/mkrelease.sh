@@ -305,6 +305,9 @@ Release type: $RELEASE_TYPE
 ### 🚀 Improvements
 - [List improvements made in this release]
 
+### 📖 Documentation
+- [List documentation updates made in this release]
+
 ### 🐛 Bug Fixes
 - [List bug fixes addressed in this release]
 
