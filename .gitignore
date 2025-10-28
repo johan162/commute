@@ -12,6 +12,8 @@ coverage
 *.bak
 *.swp
 build
+commute-*.zip
 .vite/
+artifacts/
 commute*.zip
 commute*.tar.gz
