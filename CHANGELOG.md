@@ -1,4 +1,4 @@
-## [0.3.1 - 0.3.9] - 2025-10-28
+## [0.3.1 - 0.3.10] - 2025-10-28
 
 Release type: patch
 
@@ -10,7 +10,7 @@ Release type: patch
 
 ### 🛠 Internal
 - [bug] Fix BSD vs. GNU sed issue in `mkrelease.sh`
-- [chore] Cleanup release script and also make it less verbose
+- [chore] Cleanup release script and also make it less verbose and log execution to file instead
 - [bug] Forgot merge back main into develop after squash merge of develop to main
 
 
