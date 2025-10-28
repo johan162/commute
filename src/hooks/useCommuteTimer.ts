@@ -7,9 +7,11 @@ interface UseCommuteTimerProps {
   workLocation: Coordinates | null;
   onStop: (duration: number) => void;
   autoStopRadius?: number; // in meters
+  autoRecordWorkLocation?: boolean;
+  onAddWorkLocation?: (location: Coordinates) => void;
 }
 
-export const useCommuteTimer = ({ workLocation, onStop, autoStopRadius = 50 }: UseCommuteTimerProps) => {
+export const useCommuteTimer = ({ workLocation, onStop, autoStopRadius = 50, autoRecordWorkLocation = false, onAddWorkLocation }: UseCommuteTimerProps) => {
   const [isRunning, setIsRunning] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [statusMessage, setStatusMessage] = useState('Press "Leaving" to start your commute.');
@@ -72,13 +74,34 @@ export const useCommuteTimer = ({ workLocation, onStop, autoStopRadius = 50 }: U
     // Clear the stored start time
     localStorage.removeItem('commuteStartTime');
     
+    // Auto-record work location if enabled
+    if (autoRecordWorkLocation && onAddWorkLocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          onAddWorkLocation({ latitude, longitude });
+          setStatusMessage(message || `Commute recorded! Duration: ${Math.round(finalDuration)}s. Work location auto-recorded.`);
+          setTimeout(() => setStatusMessage('Press "Leaving" to start your commute.'), 5000);
+          return; // Exit early to avoid setting status message again below
+        },
+        (error) => {
+          console.error('Failed to record work location automatically:', error);
+          setStatusMessage(message || `Commute recorded! Duration: ${Math.round(finalDuration)}s. Failed to auto-record location.`);
+          setTimeout(() => setStatusMessage('Press "Leaving" to start your commute.'), 5000);
+          return; // Exit early to avoid setting status message again below
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      );
+    } else {
+      setStatusMessage(message || `Commute recorded! Duration: ${Math.round(finalDuration)}s`);
+      setTimeout(() => setStatusMessage('Press "Leaving" to start your commute.'), 5000);
+    }
+    
     onStop(finalDuration);
     
     setElapsedTime(0);
     setDistance(null);
-    setStatusMessage(message || `Commute recorded! Duration: ${Math.round(finalDuration)}s`);
-    setTimeout(() => setStatusMessage('Press "Leaving" to start your commute.'), 5000);
-  }, [isRunning, onStop]);
+  }, [isRunning, onStop, autoRecordWorkLocation, onAddWorkLocation]);
 
 
   useEffect(() => {

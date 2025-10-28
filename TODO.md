@@ -2,8 +2,7 @@
 
 
 ## ✨ FEATURES
-- Make it possible to protect history & statistics with password. This can be enabled/disabled in the "Settings" tab
-- Make it possible (via setting in "Settings" tab) to automatically record the position when the timer is stopped as the work location
+- NA
 
 
 ## 🐛 BUGS
@@ -22,6 +21,7 @@
 
 # Completed features/fixes
 
+- [feat] Make it possible (via setting in "Settings" tab) to automatically record the position when the timer is stopped as the work location
 - [feat] Add proper charts for time of day breakdown in PDF export
 - [feat] Add proper histogram charts for commute duration in PDF export
 - [chan] Reorder the PDF export to move recent records last to its own page
