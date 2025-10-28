@@ -321,3 +321,161 @@ function erf(x: number): number {
     
     return sign * y;
 }
+
+/**
+ * Mann-Kendall Trend Test
+ * Tests for monotonic trend in time series data
+ * Returns null if insufficient data (need at least 10 observations)
+ */
+export function mannKendallTest(data: number[]): {
+    S: number;
+    tau: number;
+    zScore: number;
+    pValue: number;
+    trend: 'increasing' | 'decreasing' | 'no trend';
+    significance: 'strong' | 'moderate' | 'weak' | 'none';
+} | null {
+    const n = data.length;
+    
+    // Need at least 10 observations for meaningful results
+    if (n < 10) {
+        return null;
+    }
+    
+    // Calculate S statistic
+    let S = 0;
+    for (let i = 0; i < n - 1; i++) {
+        for (let j = i + 1; j < n; j++) {
+            const diff = data[j] - data[i];
+            if (diff > 0) S++;
+            else if (diff < 0) S--;
+        }
+    }
+    
+    // Calculate Kendall's tau
+    const tau = (2 * S) / (n * (n - 1));
+    
+    // Calculate variance of S
+    const varS = (n * (n - 1) * (2 * n + 5)) / 18;
+    
+    // Calculate z-score with continuity correction
+    let zScore: number;
+    if (S > 1) {
+        zScore = (S - 1) / Math.sqrt(varS);
+    } else if (S < -1) {
+        zScore = (S + 1) / Math.sqrt(varS);
+    } else {
+        // For S = -1, 0, or 1, z-score is essentially 0
+        zScore = S / Math.sqrt(varS);
+    }
+    
+    // Calculate two-tailed p-value
+    const cdfValue = standardNormalCDF(Math.abs(zScore));
+    const pValue = 2 * (1 - cdfValue);
+    
+    // Determine trend direction
+    let trend: 'increasing' | 'decreasing' | 'no trend';
+    if (pValue < 0.05) {
+        trend = S > 0 ? 'increasing' : 'decreasing';
+    } else {
+        trend = 'no trend';
+    }
+    
+    // Determine significance level
+    let significance: 'strong' | 'moderate' | 'weak' | 'none';
+    if (pValue < 0.01) {
+        significance = 'strong';
+    } else if (pValue < 0.05) {
+        significance = 'moderate';
+    } else if (pValue < 0.10) {
+        significance = 'weak';
+    } else {
+        significance = 'none';
+    }
+    
+    return { S, tau, zScore, pValue, trend, significance };
+}
+
+/**
+ * Wald-Wolfowitz Runs Test
+ * Tests for randomness in a sequence
+ * Returns null if insufficient data (need at least 10 observations)
+ */
+export function runsTest(data: number[]): {
+    runs: number;
+    expectedRuns: number;
+    zScore: number;
+    pValue: number;
+    pattern: 'random' | 'clustered' | 'oscillating';
+    significance: 'strong' | 'moderate' | 'weak' | 'none';
+} | null {
+    const n = data.length;
+    
+    // Need at least 10 observations for meaningful results
+    if (n < 10) {
+        return null;
+    }
+    
+    // Calculate median
+    const median = getMedian(data);
+    
+    // Convert to binary sequence (above/below median)
+    const binary = data.map(val => val > median ? 1 : 0);
+    
+    // Count number of values above and below median
+    const n1 = binary.filter(v => v === 1).length;
+    const n2 = binary.filter(v => v === 0).length;
+    
+    // Need both above and below median values
+    if (n1 === 0 || n2 === 0) {
+        return null;
+    }
+    
+    // Count runs
+    let runs = 1;
+    for (let i = 1; i < n; i++) {
+        if (binary[i] !== binary[i - 1]) {
+            runs++;
+        }
+    }
+    
+    // Calculate expected runs and variance
+    const expectedRuns = (2 * n1 * n2) / (n1 + n2) + 1;
+    const variance = (2 * n1 * n2 * (2 * n1 * n2 - n1 - n2)) / 
+                     (Math.pow(n1 + n2, 2) * (n1 + n2 - 1));
+    
+    // Calculate z-score with continuity correction
+    let zScore: number;
+    if (runs > expectedRuns) {
+        zScore = (runs - 0.5 - expectedRuns) / Math.sqrt(variance);
+    } else if (runs < expectedRuns) {
+        zScore = (runs + 0.5 - expectedRuns) / Math.sqrt(variance);
+    } else {
+        zScore = 0;
+    }
+    
+    // Calculate two-tailed p-value
+    const pValue = 2 * (1 - standardNormalCDF(Math.abs(zScore)));
+    
+    // Determine pattern
+    let pattern: 'random' | 'clustered' | 'oscillating';
+    if (pValue < 0.05) {
+        pattern = runs < expectedRuns ? 'clustered' : 'oscillating';
+    } else {
+        pattern = 'random';
+    }
+    
+    // Determine significance level
+    let significance: 'strong' | 'moderate' | 'weak' | 'none';
+    if (pValue < 0.01) {
+        significance = 'strong';
+    } else if (pValue < 0.05) {
+        significance = 'moderate';
+    } else if (pValue < 0.10) {
+        significance = 'weak';
+    } else {
+        significance = 'none';
+    }
+    
+    return { runs, expectedRuns, zScore, pValue, pattern, significance };
+}

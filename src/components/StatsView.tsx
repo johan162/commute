@@ -5,7 +5,7 @@ import { Card } from './Card';
 import { HistogramChart } from './HistogramChart';
 import { TimeBreakdownView } from './TimeBreakdownView';
 import { exportToCSV, exportToPDF } from '../services/exportService';
-import { getConfidenceInterval, getConfidenceIntervalRank, shapiroWilkTest } from '../services/statsService';
+import { getConfidenceInterval, getConfidenceIntervalRank, shapiroWilkTest, mannKendallTest, runsTest } from '../services/statsService';
 import { Button } from './Button';
 
 interface StatsViewProps {
@@ -201,6 +201,20 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats }) => {
     if (records.length < 20) return null;
     const durations = records.map(record => record.duration);
     return shapiroWilkTest(durations);
+  }, [records]);
+
+  // Calculate Mann-Kendall trend test
+  const trendTest = useMemo(() => {
+    if (records.length < 10) return null;
+    const durations = records.map(record => record.duration);
+    return mannKendallTest(durations);
+  }, [records]);
+
+  // Calculate Runs test for randomness
+  const randomnessTest = useMemo(() => {
+    if (records.length < 10) return null;
+    const durations = records.map(record => record.duration);
+    return runsTest(durations);
   }, [records]);
 
   // Create a string "Statistics Summary" with added number of records
@@ -444,6 +458,214 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats }) => {
                 <option value={5}>5</option>
                 <option value={10}>10</option>
             </select>
+        </div>
+      </Card>
+
+      <Card title="Trend Analysis (Mann-Kendall Test)">
+        <div className="text-center">
+          {trendTest ? (
+            <>
+              <p className="text-sm text-gray-400 mb-4">
+                Analyzes whether your commute times are getting longer, shorter, or staying stable over time
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <p className="text-sm text-gray-400">Trend Direction</p>
+                  <div className="flex items-center justify-center gap-2 mt-2">
+                    {trendTest.trend === 'increasing' && (
+                      <>
+                        <span className="text-4xl">📈</span>
+                        <p className="text-2xl font-bold text-red-400">Getting Longer</p>
+                      </>
+                    )}
+                    {trendTest.trend === 'decreasing' && (
+                      <>
+                        <span className="text-4xl">📉</span>
+                        <p className="text-2xl font-bold text-green-400">Getting Shorter</p>
+                      </>
+                    )}
+                    {trendTest.trend === 'no trend' && (
+                      <>
+                        <span className="text-4xl">➡️</span>
+                        <p className="text-2xl font-bold text-cyan-400">Stable</p>
+                      </>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {trendTest.trend === 'increasing' && 'Your commute times show an upward trend'}
+                    {trendTest.trend === 'decreasing' && 'Your commute times show a downward trend'}
+                    {trendTest.trend === 'no trend' && 'No significant trend detected'}
+                  </p>
+                </div>
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <p className="text-sm text-gray-400">Confidence Level</p>
+                  <div className="flex items-center justify-center gap-2 mt-2">
+                    {trendTest.significance === 'strong' && (
+                      <>
+                        <span className="text-4xl">💪</span>
+                        <p className="text-2xl font-bold text-green-400">Very Strong</p>
+                      </>
+                    )}
+                    {trendTest.significance === 'moderate' && (
+                      <>
+                        <span className="text-4xl">👍</span>
+                        <p className="text-2xl font-bold text-blue-400">Moderate</p>
+                      </>
+                    )}
+                    {trendTest.significance === 'weak' && (
+                      <>
+                        <span className="text-4xl">🤔</span>
+                        <p className="text-2xl font-bold text-yellow-400">Weak</p>
+                      </>
+                    )}
+                    {trendTest.significance === 'none' && (
+                      <>
+                        <span className="text-4xl">🤷</span>
+                        <p className="text-2xl font-bold text-gray-400">Not Significant</p>
+                      </>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    p-value: {trendTest.pValue.toFixed(4)}
+                  </p>
+                </div>
+              </div>
+              <div className="bg-gray-800 p-4 rounded-lg text-left">
+                <p className="text-sm font-semibold text-gray-300 mb-2">What does this mean?</p>
+                <p className="text-xs text-gray-400 mb-2">
+                  {trendTest.trend === 'increasing' && trendTest.significance !== 'none' && (
+                    <>
+                      <span className="text-red-400">⚠️</span> Your commute times are trending <strong>upward</strong>. 
+                      This could indicate increasing traffic congestion, seasonal changes, or route deterioration. 
+                      Consider exploring alternative routes or adjusting your departure time.
+                    </>
+                  )}
+                  {trendTest.trend === 'decreasing' && trendTest.significance !== 'none' && (
+                    <>
+                      <span className="text-green-400">✓</span> Great news! Your commute times are trending <strong>downward</strong>. 
+                      This suggests improvements in traffic flow, better route choices, or favorable seasonal changes. 
+                      Keep up whatever you're doing!
+                    </>
+                  )}
+                  {trendTest.trend === 'no trend' && (
+                    <>
+                      <span className="text-cyan-400">➡️</span> Your commute times remain <strong>stable</strong> over time. 
+                      This consistency suggests predictable traffic patterns and reliable route conditions. 
+                      Good for planning your schedule!
+                    </>
+                  )}
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Based on {records.length} recorded commutes • Kendall's τ = {trendTest.tau.toFixed(3)}
+                </p>
+              </div>
+            </>
+          ) : (
+            <div className="py-8">
+              <p className="text-gray-400 text-lg">Needs 10 or more records for trend analysis</p>
+              <p className="text-xs text-gray-500 mt-2">
+                Currently {records.length} of 10 required
+              </p>
+              <p className="text-xs text-gray-500 mt-4">
+                The Mann-Kendall test detects monotonic trends in time series data
+              </p>
+            </div>
+          )}
+        </div>
+      </Card>
+
+      <Card title="Pattern Analysis (Runs Test)">
+        <div className="text-center">
+          {randomnessTest ? (
+            <>
+              <p className="text-sm text-gray-400 mb-4">
+                Detects whether your commute times follow a random pattern or show clustering/oscillation
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <p className="text-sm text-gray-400">Pattern Type</p>
+                  <div className="flex items-center justify-center gap-2 mt-2">
+                    {randomnessTest.pattern === 'random' && (
+                      <>
+                        <span className="text-4xl">🎲</span>
+                        <p className="text-2xl font-bold text-cyan-400">Random</p>
+                      </>
+                    )}
+                    {randomnessTest.pattern === 'clustered' && (
+                      <>
+                        <span className="text-4xl">📦</span>
+                        <p className="text-2xl font-bold text-orange-400">Clustered</p>
+                      </>
+                    )}
+                    {randomnessTest.pattern === 'oscillating' && (
+                      <>
+                        <span className="text-4xl">🌊</span>
+                        <p className="text-2xl font-bold text-purple-400">Oscillating</p>
+                      </>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {randomnessTest.pattern === 'random' && 'No predictable pattern detected'}
+                    {randomnessTest.pattern === 'clustered' && 'Similar times grouped together'}
+                    {randomnessTest.pattern === 'oscillating' && 'Alternating fast/slow pattern'}
+                  </p>
+                </div>
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <p className="text-sm text-gray-400">Runs Analysis</p>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-300">Observed: <span className="font-bold text-cyan-400">{randomnessTest.runs}</span></p>
+                    <p className="text-sm text-gray-300">Expected: <span className="font-bold text-gray-400">{randomnessTest.expectedRuns.toFixed(1)}</span></p>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {randomnessTest.significance === 'strong' && '(Very Strong Evidence)'}
+                    {randomnessTest.significance === 'moderate' && '(Moderate Evidence)'}
+                    {randomnessTest.significance === 'weak' && '(Weak Evidence)'}
+                    {randomnessTest.significance === 'none' && '(Not Statistically Significant)'}
+                  </p>
+                </div>
+              </div>
+              <div className="bg-gray-800 p-4 rounded-lg text-left">
+                <p className="text-sm font-semibold text-gray-300 mb-2">What does this mean?</p>
+                <p className="text-xs text-gray-400 mb-2">
+                  {randomnessTest.pattern === 'random' && (
+                    <>
+                      <span className="text-cyan-400">🎲</span> Your commute times appear <strong>random</strong>, 
+                      with no clear pattern of clustering or alternation. This is typical when traffic conditions 
+                      vary independently from day to day. Each commute is relatively unpredictable.
+                    </>
+                  )}
+                  {randomnessTest.pattern === 'clustered' && (
+                    <>
+                      <span className="text-orange-400">📦</span> Your commute times show <strong>clustering</strong>, 
+                      meaning you tend to have stretches of similar commute times (several fast days followed by 
+                      several slow days). This could indicate weekly patterns, weather impacts, or consistent 
+                      schedule changes.
+                    </>
+                  )}
+                  {randomnessTest.pattern === 'oscillating' && (
+                    <>
+                      <span className="text-purple-400">🌊</span> Your commute times show an <strong>oscillating pattern</strong>, 
+                      alternating between faster and slower commutes more than expected by chance. This could suggest 
+                      alternating schedules, every-other-day traffic patterns, or behavioral factors affecting your timing.
+                    </>
+                  )}
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Based on {records.length} recorded commutes • p-value: {randomnessTest.pValue.toFixed(4)}
+                </p>
+              </div>
+            </>
+          ) : (
+            <div className="py-8">
+              <p className="text-gray-400 text-lg">Needs 10 or more records for pattern analysis</p>
+              <p className="text-xs text-gray-500 mt-2">
+                Currently {records.length} of 10 required
+              </p>
+              <p className="text-xs text-gray-500 mt-4">
+                The Runs Test detects non-random patterns in sequential data
+              </p>
+            </div>
+          )}
         </div>
       </Card>
 
