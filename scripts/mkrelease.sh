@@ -161,10 +161,15 @@ validate_version "$VERSION"
 log_info "Creating release for version: $VERSION"
 
 # Check if we're in a git repository
-if ! git rev-parse --git-dir > /dev/null 2>&1; then
+if ! git rev-parse --git-dir >> "$RELEASE_LOGFILE" 2>&1; then
     log_error "Not a git repository"
     exit 1
 fi
+
+RELEASE_LOGFILE="/tmp/release-${VERSION//./_}.log"
+echo "Release Log - Version $VERSION" > "$RELEASE_LOGFILE"
+echo "==============================" >> "$RELEASE_LOGFILE"
+echo "" >> "$RELEASE_LOGFILE"
 
 # ===============================================================
 # Step 1: Check that we are on develop branch
@@ -211,14 +216,14 @@ log_info "✓ Working directory is clean"
 # ===============================================================
 log_step "4. Testing build..."
 
-if ! npm run build > /dev/null 2>&1; then
+if ! npm run build >> "$RELEASE_LOGFILE" 2>&1; then
     log_error "Build failed. Please fix build errors before creating a release."
     exit 1
 fi
 log_info "✓ Build successful"
 
 # Check with npx for type errors
-if ! npx tsc --noEmit > /dev/null 2>&1; then
+if ! npx tsc --noEmit >> "$RELEASE_LOGFILE" 2>&1; then
     log_error "TypeScript type check failed. Please fix type errors before creating a release."
     exit 1
 fi
@@ -343,7 +348,7 @@ else
     exit 1
 fi
 
-if git commit -m "[chore] Bump version to $VERSION on develop branch"; then
+if git commit -m "[chore] Bump version to $VERSION on develop branch" >> "$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Committed version bump ($VERSION) in files to develop branch"
 else
     log_error "Failed to commit version bump"
@@ -355,19 +360,19 @@ fi
 # ===============================================================
 log_step "7. Switching to main branch..."
 
-if ! git checkout main > /dev/null 2>&1; then
+if ! git checkout main >> "$RELEASE_LOGFILE" 2>&1; then
     log_error "Failed to checkout main branch. Directory dirty?"
     exit 1
 fi
 log_info "✓ Switched to main branch"
 
-if ! git merge --squash develop > /dev/null 2>&1; then
+if ! git merge --squash develop >> "$RELEASE_LOGFILE" 2>&1; then
     log_error "Failed to squash merge develop to main in. Possible conflicts?"
     exit 1
 fi
 
 # Commit the squash merge
-if git commit -m "[chore] Release: v$VERSION" > /dev/null 2>&1; then
+if git commit -m "[chore] Release: v$VERSION" >> "$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Merged and Committed squash merge to main"
 else
     log_error "Failed to commit squash merge to main"
@@ -389,14 +394,14 @@ else
 fi
 
 # Push main and tag to origin
-if git push origin main > /dev/null 2>&1; then
+if git push origin main >> "$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Pushed main branch to origin"
 else
     log_error "Failed to push main branch to origin"
     exit 1
 fi
 
-if git push origin "v$VERSION" > /dev/null 2>&1; then
+if git push origin "v$VERSION" >> "$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Pushed tag v$VERSION to origin"
 else
     log_error "Failed to push tag v$VERSION to origin"
@@ -414,14 +419,14 @@ if [ ! -f "scripts/mkbld.sh" ]; then
     exit 1
 fi
 
-if ! bash scripts/mkbld.sh --deploy > /dev/null 2>&1; then
+if ! bash scripts/mkbld.sh --deploy >> "$RELEASE_LOGFILE" 2>&1; then
     log_error "Failed to build and deploy to gh-pages"
     exit 1
 else
     log_info "✓ Deployed app to gh-pages"
 fi
 
-if git push origin gh-pages > /dev/null 2>&1; then
+if git push origin gh-pages >> "$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Pushed gh-pages branch to origin"
 else
     log_error "Failed to push gh-pages branch to origin"
@@ -433,7 +438,7 @@ fi
 # ===============================================================
 log_step "9. Switching back to develop branch..."
 
-if git checkout develop > /dev/null 2>&1; then
+if git checkout develop >> "$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Switched back to develop branch"
 else
     log_error "Failed to switch back to develop branch"
@@ -441,14 +446,14 @@ else
 fi
 
 # Merge main into develop to reconcile squash merge
-if git merge --no-ff -m "[chore] sync develop with main after release $VERSION" main > /dev/null 2>&1; then
+if git merge --no-ff -m "[chore] sync develop with main after release $VERSION" main >> "$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Merged main back into develop"
 else
     log_error "Failed to merge main back into develop. Possible conflicts?"
     exit 1
 fi
 
-if git push origin develop > /dev/null 2>&1; then
+if git push origin develop >> "$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Pushed develop branch to origin after merge back from main"
 else
     log_error "Failed to push develop branch to origin"
@@ -474,7 +479,7 @@ fi
 FILE_VERSION=${VERSION//-rc/rc}
 ARTIFACT_NAME="${PROGRAMNAME}-${FILE_VERSION}-dist.zip"
 cd dist
-if zip -r "../${ARTIFACT_NAME}" . > /dev/null 2>&1; then
+if zip -r "../${ARTIFACT_NAME}" . >> "$RELEASE_LOGFILE" 2>&1; then
     cd ..
     ARTIFACT_SIZE=$(stat -f%z "${ARTIFACT_NAME}" 2>/dev/null || stat -c%s "${ARTIFACT_NAME}" 2>/dev/null)
     if [ ! -f "${ARTIFACT_NAME}" ] || [ ! -s "${ARTIFACT_NAME}" ] ; then
