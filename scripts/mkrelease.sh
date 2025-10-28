@@ -280,6 +280,7 @@ if ! grep -q "badge/version-$VERSION" README.md; then
     log_error "Version badge update verification failed"
     exit 1
 fi
+rm -f README.md.bak
 
 # --------------------------------------------------------------
 # Step 5.2: Updated CHANGELOG.md
@@ -353,7 +354,7 @@ if ! git merge --squash develop; then
 fi
 
 # Commit the squash merge
-if git commit -m "[chore] Release: v$VERSION"; then
+if git commit -m "[chore] Release: v$VERSION" > /dev/null 2>&1; then
     log_info "✓ Committed squash merge to main"
 else
     log_error "Failed to commit squash merge to main"
@@ -375,14 +376,14 @@ else
 fi
 
 # Push main and tag to origin
-if git push origin main; then
+if git push origin main > /dev/null 2>&1; then
     log_info "✓ Pushed main branch to origin"
 else
     log_error "Failed to push main branch to origin"
     exit 1
 fi
 
-if git push origin "v$VERSION"; then
+if git push origin "v$VERSION" > /dev/null 2>&1; then
     log_info "✓ Pushed tag v$VERSION to origin"
 else
     log_error "Failed to push tag v$VERSION to origin"
@@ -434,7 +435,7 @@ else
     exit 1
 fi
 
-if git push origin develop; then
+if git push origin develop > /dev/null 2>&1; then
     log_info "✓ Pushed develop branch to origin after merge back from main"
 else
     log_error "Failed to push develop branch to origin"
@@ -462,7 +463,6 @@ ARTIFACT_NAME="${PROGRAMNAME}-${FILE_VERSION}-dist.zip"
 cd dist
 if zip -r "../${ARTIFACT_NAME}" . > /dev/null 2>&1; then
     cd ..
-    log_info "Validating artifact sizes..."
     ARTIFACT_SIZE=$(stat -f%z "${ARTIFACT_NAME}" 2>/dev/null || stat -c%s "${ARTIFACT_NAME}" 2>/dev/null)
     if [ ! -f "${ARTIFACT_NAME}" ] || [ ! -s "${ARTIFACT_NAME}" ] ; then
         log_error "Build artifact creation failed"
