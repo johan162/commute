@@ -408,7 +408,7 @@ else
     log_info "✓ Deployed app to gh-pages"
 fi
 
-if git push origin gh-pages; then
+if git push origin gh-pages > /dev/null 2>&1; then
     log_info "✓ Pushed gh-pages branch to origin"
 else
     log_error "Failed to push gh-pages branch to origin"
@@ -420,7 +420,7 @@ fi
 # ===============================================================
 log_step "9. Switching back to develop branch..."
 
-if git checkout develop; then
+if git checkout develop > /dev/null 2>&1; then
     log_info "✓ Switched back to develop branch"
 else
     log_error "Failed to switch back to develop branch"
@@ -428,7 +428,7 @@ else
 fi
 
 # Merge main into develop to reconcile squash merge
-if git merge --no-ff -m "[chore] sync develop with main after release $VERSION" main; then
+if git merge --no-ff -m "[chore] sync develop with main after release $VERSION" main > /dev/null 2>&1; then
     log_info "✓ Merged main back into develop"
 else
     log_error "Failed to merge main back into develop. Possible conflicts?"
