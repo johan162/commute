@@ -11,7 +11,8 @@ A simple and efficient Progressive Web App (PWA) to track your commute time to w
 
 ## Features
 
-- **Full Statistics:** Get detailed insights into your commute times, including average, best, and worst travel times.
+- **Basic Statistics:** Get detailed insights into your commute times, including average, best, and worst travel times.
+- **Advance Statistics:** Trend analysis (Mann-Kendall), pattern analysis (Runs Test) and normality test (Shapiro-Wilk) to give insights in commute patterns.
 - **History View:** Browse a complete history of your commutes to identify trends and patterns.
 - **Geo-Fencing:** The app can automatically stop tracking when you arrive at your work destination, so you don't have to remember to do it manually.
 - **PDF Report**: Professional loooking PDF summary report.
