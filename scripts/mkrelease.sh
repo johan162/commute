@@ -230,7 +230,7 @@ log_info "✓ TypeScript type check passed"
 
 # ===============================================================
 # Step 5: Update the version number string in 
-# src/App.tsx, README.md, package.json
+# src/App.tsx, README.md, package.json, package-lock.json
 # ===============================================================
 log_step "5. Updating version in files..."
 
@@ -377,10 +377,10 @@ done
 # ===============================================================
 log_step "7. Committing version update, README.md and CHANGELOG.md..."
 
-if git add src/App.tsx CHANGELOG.md README.md >>"$RELEASE_LOGFILE" 2>&1; then
-    log_info "✓ Staged src/App.tsx, CHANGELOG.md and README.md"
+if git add src/App.tsx CHANGELOG.md README.md package.json package-lock.json >>"$RELEASE_LOGFILE" 2>&1; then
+    log_info "✓ Staged src/App.tsx, CHANGELOG.md, README.md, package.json and package-lock.json"
 else
-    log_error "Failed to stage src/App.tsx, CHANGELOG.md or README.md"
+    log_error "Failed to stage src/App.tsx, CHANGELOG.md, README.md, package.json or package-lock.json"
     exit 1
 fi
 
