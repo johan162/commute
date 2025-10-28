@@ -5,7 +5,7 @@ import { Card } from './Card';
 import { HistogramChart } from './HistogramChart';
 import { TimeBreakdownView } from './TimeBreakdownView';
 import { exportToCSV, exportToPDF } from '../services/exportService';
-import { getConfidenceInterval, getConfidenceIntervalRank } from '../services/statsService';
+import { getConfidenceInterval, getConfidenceIntervalRank, shapiroWilkTest } from '../services/statsService';
 import { Button } from './Button';
 
 interface StatsViewProps {
@@ -196,9 +196,19 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats }) => {
     return getConfidenceIntervalRank(durations, 90);
   }, [records]);
 
+  // Calculate Shapiro-Wilk test for normality
+  const normalityTest = useMemo(() => {
+    if (records.length < 20) return null;
+    const durations = records.map(record => record.duration);
+    return shapiroWilkTest(durations);
+  }, [records]);
+
+  // Create a string "Statistics Summary" with added number of records
+  const statsSummary = `Statistics Summary - ${records.length} records`;
+
   return (
     <div className="space-y-6">
-      <Card title="Statistics Summary">
+      <Card title={statsSummary}>
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 text-center">
           <StatItem label="Total Trips" value={records.length} />
           <StatItem label="Min Time" value={formatDuration(stats.min)} />
@@ -268,6 +278,70 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats }) => {
               <p className="text-gray-400 text-lg">Needs 5 or more records to show 90% CI</p>
               <p className="text-xs text-gray-500 mt-2">
                 Currently {records.length} of 5 required
+              </p>
+            </div>
+          )}
+        </div>
+      </Card>
+
+      <Card title="Normality Test (Shapiro-Wilk)">
+        <div className="text-center">
+          {normalityTest ? (
+            <>
+              <p className="text-sm text-gray-400 mb-4">
+                Tests whether commute times follow a normal (bell curve) distribution
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <p className="text-sm text-gray-400">W Statistic</p>
+                  <p className="text-2xl font-bold text-cyan-400">{normalityTest.W.toFixed(4)}</p>
+                  <p className="text-xs text-gray-500 mt-1">Range: 0-1 (closer to 1 = more normal)</p>
+                </div>
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <p className="text-sm text-gray-400">p-value</p>
+                  <p className="text-2xl font-bold text-cyan-400">{normalityTest.pValue.toFixed(4)}</p>
+                  <p className="text-xs text-gray-500 mt-1">Significance threshold: 0.05</p>
+                </div>
+                <div className="bg-gray-800 p-4 rounded-lg">
+                  <p className="text-sm text-gray-400">Distribution</p>
+                  <p className={`text-2xl font-bold ${normalityTest.isNormal ? 'text-green-400' : 'text-yellow-400'}`}>
+                    {normalityTest.isNormal ? '✓ Normal' : '⚠ Not Normal'}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {normalityTest.isNormal ? 'Data fits normal distribution' : 'Data deviates from normal'}
+                  </p>
+                </div>
+              </div>
+              <div className="bg-gray-800 p-4 rounded-lg text-left">
+                <p className="text-sm font-semibold text-gray-300 mb-2">Interpretation:</p>
+                <p className="text-xs text-gray-400 mb-2">
+                  {normalityTest.isNormal ? (
+                    <>
+                      <span className="text-green-400">✓</span> Your commute times appear to follow a normal distribution 
+                      (p &gt; 0.05). This suggests that most of your commutes cluster around the average, with fewer 
+                      extremely short or long commutes. Statistical methods assuming normality are appropriate for your data.
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-yellow-400">⚠</span> Your commute times do not follow a normal distribution 
+                      (p ≤ 0.05). This could indicate consistent factors affecting your commute (traffic patterns, weather, 
+                      route changes) or the presence of outliers. Consider using non-parametric statistical methods.
+                    </>
+                  )}
+                </p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Based on {records.length} recorded commutes • α = 0.05 significance level
+                </p>
+              </div>
+            </>
+          ) : (
+            <div className="py-8">
+              <p className="text-gray-400 text-lg">Needs 20 or more records for normality test</p>
+              <p className="text-xs text-gray-500 mt-2">
+                Currently {records.length} of 20 required
+              </p>
+              <p className="text-xs text-gray-500 mt-4">
+                The Shapiro-Wilk test is most reliable with at least 20 samples
               </p>
             </div>
           )}
