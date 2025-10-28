@@ -265,13 +265,10 @@ if [ ! -f "README.md" ]; then
     exit 1
 fi
 
-# Create backup
-cp README.md README.md.bak
-
 # Example badge line:
 # ![Version](https://img.shields.io/badge/version-0.2.0-brightgreen.svg)
 # Update version badge using sed
-if sed -i -E "s/badge\/version-[0-9]+\.[0-9]+\.[0-9]+/badge\/version-$VERSION/g" README.md; then
+if sed -i '.bak' -E "s/badge\/version-[0-9]+\.[0-9]+\.[0-9]+/badge\/version-$VERSION/g" README.md; then
     log_info "✓ Version badge updated to $VERSION in README.md"
 else
     mv README.md.bak README.md
