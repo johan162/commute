@@ -1,3 +1,11 @@
+## [0.3.6] - 2025-10-28
+
+Release type: patch
+
+### 🛠 Internal
+- [chore] Make release script less verbose
+
+
 ## [0.3.5] - 2025-10-28
 
 Release type: patch
