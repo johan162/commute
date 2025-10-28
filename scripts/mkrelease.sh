@@ -40,7 +40,7 @@ log_error() {
 }
 
 log_step() {
-    echo -e "${BLUE}🔄 [STEP]${NC} $1"
+    echo -e "${BLUE}🔄 [STEP $1] $2${NC}"
 }
 
 # Function to validate semantic version format
@@ -173,7 +173,7 @@ echo "" >>"$RELEASE_LOGFILE"
 # ===============================================================
 # Step 1: Check that we are on develop branch
 # ===============================================================
-log_step "1. Checking current branch..."
+log_step 1 "Checking current branch..."
 CURRENT_BRANCH=$(git branch --show-current)
 if [ "$CURRENT_BRANCH" != "develop" ]; then
     log_error "Must be on 'develop' branch. Currently on: $CURRENT_BRANCH"
@@ -513,13 +513,17 @@ if ! command -v zip >/dev/null 2>&1; then
     exit 1
 fi
 
+ARTIFACTS_DIR="artifacts"
+# Make sure the artifacts/ directory exists
+mkdir -p "$ARTIFACTS_DIR"
+
 FILE_VERSION=${VERSION//-rc/rc}
 ARTIFACT_NAME="${PROGRAMNAME}-${FILE_VERSION}-dist.zip"
 cd dist
-if zip -r "../${ARTIFACT_NAME}" . >>"$RELEASE_LOGFILE" 2>&1; then
+if zip -r "../${ARTIFACTS_DIR}/${ARTIFACT_NAME}" . >>"$RELEASE_LOGFILE" 2>&1; then
     cd ..
-    ARTIFACT_SIZE=$(stat -f%z "${ARTIFACT_NAME}" 2>/dev/null || stat -c%s "${ARTIFACT_NAME}" 2>/dev/null)
-    if [ ! -f "${ARTIFACT_NAME}" ] || [ ! -s "${ARTIFACT_NAME}" ]; then
+    ARTIFACT_SIZE=$(stat -f%z "${ARTIFACTS_DIR}/${ARTIFACT_NAME}" 2>/dev/null || stat -c%s "${ARTIFACTS_DIR}/${ARTIFACT_NAME}" 2>/dev/null)
+    if [ ! -f "${ARTIFACTS_DIR}/${ARTIFACT_NAME}" ] || [ ! -s "${ARTIFACTS_DIR}/${ARTIFACT_NAME}" ]; then
         log_error "Build artifact creation failed"
         exit 1
     fi
@@ -527,7 +531,7 @@ if zip -r "../${ARTIFACT_NAME}" . >>"$RELEASE_LOGFILE" 2>&1; then
         print_error "Distribution artifact suspiciously small: $ARTIFACT_SIZE bytes"
         exit 1
     fi
-    log_info "✓ Created build artifact: ${ARTIFACT_NAME}"
+    log_info "✓ Created build artifact: \"${ARTIFACTS_DIR}/${ARTIFACT_NAME}\" (${ARTIFACT_SIZE} bytes)"
 else
     cd ..
     log_error "Failed to create build artifact"
@@ -543,6 +547,7 @@ echo -e "${GREEN}=====<< Release v$VERSION completed successfully! >>=====${NC}"
 echo ""
 echo "Summary of actions performed:"
 echo "  ✓ Updated version in src/App.tsx, CHANGELOG.md, README.md to $VERSION"
+echo "  ✓ Created build artifacts in ${ARTIFACTS_DIR}/${ARTIFACT_NAME}"
 echo "  ✓ Created commit with version bump on develop branch"
 echo "  ✓ Created tag v$VERSION on main branch"
 echo "  ✓ Squash merged develop to main branch"
@@ -551,8 +556,7 @@ echo "  ✓ Pushed all changes to remote"
 echo ""
 echo "Next steps:"
 echo "  - Verify the deployment at GitHub Pages URL https://${GITHUB_USER}.github.io/${PROGRAMNAME}/"
-echo "  - Create a GitHub release from the v$VERSION tag (using mkgrelease.sh)"
-echo "  - Continue development on the develop branch"
+echo "  - Create a GitHub release from the v$VERSION tag (using mkghrelease.sh)"
 echo ""
 
 # End of script
