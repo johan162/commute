@@ -14,3 +14,4 @@ coverage
 build
 commute-*.zip
 .vite/
+artifacts/

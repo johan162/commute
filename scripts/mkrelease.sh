@@ -4,7 +4,7 @@
 # Usage: ./scripts/mkrelease.sh <version>
 # Example: ./scripts/mkrelease.sh 0.2.0
 
-set -eu  # Exit on error, undefined variables
+set -eu # Exit on error, undefined variables
 
 # =====================================
 # CONFIGURATION
@@ -26,7 +26,6 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
-
 # Function to print colored output
 log_info() {
     echo -e "${GREEN}    [INFO]${NC} $1"
@@ -47,8 +46,8 @@ log_step() {
 # Function to validate semantic version format
 validate_version() {
     local version=$1
-    if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-        log_error "Invalid version format. Expected: x.y.z (e.g., 0.1.0). Only numeric versions allowed."
+    if [[ ! $version =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$ ]]; then
+        log_error "Invalid version format. Expected: x.y.z or x.y.z-prerelease (e.g., 0.1.0 or 1.0.0-rc1)."
         exit 1
     fi
 }
@@ -65,7 +64,7 @@ cleanup() {
 
 # Function to show help message
 show_help() {
-    cat << EOF
+    cat <<EOF
 🚀 ${PROGRAMNAME_PRETTY} Release Script
 
 DESCRIPTION:
@@ -122,24 +121,24 @@ declare RELEASE_TYPE="minor"
 
 for arg in "$@"; do
     case $arg in
-        --help|-h)
-            show_help
-            exit 0
-            ;;
-        -*)
-            log_error "Unknown option: $arg"
-            echo "Usage: $0 <version> [major|minor|patch] [--help]"
-            echo "Run '$0 --help' for detailed information"
-            exit 1
-            ;;
-        *)
-            if [[ -z "$VERSION" ]]; then
-                VERSION="$arg"
-            else
-                RELEASE_TYPE="$arg"
-            fi
-            shift
-            ;;
+    --help | -h)
+        show_help
+        exit 0
+        ;;
+    -*)
+        log_error "Unknown option: $arg"
+        echo "Usage: $0 <version> [major|minor|patch] [--help]"
+        echo "Run '$0 --help' for detailed information"
+        exit 1
+        ;;
+    *)
+        if [[ -z "$VERSION" ]]; then
+            VERSION="$arg"
+        else
+            RELEASE_TYPE="$arg"
+        fi
+        shift
+        ;;
     esac
 done
 
@@ -161,15 +160,15 @@ validate_version "$VERSION"
 log_info "Creating release for version: $VERSION"
 
 # Check if we're in a git repository
-if ! git rev-parse --git-dir > /dev/null 2>&1; then
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
     log_error "Not a git repository"
     exit 1
 fi
 
 RELEASE_LOGFILE="/tmp/release-${VERSION//./_}.log"
-echo "Release Log - Version $VERSION" > "$RELEASE_LOGFILE"
-echo "==============================" >> "$RELEASE_LOGFILE"
-echo "" >> "$RELEASE_LOGFILE"
+echo "Release Log - Version $VERSION" >"$RELEASE_LOGFILE"
+echo "==============================" >>"$RELEASE_LOGFILE"
+echo "" >>"$RELEASE_LOGFILE"
 
 # ===============================================================
 # Step 1: Check that we are on develop branch
@@ -216,23 +215,29 @@ log_info "✓ Working directory is clean"
 # ===============================================================
 log_step "4. Testing build..."
 
-if ! npm run build >> "$RELEASE_LOGFILE" 2>&1; then
+if ! npm run build >>"$RELEASE_LOGFILE" 2>&1; then
     log_error "Build failed. Please fix build errors before creating a release."
     exit 1
 fi
 log_info "✓ Build successful"
 
 # Check with npx for type errors
-if ! npx tsc --noEmit >> "$RELEASE_LOGFILE" 2>&1; then
+if ! npx tsc --noEmit >>"$RELEASE_LOGFILE" 2>&1; then
     log_error "TypeScript type check failed. Please fix type errors before creating a release."
     exit 1
 fi
 log_info "✓ TypeScript type check passed"
 
 # ===============================================================
-# Step 5: Update the version number string in src/App.tsx and README.md
+# Step 5: Update the version number string in 
+# src/App.tsx, README.md, package.json, package-lock.json
 # ===============================================================
-log_step "5. Updating version in src/App.tsx..."
+log_step "5. Updating version in files..."
+
+# --------------------------------------------------------------
+# Step 5.1: Update version number in badge in App.tsx
+# --------------------------------------------------------------
+log_step "5.1 Updating version badge in App.tsx..."
 
 if [ ! -f "src/App.tsx" ]; then
     log_error "src/App.tsx not found"
@@ -261,9 +266,9 @@ if ! grep -q "const version = '$VERSION';" src/App.tsx; then
 fi
 
 # --------------------------------------------------------------
-# Step 5.1: Update version number in badge in README.md
+# Step 5.2: Update version number in badge in README.md
 # --------------------------------------------------------------
-log_step "5.1 Updating version badge in README.md..."
+log_step "5.2 Updating version badge in README.md..."
 
 if [ ! -f "README.md" ]; then
     log_error "README.md not found"
@@ -288,15 +293,31 @@ fi
 rm -f README.md.bak
 
 # --------------------------------------------------------------
-# Step 5.2: Updated CHANGELOG.md
+# Step 5.3: Update version in package.json
 # --------------------------------------------------------------
-log_step "5.2 Updating CHANGELOG.md..."
+log_step "5.3 Updating version in package.json..."
+if [ ! -f "package.json" ]; then
+    log_error "package.json not found"
+    exit 1
+fi
+# Update version using npm version
+if npm version "$VERSION" --no-git-tag-version >>"$RELEASE_LOGFILE" 2>&1; then
+    log_info "✓ Version updated to $VERSION in package.json"
+else
+    log_error "Failed to update version in package.json"
+    exit 1
+fi
+
+# ===============================================================
+# Step 6: Updated CHANGELOG.md
+# ==============================================================
+log_step "6. Updating CHANGELOG.md..."
 
 echo "  ✓ Preparing changelog..."
 CHANGELOG_DATE=$(date +%Y-%m-%d)
 
-# Create temporary changelog entry 
-cat > CHANGELOG_ENTRY.tmp << EOF
+# Create temporary changelog entry
+cat >CHANGELOG_ENTRY.tmp <<EOF
 ## [$VERSION] - $CHANGELOG_DATE
 
 Release type: $RELEASE_TYPE
@@ -323,7 +344,7 @@ EOF
 
 # Prepend to existing CHANGELOG.md (create if doesn't exist)
 if [[ -f CHANGELOG.md ]]; then
-    cat CHANGELOG_ENTRY.tmp CHANGELOG.md > CHANGELOG_NEW.tmp
+    cat CHANGELOG_ENTRY.tmp CHANGELOG.md >CHANGELOG_NEW.tmp
     mv CHANGELOG_NEW.tmp CHANGELOG.md
 else
     mv CHANGELOG_ENTRY.tmp CHANGELOG.md
@@ -332,23 +353,38 @@ rm -f CHANGELOG_ENTRY.tmp
 
 echo ""
 echo "⚠️  PLEASE EDIT CHANGELOG.md to add specific release notes"
-echo "   Press Enter when changelog is ready, or Ctrl+C to abort"
-read -r
+echo "   Type 'yes' to continue, 'no' to abort, or Ctrl+C to exit"
 
+while true; do
+    read -r response
+    case "$response" in
+        yes)
+            log_info "✓ Changelog confirmed ready"
+            break
+            ;;
+        no)
+            log_error "Aborted by user (response was 'no')"
+            exit 1
+            ;;
+        *)
+            echo "⚠️ Please type 'yes' to continue or 'no' to abort:"
+            ;;
+    esac
+done
 
 # ===============================================================
-# Step 6: Stage and commit the updated src/App.tsx and CHANGELOG.md files
+# Step 7: Stage and commit the updated src/App.tsx and CHANGELOG.md files
 # ===============================================================
-log_step "6. Committing version update, README.md and CHANGELOG.md..."
+log_step "7. Committing version update, README.md and CHANGELOG.md..."
 
-if git add src/App.tsx CHANGELOG.md README.md; then
-    log_info "✓ Staged src/App.tsx, CHANGELOG.md and README.md"
+if git add src/App.tsx CHANGELOG.md README.md package.json package-lock.json >>"$RELEASE_LOGFILE" 2>&1; then
+    log_info "✓ Staged src/App.tsx, CHANGELOG.md, README.md, package.json and package-lock.json"
 else
-    log_error "Failed to stage src/App.tsx, CHANGELOG.md or README.md"
+    log_error "Failed to stage src/App.tsx, CHANGELOG.md, README.md, package.json or package-lock.json"
     exit 1
 fi
 
-if git commit -m "[chore] Bump version to $VERSION on develop branch" >> "$RELEASE_LOGFILE" 2>&1; then
+if git commit -m "[chore] Bump version to $VERSION on develop branch" >>"$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Committed version bump ($VERSION) in files to develop branch"
 else
     log_error "Failed to commit version bump"
@@ -356,23 +392,25 @@ else
 fi
 
 # ===============================================================
-# Step 7: Switch to main branch and merge develop and tag main
+# Step 8: Switch to main branch and merge develop and tag main
 # ===============================================================
-log_step "7. Switching to main branch..."
+log_step "8. Switching to main branch..."
 
-if ! git checkout main >> "$RELEASE_LOGFILE" 2>&1; then
+if ! git checkout main >>"$RELEASE_LOGFILE" 2>&1; then
     log_error "Failed to checkout main branch. Directory dirty?"
     exit 1
 fi
 log_info "✓ Switched to main branch"
 
-if ! git merge --squash develop >> "$RELEASE_LOGFILE" 2>&1; then
+if ! git merge --squash develop >>"$RELEASE_LOGFILE" 2>&1; then
     log_error "Failed to squash merge develop to main in. Possible conflicts?"
+    log_error "Resolve conflicts with 'git status' and 'git add <file>', then re-run."
+    git status --porcelain
     exit 1
 fi
 
 # Commit the squash merge
-if git commit -m "[chore] Release: v$VERSION" >> "$RELEASE_LOGFILE" 2>&1; then
+if git commit -m "[chore] Release: v$VERSION" >>"$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Merged and Committed squash merge to main"
 else
     log_error "Failed to commit squash merge to main"
@@ -394,39 +432,38 @@ else
 fi
 
 # Push main and tag to origin
-if git push origin main >> "$RELEASE_LOGFILE" 2>&1; then
+if git push origin main >>"$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Pushed main branch to origin"
 else
     log_error "Failed to push main branch to origin"
     exit 1
 fi
 
-if git push origin "v$VERSION" >> "$RELEASE_LOGFILE" 2>&1; then
+if git push origin "v$VERSION" >>"$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Pushed tag v$VERSION to origin"
 else
     log_error "Failed to push tag v$VERSION to origin"
     exit 1
 fi
 
-
 # ===============================================================
-# Step 8: Build and deploy to gh-pages using existing script
+# Step 9: Build and deploy to gh-pages using existing script
 # ===============================================================
-log_step "8. Building and deploying to gh-pages..."
+log_step "9. Building and deploying to gh-pages..."
 
 if [ ! -f "scripts/mkbld.sh" ]; then
     log_error "scripts/mkbld.sh not found"
     exit 1
 fi
 
-if ! bash scripts/mkbld.sh --deploy >> "$RELEASE_LOGFILE" 2>&1; then
+if ! bash scripts/mkbld.sh --deploy >>"$RELEASE_LOGFILE" 2>&1; then
     log_error "Failed to build and deploy to gh-pages"
     exit 1
 else
     log_info "✓ Deployed app to gh-pages"
 fi
 
-if git push origin gh-pages >> "$RELEASE_LOGFILE" 2>&1; then
+if git push origin gh-pages >>"$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Pushed gh-pages branch to origin"
 else
     log_error "Failed to push gh-pages branch to origin"
@@ -434,11 +471,11 @@ else
 fi
 
 # ===============================================================
-# Step 9: Switch back to develop branch and merge back main
+# Step 10: Switch back to develop branch and merge back main
 # ===============================================================
-log_step "9. Switching back to develop branch..."
+log_step "10. Switching back to develop branch..."
 
-if git checkout develop >> "$RELEASE_LOGFILE" 2>&1; then
+if git checkout develop >>"$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Switched back to develop branch"
 else
     log_error "Failed to switch back to develop branch"
@@ -446,14 +483,14 @@ else
 fi
 
 # Merge main into develop to reconcile squash merge
-if git merge --no-ff -m "[chore] sync develop with main after release $VERSION" main >> "$RELEASE_LOGFILE" 2>&1; then
+if git merge --no-ff -m "[chore] sync develop with main after release $VERSION" main >>"$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Merged main back into develop"
 else
     log_error "Failed to merge main back into develop. Possible conflicts?"
     exit 1
 fi
 
-if git push origin develop >> "$RELEASE_LOGFILE" 2>&1; then
+if git push origin develop >>"$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Pushed develop branch to origin after merge back from main"
 else
     log_error "Failed to push develop branch to origin"
@@ -461,9 +498,9 @@ else
 fi
 
 # ==============================================================
-# Step 10: Create build artifacts by compressing dist/ directory
+# Step 11: Create build artifacts by compressing dist/ directory
 # ==============================================================
-log_step "10. Creating build artifacts..."
+log_step "11. Creating build artifacts..."
 
 if [ ! -d "dist" ]; then
     log_error "dist directory not found"
@@ -479,10 +516,10 @@ fi
 FILE_VERSION=${VERSION//-rc/rc}
 ARTIFACT_NAME="${PROGRAMNAME}-${FILE_VERSION}-dist.zip"
 cd dist
-if zip -r "../${ARTIFACT_NAME}" . >> "$RELEASE_LOGFILE" 2>&1; then
+if zip -r "../${ARTIFACT_NAME}" . >>"$RELEASE_LOGFILE" 2>&1; then
     cd ..
     ARTIFACT_SIZE=$(stat -f%z "${ARTIFACT_NAME}" 2>/dev/null || stat -c%s "${ARTIFACT_NAME}" 2>/dev/null)
-    if [ ! -f "${ARTIFACT_NAME}" ] || [ ! -s "${ARTIFACT_NAME}" ] ; then
+    if [ ! -f "${ARTIFACT_NAME}" ] || [ ! -s "${ARTIFACT_NAME}" ]; then
         log_error "Build artifact creation failed"
         exit 1
     fi
@@ -498,8 +535,9 @@ else
 fi
 
 # ===============================================================
-# Step 11: Print summary and next steps
+# Step 12: Print summary and next steps
 # ===============================================================
+
 echo ""
 echo -e "${GREEN}=====<< Release v$VERSION completed successfully! >>=====${NC}"
 echo ""
