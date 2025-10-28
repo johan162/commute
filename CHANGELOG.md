@@ -1,11 +1,11 @@
-## [0.3.1 - 0.3.8] - 2025-10-28
+## [0.3.1 - 0.3.9] - 2025-10-28
 
 Release type: patch
 
 ### 📋 Summary 
 - A series of internal releases to fine-tune the release process and scripts.
 
-### Docs 
+### 📖 Documentation
 - [upd] Add instruction to install App on Desktop Chromg in README.md
 
 ### 🛠 Internal
