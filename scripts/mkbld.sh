@@ -3,7 +3,7 @@
 # Build and Deploy Script for PWA to gh-pages branch
 # This script builds the app and deploys it to the gh-pages branch
 
-set -eu  # Exit on error, undefined variables
+set -eu # Exit on error, undefined variables
 
 # Colors for output
 RED='\033[0;31m'
@@ -39,7 +39,7 @@ log_step() {
 }
 
 show_help() {
-    cat << EOF
+    cat <<EOF
 🚀 ${PROGRAMNAME_PRETTY} ReleaBuild Script
 
 DESCRIPTION:
@@ -78,24 +78,24 @@ declare PUSH_AFTER_BUILD=false
 
 for arg in "$@"; do
     case $arg in
-        --help|-h)
-            show_help
-            exit 0
-            ;;
-        --push|-p)
-            PUSH_AFTER_BUILD=true
-            shift
-            ;;
-        --deploy|-d)
-            DEPLOY_AFTER_BUILD=true
-            shift
-            ;;
-        -*)
-            log_error "Unknown option: $arg"
-            echo "Usage: $0 <version> [major|minor|patch] [--help]"
-            echo "Run '$0 --help' for detailed information"
-            exit 1
-            ;;
+    --help | -h)
+        show_help
+        exit 0
+        ;;
+    --push | -p)
+        PUSH_AFTER_BUILD=true
+        shift
+        ;;
+    --deploy | -d)
+        DEPLOY_AFTER_BUILD=true
+        shift
+        ;;
+    -*)
+        log_error "Unknown option: $arg"
+        echo "Usage: $0 <version> [major|minor|patch] [--help]"
+        echo "Run '$0 --help' for detailed information"
+        exit 1
+        ;;
     esac
 done
 
@@ -108,7 +108,7 @@ echo -e "${BLUE}==== Commute Tracker Build Script ====${NC}"
 log_step 1 "Pre-build checks"
 
 # Check if we're in a git repository
-if ! git rev-parse --git-dir > /dev/null 2>&1; then
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
     log_error "Not a git repository. Please run this script from the root of a git repository."
     exit 1
 fi
@@ -135,7 +135,6 @@ if ! git show-ref --verify --quiet refs/heads/gh-pages; then
     exit 1
 fi
 
-
 # =====================================
 # Step 2: Build Project
 # =====================================
@@ -148,8 +147,8 @@ rm -rf dist/
 
 # Build the project
 log_info "Building project..."
-if ! npm run build; then
-    log_error "Build failed"
+if ! npm run build >/dev/null 2>&1; then
+    log_error "Build failed. Run 'npm run build' manually to see errors."
     exit 1
 fi
 
@@ -169,12 +168,13 @@ log_info "Build successful!"
 # =====================================
 # Step 3: Deploy to gh-pages
 # =====================================
+log_step 3 "Checking if we should deploy to gh-pages branch."
 
 if [ "${DEPLOY_AFTER_BUILD}" != true ]; then
     log_info "Skipping deployment to gh-pages branch (not requested)"
 else
-    log_step 3 "Deploying to gh-pages branch..."
-
+    log_info "Deploying to gh-pages branch..."
+    
     # Switch to gh-pages branch
     log_info "Switching to gh-pages branch..."
     if ! git checkout gh-pages; then
@@ -184,7 +184,7 @@ else
 
     # Remove old files (keep .git & .gitignore in directory)
     log_info "Removing old deployment files from gh-pages..."
-    git rm -rf assets *.svg *.html *.json manifest.* *.js  > /dev/null 2>&1 || true
+    git rm -rf assets *.svg *.html *.json manifest.* *.js >/dev/null 2>&1 || true
 
     # Copy new build files
     log_info "Copying new build files..."
@@ -224,7 +224,6 @@ else
         log_info "Skipping push to remote gh-pages branch (not requested)"
     fi
 fi
-
 
 # =====================================
 # Step 4: Cleanup and Return
