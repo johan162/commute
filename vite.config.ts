@@ -39,4 +39,24 @@ export default defineConfig({
       }
     })
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id: string) {
+          // Create a separate chunk for recharts
+          if (id.includes('recharts')) {
+            return 'recharts';
+          }
+          // Create a separate chunk for jspdf and related libraries
+          if (id.includes('jspdf') || id.includes('jspdf-autotable')) {
+            return 'jspdf';
+          }
+          // Create a vendor chunk for all other node_modules
+          if (id.includes('node_modules')) {
+            return 'vendor';
+          }
+        }
+      }
+    }
+  }
 })
