@@ -1,3 +1,11 @@
+## [0.6.2] - 2025-10-29
+
+Release type: patch
+
+### 🚀 Improvements
+- [upd] Add delete button to clear work location in settings tab
+
+
 ## [0.6.1] - 2025-10-29
 
 Release type: patch

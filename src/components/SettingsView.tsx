@@ -6,6 +6,7 @@ import { Button } from './Button';
 
 interface SettingsViewProps {
   onAddLocation: (location: Coordinates) => void;
+  onClearWorkLocations: () => void;
   workLocationCount: number;
   onClearAllData: () => void;
   autoStopRadius: number;
@@ -18,7 +19,7 @@ interface SettingsViewProps {
   onIncludeWeekendsChange: (enabled: boolean) => void;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, workLocationCount, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onClearWorkLocations, workLocationCount, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [showAboutDetails, setShowAboutDetails] = useState(false);
@@ -39,6 +40,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, workL
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
+  };
+
+  const handleClearWorkLocations = () => {
+    onClearWorkLocations();
+    setMessage(''); // Clear the message when work locations are cleared
   };
 
   return (
@@ -119,9 +125,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, workL
           <p className="text-gray-300 font-semibold">
             Current Recordings: <span className="text-cyan-400">{workLocationCount}</span>
           </p>
-          <Button onClick={handleRecordLocation} disabled={loading || !autoStopEnabled}>
-            {loading ? 'Recording...' : 'Record Current Location'}
-          </Button>
+          <div className="flex gap-4">
+            <Button onClick={handleRecordLocation} disabled={loading || !autoStopEnabled}>
+              {loading ? 'Recording...' : 'Record Current Location'}
+            </Button>
+            <Button 
+              onClick={handleClearWorkLocations} 
+              disabled={workLocationCount === 0 || !autoStopEnabled}
+              variant="danger"
+            >
+              Clear Work Locations
+            </Button>
+          </div>
           {message && <p className="text-sm text-gray-400 mt-2">{message}</p>}
         </div>
       </Card>
