@@ -1,3 +1,14 @@
+## [0.5.1] - 2025-10-29
+
+Release type: patch
+
+### 📋 Summary 
+- Added more information in "Settings" tab.
+
+### ✨ Additions
+- [feat] Added "About" card with list of all used libraries, technologies and License information
+
+
 ## [0.5.0] - 2025-10-29
 
 Release type: minor

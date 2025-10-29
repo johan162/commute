@@ -19,6 +19,7 @@ interface SettingsViewProps {
 export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, workLocationCount, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+  const [showAboutDetails, setShowAboutDetails] = useState(false);
 
   const handleRecordLocation = () => {
     setLoading(true);
@@ -166,6 +167,103 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, workL
             <Button onClick={onClearAllData} variant="danger">
                 Clear All Data
             </Button>
+        </div>
+      </Card>
+
+      <Card title="About">
+        <div className="space-y-4">
+          <div className="flex justify-center mb-4">
+            <span className="text-6xl">ℹ️</span>
+          </div>
+          <div className="text-center">
+            <h3 className="text-xl font-bold text-cyan-400 mb-2">Commute Tracker</h3>
+            <p className="text-gray-400 mb-4">
+              A Progressive Web App for tracking and analyzing your daily commute times
+            </p>
+          </div>
+          
+          <button
+            onClick={() => setShowAboutDetails(!showAboutDetails)}
+            className="w-full flex items-center justify-between bg-gray-800 p-3 rounded-lg hover:bg-gray-750 transition-colors"
+          >
+            <span className="text-gray-300 font-semibold">
+              {showAboutDetails ? '▼ Hide Details' : '▶ Show Details'}
+            </span>
+          </button>
+
+          {showAboutDetails && (
+            <div className="space-y-4 pt-4 border-t border-gray-700">
+              <div>
+                <h4 className="text-sm font-semibold text-gray-300 mb-2">Technologies & Libraries</h4>
+                <div className="bg-gray-800 p-3 rounded-lg space-y-1 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">React</span>
+                    <span className="text-cyan-400 font-mono">19.2.0</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">TypeScript</span>
+                    <span className="text-cyan-400 font-mono">5.2.2</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Vite</span>
+                    <span className="text-cyan-400 font-mono">7.1.12</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">TailwindCSS</span>
+                    <span className="text-cyan-400 font-mono">3.4.18</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Recharts</span>
+                    <span className="text-cyan-400 font-mono">3.3.0</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">jsPDF</span>
+                    <span className="text-cyan-400 font-mono">3.0.3</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">PWA (vite-plugin-pwa)</span>
+                    <span className="text-cyan-400 font-mono">1.1.0</span>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-semibold text-gray-300 mb-2">Features</h4>
+                <div className="bg-gray-800 p-3 rounded-lg">
+                  <ul className="text-sm text-gray-400 space-y-1">
+                    <li>• Real-time GPS-based commute tracking</li>
+                    <li>• Automatic arrival detection</li>
+                    <li>• Statistical analysis (Shapiro-Wilk, Mann-Kendall, Runs Test)</li>
+                    <li>• Interactive charts and histograms</li>
+                    <li>• CSV and PDF export capabilities</li>
+                    <li>• Offline support via PWA</li>
+                    <li>• Local storage (no server required)</li>
+                  </ul>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-semibold text-gray-300 mb-2">License</h4>
+                <div className="bg-gray-800 p-3 rounded-lg">
+                  <p className="text-sm text-gray-400 mb-2">
+                    <span className="font-semibold text-cyan-400">MIT License</span>
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Open source software that you can use, modify, and distribute freely.
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-center pt-4 border-t border-gray-700">
+                <p className="text-sm text-gray-400">
+                  © 2025 Johan Persson
+                </p>
+                <p className="text-xs text-gray-500 mt-1">
+                  All rights reserved
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </Card>
     </div>
