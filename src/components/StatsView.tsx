@@ -441,11 +441,11 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
           {qqPlotData ? (
             <>
               <p className="text-sm text-gray-400 mb-4">
-                Visual assessment of normality - points should follow the diagonal line if data is normally distributed
+                Visual assessment of normality - points should follow the diagonal line
               </p>
               <div className="h-64 md:h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ScatterChart data={[...qqPlotData.data, ...qqPlotData.referenceLine]} margin={{ top: 20, right: 20, left: 80, bottom: 35 }}>
+                  <ScatterChart data={[...qqPlotData.data, ...qqPlotData.referenceLine]} margin={{ top: 20, right: 50, left: 20, bottom: 35 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis 
                       type="number"
