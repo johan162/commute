@@ -5,7 +5,7 @@ import { Card } from './Card';
 import { HistogramChart } from './HistogramChart';
 import { TimeBreakdownView } from './TimeBreakdownView';
 import { exportToCSV, exportToPDF } from '../services/exportService';
-import { getConfidenceInterval, getConfidenceIntervalRank, shapiroWilkTest, mannKendallTest, runsTest, getMean, getMedian, generateQQPlotData } from '../services/statsService';
+import { getConfidenceInterval, getConfidenceIntervalRank, shapiroWilkTest, mannKendallTest, runsTest, getMean, getMedian, generateQQPlotData, calculateQQPlotRSquared, getQQPlotRSquaredInterpretation } from '../services/statsService';
 import { Button } from './Button';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ScatterChart, Scatter, LineChart, Line, ReferenceLine } from 'recharts';
 
@@ -230,9 +230,18 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
     
     return {
       data: qqData.map(d => ({ ...d, isReferenceLine: false })),
-      referenceLine
+      referenceLine,
+      rawData: qqData // Keep raw data for R² calculation
     };
   }, [records]);
+
+  // Calculate R² for Q-Q plot
+  const qqRSquared = useMemo(() => {
+    if (!qqPlotData) return null;
+    const rSquared = calculateQQPlotRSquared(qqPlotData.rawData);
+    const interpretation = getQQPlotRSquaredInterpretation(rSquared);
+    return { rSquared, interpretation };
+  }, [qqPlotData]);
 
   // Calculate Mann-Kendall trend test
   const trendTest = useMemo(() => {
@@ -511,6 +520,31 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                   </ScatterChart>
                 </ResponsiveContainer>
               </div>
+              
+              {/* R² Goodness-of-Fit Metric */}
+              {qqRSquared && (
+                <div className="bg-gray-800 p-4 rounded-lg mt-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-gray-300">R² (Coefficient of Determination)</p>
+                      <p className="text-xs text-gray-500 mt-1">Measures how well data fits normal distribution</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-cyan-400">{qqRSquared.rSquared.toFixed(4)}</p>
+                      <p className={`text-sm font-semibold ${qqRSquared.interpretation.color} mt-1`}>
+                        {qqRSquared.interpretation.rating}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-400 mt-3">
+                    {qqRSquared.interpretation.description}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    R² = 1.0 indicates perfect fit to normal distribution. Values closer to 1.0 suggest better normality.
+                  </p>
+                </div>
+              )}
+
               <div className="bg-gray-800 p-4 rounded-lg text-left mt-4">
                 <p className="text-sm font-semibold text-gray-300 mb-2">How to interpret this plot:</p>
                 <div className="text-xs text-gray-400 space-y-2">

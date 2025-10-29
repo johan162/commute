@@ -190,6 +190,88 @@ export function generateQQPlotData(data: number[]): Array<{ theoretical: number;
 }
 
 /**
+ * Calculate R² (coefficient of determination) for Q-Q plot
+ * Measures how well the data fits a normal distribution
+ * @param qqData Array of Q-Q plot points with theoretical and observed values
+ * @returns R² value between 0 and 1 (closer to 1 = better fit to normal distribution)
+ */
+export function calculateQQPlotRSquared(qqData: Array<{ theoretical: number; observed: number }>): number {
+    if (qqData.length < 3) return 0;
+    
+    // Calculate mean of observed values
+    const meanObserved = qqData.reduce((sum, point) => sum + point.observed, 0) / qqData.length;
+    
+    // Calculate Sum of Squared Residuals (SSR)
+    // Distance from each point to the y=x line (theoretical line)
+    const ssr = qqData.reduce((sum, point) => {
+        const residual = point.observed - point.theoretical;
+        return sum + residual * residual;
+    }, 0);
+    
+    // Calculate Total Sum of Squares (SST)
+    // Variance of observed values from their mean
+    const sst = qqData.reduce((sum, point) => {
+        const deviation = point.observed - meanObserved;
+        return sum + deviation * deviation;
+    }, 0);
+    
+    // Calculate R²
+    // R² = 1 - (SSR / SST)
+    if (sst === 0) return 1; // Perfect fit if no variance
+    const rSquared = 1 - (ssr / sst);
+    
+    // Clamp between 0 and 1 (can be negative for very poor fits)
+    return Math.max(0, Math.min(1, rSquared));
+}
+
+/**
+ * Get interpretation of R² value for Q-Q plot
+ */
+export function getQQPlotRSquaredInterpretation(rSquared: number): {
+    rating: string;
+    color: string;
+    description: string;
+} {
+    if (rSquared >= 0.99) {
+        return {
+            rating: 'Excellent',
+            color: 'text-green-400',
+            description: 'Data fits normal distribution very closely'
+        };
+    } else if (rSquared >= 0.95) {
+        return {
+            rating: 'Very Good',
+            color: 'text-green-400',
+            description: 'Data fits normal distribution well'
+        };
+    } else if (rSquared >= 0.90) {
+        return {
+            rating: 'Good',
+            color: 'text-blue-400',
+            description: 'Data reasonably fits normal distribution'
+        };
+    } else if (rSquared >= 0.80) {
+        return {
+            rating: 'Moderate',
+            color: 'text-yellow-400',
+            description: 'Data shows moderate fit to normal distribution'
+        };
+    } else if (rSquared >= 0.70) {
+        return {
+            rating: 'Fair',
+            color: 'text-orange-400',
+            description: 'Data has fair fit to normal distribution'
+        };
+    } else {
+        return {
+            rating: 'Poor',
+            color: 'text-red-400',
+            description: 'Data does not fit normal distribution well'
+        };
+    }
+}
+
+/**
  * Approximation of inverse normal CDF (quantile function)
  * Uses Beasley-Springer-Moro algorithm
  */
