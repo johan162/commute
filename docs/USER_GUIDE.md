@@ -28,6 +28,7 @@ Commute Tracker
 │   ├── Summary Statistics
 │   ├── Confidence Intervals
 │   ├── Normality Test (Shapiro-Wilk)
+│   ├── Q-Q Plot (Visual Normality Assessment)
 │   ├── Trend Analysis (Mann-Kendall)
 │   ├── Pattern Analysis (Runs Test)
 │   ├── Commute Duration Histogram
@@ -43,6 +44,7 @@ Commute Tracker
 └── ⚙️ Settings View
     ├── AutoStop Feature
     ├── Work Location Management
+    ├── Clear Work Location
     ├── Auto-Stop Radius Configuration
     ├── Data Management
     └── About
@@ -206,7 +208,142 @@ Sarah's commute shows "Not Normal" because she has two distinct patterns:
 - Slow commutes (35-40 min) when she leaves after 7:15 AM
 Her solution? Always leave before 7 AM!
 
-### 📈 Trend Analysis (Mann-Kendall Test)
+### � Q-Q Plot (Quantile-Quantile Plot)
+
+*Requires 10+ commutes*
+
+**What is it?**
+A Q-Q (Quantile-Quantile) plot is a visual way to check if your commute times follow a normal distribution. It's like a "picture worth a thousand words" complement to the Shapiro-Wilk test above.
+
+**How to Read It:**
+
+The chart plots your actual commute times against what they *should* be if perfectly normally distributed:
+
+- **X-axis (Theoretical Quantiles)**: Where your times would fall if perfectly normal
+- **Y-axis (Sample Quantiles)**: Where your actual times fall
+- **Red diagonal line**: The "perfect normal distribution" reference line
+- **Blue dots**: Your actual commute time data points
+
+**The Key Rule: Points Should Follow the Line**
+
+**Perfect Fit:**
+```
+        ●
+      ●   ●
+    ●       ●
+  ●           ●
+●               ●
+```
+If your blue dots closely follow the red line, your data is normally distributed!
+
+**S-Shaped Curve:**
+```
+          ●●●
+      ●●
+  ●●
+●
+●
+  ●●
+      ●●
+```
+Data has "heavier tails" - more extreme values (very fast or very slow commutes) than a normal distribution would predict.
+
+**Reverse S-Curve:**
+```
+●
+  ●●
+      ●●●●
+          ●●●●
+              ●●
+                ●
+```
+Data has "lighter tails" - fewer extreme values, more clustered around the middle.
+
+**Scattered Points:**
+```
+    ●     ●
+  ●   ●
+      ●
+●     ●   ●
+  ●       ●
+```
+Data may have outliers or multiple distinct groups (like Sarah's example with early vs. late departures).
+
+### 📊 R² (Goodness-of-Fit) Statistic
+
+Below the Q-Q plot, you'll see an **R² value** - a number between 0 and 1 that quantifies how well your data fits a normal distribution.
+
+**What You See:**
+- **R² Value**: A number like 0.9876 (ranges from 0.0 to 1.0)
+- **Rating**: Excellent / Very Good / Good / Moderate / Fair / Poor
+- **Interpretation**: Plain English explanation
+
+**Understanding R² Values:**
+
+| R² Range | Rating | What It Means |
+|----------|---------|---------------|
+| ≥ 0.99 | Excellent | Data fits normal distribution very closely |
+| 0.95-0.99 | Very Good | Data fits normal distribution well |
+| 0.90-0.95 | Good | Data reasonably fits normal distribution |
+| 0.80-0.90 | Moderate | Data shows moderate fit to normal distribution |
+| 0.70-0.80 | Fair | Data has fair fit to normal distribution |
+| < 0.70 | Poor | Data does not fit normal distribution well |
+
+**What Does R² Actually Measure?**
+
+R² calculates the "distance" between your data points and the theoretical line:
+- **R² = 1.0**: Perfect fit - all points exactly on the line
+- **R² = 0.95**: 95% of variation explained by normal distribution
+- **R² = 0.70**: Only 70% of variation explained - significant deviations
+
+**Why Two Tests for Normality?**
+
+You might wonder: "Why have both Shapiro-Wilk test AND Q-Q plot with R²?"
+
+They complement each other:
+
+**Shapiro-Wilk (Statistical Test):**
+- ✅ Gives definitive yes/no answer
+- ✅ Provides p-value for statistical rigor
+- ❌ Doesn't show *how* data deviates
+- ❌ Can be affected by sample size
+
+**Q-Q Plot + R² (Visual Assessment):**
+- ✅ Shows *where* and *how* data deviates
+- ✅ Easy to understand visually
+- ✅ R² quantifies the fit (0-1 scale)
+- ✅ Helps identify patterns (S-curve, clusters, outliers)
+
+**🎯 Real-World Example:**
+Mark's data shows:
+- Shapiro-Wilk: p = 0.03 (Not Normal)
+- Q-Q Plot: Points curve away at both ends (S-shape)
+- R² = 0.82 (Moderate fit)
+
+Looking at the S-curve, he realizes he has more extreme commutes than expected - both very fast (< 20 min, light traffic days) and very slow (> 45 min, accident days). The Q-Q plot helps him *see* this pattern that the Shapiro-Wilk test detected statistically.
+
+**Practical Tips:**
+
+1. **Look at the plot first** - Your eyes are excellent pattern detectors
+2. **Check R²** - A single number to quantify the fit
+3. **Read the interpretation** - Plain English explanation
+4. **Compare with Shapiro-Wilk** - They should generally agree
+5. **Don't worry if not perfect** - Few real-world datasets are perfectly normal!
+
+**When R² and Shapiro-Wilk Disagree:**
+
+Occasionally you might see:
+- Shapiro-Wilk says "Normal" but R² is 0.85 (Moderate)
+- Or vice versa
+
+This is normal! Different tests use different methods:
+- Shapiro-Wilk uses a strict p-value threshold (0.05)
+- R² measures overall fit on a continuous scale
+- Small sample sizes can cause differences
+
+**Rule of thumb**: If both show reasonable agreement (both say "pretty normal" or both say "not very normal"), trust them. If they wildly disagree, you probably need more data.
+
+### �📈 Trend Analysis (Mann-Kendall Test)
 
 *Requires 10+ commutes*
 
@@ -428,6 +565,26 @@ When your phone's GPS detects you've crossed the boundary, it triggers an action
 
 **Why Multiple Recordings?**
 GPS isn't perfect - it can be off by 5-20 meters. By recording multiple times from different spots (your parking space, the building entrance, your desk by a window), the app calculates the true center of your work area.
+
+**Clearing Work Location:**
+
+Need to remove your saved work location? Use the **"Clear Work Location"** button:
+
+**When to Clear:**
+- 🏢 Changed jobs or work locations
+- 🚗 Changed parking spots significantly (different building entrance)
+- 📍 Recorded wrong location by mistake
+- 🔄 Want to start fresh with new recordings
+
+**What Happens:**
+- All saved work location coordinates are deleted
+- AutoStop will no longer work until you record a new location
+- Your commute history is NOT affected (stays intact)
+- You can immediately record a new work location
+
+**🔒 Safety Feature:** The button requires confirmation - you won't accidentally delete your location.
+
+**💡 Pro Tip:** If AutoStop isn't working well, try clearing and re-recording your work location with 5-10 new recordings. GPS accuracy varies by weather, time of day, and device, so fresh recordings can improve performance.
 
 ### Auto-Stop Radius Configuration
 
