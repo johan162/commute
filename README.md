@@ -47,7 +47,7 @@ A simple and efficient Progressive Web App (PWA) to track your commute time to w
 
 ## Developer Quick Start
 
-### Pre-req
+### Pre-reqs
 
 * Basic knowledge of `node.js` development and TypeScript
 * `npm` & `npx` installed
