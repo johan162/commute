@@ -1,4 +1,3 @@
-
 export const getMin = (data: number[]): number => {
     if (data.length === 0) return 0;
     return Math.min(...data);
@@ -597,4 +596,46 @@ export function runsTest(data: number[]): {
     }
     
     return { runs, expectedRuns, zScore, pValue, pattern, significance };
+}
+
+/**
+ * Generates nice, human-readable tick values for a chart axis.
+ * @param min The minimum value of the data range.
+ * @param max The maximum value of the data range.
+ * @param maxTicks The maximum number of ticks to generate.
+ * @returns An object with the new domain `[niceMin, niceMax]` and the `ticks` array.
+ */
+export function generateNiceTicks(min: number, max: number, maxTicks: number): { domain: [number, number]; ticks: number[] } {
+  if (min === max) {
+    const val = min;
+    return { domain: [val - 1, val + 1], ticks: [val - 1, val, val + 1] };
+  }
+
+  const range = max - min;
+  const rawStep = range / (maxTicks - 1);
+  
+  // Calculate a "nice" step value
+  const exponent = Math.floor(Math.log10(rawStep));
+  const powerOf10 = 10 ** exponent;
+  const normalizedStep = rawStep / powerOf10; // Value between 1 and 10
+
+  let niceNormalizedStep;
+  if (normalizedStep <= 1) niceNormalizedStep = 1;
+  else if (normalizedStep <= 2) niceNormalizedStep = 2;
+  else if (normalizedStep <= 5) niceNormalizedStep = 5;
+  else niceNormalizedStep = 10;
+
+  const niceStep = niceNormalizedStep * powerOf10;
+
+  // Calculate the new, "nice" min and max for the domain
+  const niceMin = Math.floor(min / niceStep) * niceStep;
+  const niceMax = Math.ceil(max / niceStep) * niceStep;
+
+  const ticks: number[] = [];
+  for (let val = niceMin; val <= niceMax; val += niceStep) {
+    // Use toFixed to avoid floating point precision issues
+    ticks.push(Number(val.toFixed(10)));
+  }
+
+  return { domain: [niceMin, niceMax], ticks };
 }

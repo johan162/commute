@@ -5,7 +5,7 @@ import { Card } from './Card';
 import { HistogramChart } from './HistogramChart';
 import { TimeBreakdownView } from './TimeBreakdownView';
 import { exportToCSV, exportToPDF } from '../services/exportService';
-import { getConfidenceInterval, getConfidenceIntervalRank, shapiroWilkTest, mannKendallTest, runsTest, getMean, getMedian, generateQQPlotData, calculateQQPlotRSquared, getQQPlotRSquaredInterpretation } from '../services/statsService';
+import { getConfidenceInterval, getConfidenceIntervalRank, shapiroWilkTest, mannKendallTest, runsTest, getMean, getMedian, generateQQPlotData, calculateQQPlotRSquared, getQQPlotRSquaredInterpretation, generateNiceTicks } from '../services/statsService';
 import { Button } from './Button';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ScatterChart, Scatter, LineChart, Line, ReferenceLine } from 'recharts';
 
@@ -212,15 +212,19 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
     const durations = records.map(record => record.duration);
     const qqData = generateQQPlotData(durations);
     
+    const allValues = qqData.flatMap(d => [d.theoretical, d.observed]);
+    const dataMin = Math.min(...allValues);
+    const dataMax = Math.max(...allValues);
+    
+    const { domain: niceDomain, ticks: niceTicks } = generateNiceTicks(dataMin, dataMax, 7);
+
     // Create reference line data (y = x) with multiple points for a smooth line
-    const minValue = Math.min(...qqData.map(d => Math.min(d.theoretical, d.observed)));
-    const maxValue = Math.max(...qqData.map(d => Math.max(d.theoretical, d.observed)));
     const numLinePoints = 30; // Create 30 points for a smooth line
     const referenceLine = [];
     
     for (let i = 0; i < numLinePoints; i++) {
       const t = i / (numLinePoints - 1); // Parameter from 0 to 1
-      const value = minValue + t * (maxValue - minValue);
+      const value = niceDomain[0] + t * (niceDomain[1] - niceDomain[0]);
       referenceLine.push({
         theoretical: value,
         observed: value,
@@ -231,7 +235,9 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
     return {
       data: qqData.map(d => ({ ...d, isReferenceLine: false })),
       referenceLine,
-      rawData: qqData // Keep raw data for R² calculation
+      rawData: qqData, // Keep raw data for R² calculation
+      domain: niceDomain,
+      ticks: niceTicks
     };
   }, [records]);
 
@@ -462,12 +468,10 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                       stroke="#9CA3AF"
                       style={{ fontSize: '0.875rem' }}
                       label={{ value: 'Theoretical Quantiles', position: 'insideBottom', offset: -5, style: { fill: '#9CA3AF', fontSize: '0.8rem' } }}
-                      domain={['dataMin', 'dataMax']}
+                      domain={qqPlotData.domain}
+                      ticks={qqPlotData.ticks}
                       allowDataOverflow={false}
-                      tickCount={7}
-                      tickFormatter={(value: number) => {
-                        return value.toFixed(1);
-                      }}
+                      tickFormatter={(value: number) => value.toFixed(1)}
                     />
                     <YAxis 
                       type="number"
@@ -475,12 +479,10 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                       stroke="#9CA3AF"
                       style={{ fontSize: '0.875rem' }}
                       label={{ value: 'Sample Quantiles', angle: -90, position: 'insideLeft', offset: 0, style: { fill: '#9CA3AF', textAnchor: 'middle', fontSize: '0.8rem' } }}
-                      domain={['dataMin', 'dataMax']}
+                      domain={qqPlotData.domain}
+                      ticks={qqPlotData.ticks}
                       allowDataOverflow={false}
-                      tickCount={7}
-                      tickFormatter={(value: number) => {
-                        return value.toFixed(1);
-                      }}
+                      tickFormatter={(value: number) => value.toFixed(1)}
                     />
                     <Tooltip
                       contentStyle={{
@@ -503,7 +505,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                       shape={(props: any) => {
                         const { cx, cy, payload } = props;
                         if (payload?.isReferenceLine) {
-                          // For reference line points, create a small line segment to connect them
+                          // For reference line points, create a small dot
                           return (
                             <circle 
                               cx={cx} 

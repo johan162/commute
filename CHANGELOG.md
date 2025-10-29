@@ -1,3 +1,11 @@
+## [0.8.2] - 2025-10-29
+
+Release type: patch
+
+### 🚀 Improvements
+- [upd] Tweak tick-marks by implementing our own tick marks selection algorithm as the built-in is piss-poor.
+
+
 ## [0.8.1] - 2025-10-29
 
 Release type: patch
