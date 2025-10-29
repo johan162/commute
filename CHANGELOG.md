@@ -1,3 +1,17 @@
+## [0.8.0] - 2025-10-29
+
+Release type: minor
+
+### 📋 Summary 
+- Work location feature update together with update of general user docs
+
+### ✨ Additions
+- [feat] Add display of averaged GPS coordinates in Lat/Long format with map-link
+
+### 📖 Documentation
+- [upd] Add information about Q-Q plots and R² statistics
+
+
 ## [0.7.0] - 2025-10-29
 
 Release type: minor
