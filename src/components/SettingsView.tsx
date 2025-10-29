@@ -8,6 +8,7 @@ interface SettingsViewProps {
   onAddLocation: (location: Coordinates) => void;
   onClearWorkLocations: () => void;
   workLocationCount: number;
+  averageWorkLocation: Coordinates | null;
   onClearAllData: () => void;
   autoStopRadius: number;
   onAutoStopRadiusChange: (radius: number) => void;
@@ -19,10 +20,29 @@ interface SettingsViewProps {
   onIncludeWeekendsChange: (enabled: boolean) => void;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onClearWorkLocations, workLocationCount, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onClearWorkLocations, workLocationCount, averageWorkLocation, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [showAboutDetails, setShowAboutDetails] = useState(false);
+
+  // Format coordinates in human-readable format
+  const formatCoordinates = (coords: Coordinates): string => {
+    const latDirection = coords.latitude >= 0 ? 'N' : 'S';
+    const lonDirection = coords.longitude >= 0 ? 'E' : 'W';
+    const lat = Math.abs(coords.latitude).toFixed(6);
+    const lon = Math.abs(coords.longitude).toFixed(6);
+    return `${lat}° ${latDirection}, ${lon}° ${lonDirection}`;
+  };
+
+  // Open map application with coordinates
+  const openInMap = (coords: Coordinates) => {
+    // Use geo: URI scheme which works cross-platform
+    // iOS: Opens in Apple Maps
+    // Android: Opens in Google Maps or default map app
+    // Desktop: Opens in default browser map service
+    const url = `https://www.google.com/maps?q=${coords.latitude},${coords.longitude}`;
+    window.open(url, '_blank');
+  };
 
   const handleRecordLocation = () => {
     setLoading(true);
@@ -137,6 +157,41 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
               Clear Work Locations
             </Button>
           </div>
+          
+          {averageWorkLocation && (
+            <div className="bg-gray-800 p-3 rounded-lg mt-4">
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-xs text-gray-500 mb-1">Averaged Work Location:</p>
+                  <p className="text-sm text-gray-300 font-mono">
+                    {formatCoordinates(averageWorkLocation)}
+                  </p>
+                </div>
+                <button
+                  onClick={() => openInMap(averageWorkLocation)}
+                  className="ml-4 p-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors flex items-center justify-center"
+                  title="Open in maps"
+                  aria-label="Open location in maps"
+                >
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    className="h-6 w-6 text-cyan-400" 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" 
+                    />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          )}
+          
           {message && <p className="text-sm text-gray-400 mt-2">{message}</p>}
         </div>
       </Card>

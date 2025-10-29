@@ -90,7 +90,8 @@ const App: React.FC = () => {
         return <SettingsView 
           onAddLocation={addWorkLocation}
           onClearWorkLocations={clearWorkLocations}
-          workLocationCount={workLocations.length} 
+          workLocationCount={workLocations.length}
+          averageWorkLocation={averageWorkLocation}
           onClearAllData={clearAllData}
           autoStopRadius={autoStopRadius}
           onAutoStopRadiusChange={setAutoStopRadius}
