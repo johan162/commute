@@ -212,7 +212,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
           </p>
           <div className="flex items-center justify-between">
             <span className="text-gray-300 font-semibold">Enable AutoStop</span>
-            <div className="relative inline-block w-12 h-6">
+            <div className="relative inline-block w-12 h-6 flex-shrink-0">
               <input
                 type="checkbox"
                 checked={autoStopEnabled}
@@ -238,36 +238,38 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
             When disabled, you will need to manually stop the timer when you arrive at work.
           </p>
 
-          <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-700">
-            <div className="flex-1 mr-4">
+          <div className="mt-4 pt-4 border-t border-gray-700">
+            <p className="text-gray-400 mb-3">
+              Automatically record your GPS position when manually stopping the timer to build up accurate work location data.
+            </p>
+            <div className="flex items-center justify-between">
               <span className="text-gray-300 font-semibold">Auto-record Work Location</span>
-              <p className="text-xs text-gray-500 mt-1">Record GPS position when manually stopping timer</p>
-            </div>
-            <div className="relative inline-block w-12 h-6 flex-shrink-0">
-              <input
-                type="checkbox"
-                checked={autoRecordWorkLocation}
-                onChange={(e) => onAutoRecordWorkLocationChange(e.target.checked)}
-                className="sr-only"
-                id="autoRecordWorkLocationToggle"
-              />
-              <label
-                htmlFor="autoRecordWorkLocationToggle"
-                className={`block w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 ${
-                  autoRecordWorkLocation ? 'bg-cyan-500' : 'bg-gray-600'
-                }`}
-              >
-                <span
-                  className={`block w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-1 ${
-                    autoRecordWorkLocation ? 'translate-x-7' : 'translate-x-1'
-                  }`}
+              <div className="relative inline-block w-12 h-6 flex-shrink-0">
+                <input
+                  type="checkbox"
+                  checked={autoRecordWorkLocation}
+                  onChange={(e) => onAutoRecordWorkLocationChange(e.target.checked)}
+                  className="sr-only"
+                  id="autoRecordWorkLocationToggle"
                 />
-              </label>
+                <label
+                  htmlFor="autoRecordWorkLocationToggle"
+                  className={`block w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 ${
+                    autoRecordWorkLocation ? 'bg-cyan-500' : 'bg-gray-600'
+                  }`}
+                >
+                  <span
+                    className={`block w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-1 ${
+                      autoRecordWorkLocation ? 'translate-x-7' : 'translate-x-1'
+                    }`}
+                  />
+                </label>
+              </div>
             </div>
+            <p className="text-xs text-gray-500 mt-2">
+              When enabled, your GPS location will be automatically recorded as a work location each time you stop the commute timer manually. This helps build up accurate work location data even when AutoStop is disabled.
+            </p>
           </div>
-          <p className="text-xs text-gray-500">
-            When enabled, your GPS location will be automatically recorded as a work location each time you stop the commute timer manually. This helps build up accurate work location data even when AutoStop is disabled.
-          </p>
 
           <div className="mt-4 pt-4 border-t border-gray-700">
             <p className="text-gray-400 mb-3">
