@@ -5,8 +5,9 @@ import { Card } from './Card';
 import { HistogramChart } from './HistogramChart';
 import { TimeBreakdownView } from './TimeBreakdownView';
 import { exportToCSV, exportToPDF } from '../services/exportService';
-import { getConfidenceInterval, getConfidenceIntervalRank, shapiroWilkTest, mannKendallTest, runsTest } from '../services/statsService';
+import { getConfidenceInterval, getConfidenceIntervalRank, shapiroWilkTest, mannKendallTest, runsTest, getMean, getMedian } from '../services/statsService';
 import { Button } from './Button';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
 
 interface StatsViewProps {
   records: CommuteRecord[];
@@ -17,6 +18,7 @@ interface StatsViewProps {
     median: number;
     stdDev: number;
   } | null;
+  includeWeekends: boolean;
 }
 
 const formatDuration = (seconds: number): string => {
@@ -26,8 +28,9 @@ const formatDuration = (seconds: number): string => {
   return `${m}m ${s}s`;
 };
 
-export const StatsView: React.FC<StatsViewProps> = ({ records, stats }) => {
+export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWeekends }) => {
   const [binSize, setBinSize] = useState(5); // bin size in minutes
+  const [weekdayMetric, setWeekdayMetric] = useState<'mean' | 'median'>('median');
   
   // State for time period selections
   const [selectedDay, setSelectedDay] = useState<string>('');
@@ -216,6 +219,49 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats }) => {
     const durations = records.map(record => record.duration);
     return runsTest(durations);
   }, [records]);
+
+  // Calculate weekday statistics
+  const weekdayData = useMemo(() => {
+    const daysOfWeek = includeWeekends 
+      ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+      : ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+    
+    const dayMap: { [key: string]: number[] } = {
+      Mon: [], Tue: [], Wed: [], Thu: [], Fri: [], Sat: [], Sun: []
+    };
+
+    records.forEach(record => {
+      const date = new Date(record.date);
+      const dayIndex = date.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const dayName = dayNames[dayIndex];
+      
+      if (dayMap[dayName]) {
+        dayMap[dayName].push(record.duration);
+      }
+    });
+
+    return daysOfWeek.map(day => {
+      const durations = dayMap[day];
+      if (durations.length === 0) {
+        return {
+          day,
+          value: 0,
+          count: 0
+        };
+      }
+      
+      const value = weekdayMetric === 'mean' 
+        ? getMean(durations) 
+        : getMedian(durations);
+      
+      return {
+        day,
+        value: value / 60, // Convert to minutes for display
+        count: durations.length
+      };
+    });
+  }, [records, includeWeekends, weekdayMetric]);
 
   // Create a string "Statistics Summary" with added number of records
   const statsSummary = `Statistics Summary - ${records.length} records`;
@@ -458,6 +504,77 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats }) => {
                 <option value={5}>5</option>
                 <option value={10}>10</option>
             </select>
+        </div>
+      </Card>
+
+      <Card title="Commute Time by Day of Week">
+        <div className="text-center">
+          {records.length >= 5 ? (
+            <>
+              <p className="text-sm text-gray-400 mb-4">
+                {weekdayMetric === 'median' ? 'Median' : 'Average'} commute time for each day
+              </p>
+              <div className="h-64 md:h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={weekdayData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis 
+                      dataKey="day" 
+                      stroke="#9CA3AF"
+                      style={{ fontSize: '0.875rem' }}
+                    />
+                    <YAxis 
+                      stroke="#9CA3AF"
+                      style={{ fontSize: '0.875rem' }}
+                      label={{ value: 'Minutes', angle: -90, position: 'insideLeft', style: { fill: '#9CA3AF' } }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1F2937',
+                        border: '1px solid #374151',
+                        borderRadius: '0.5rem',
+                        color: '#F3F4F6'
+                      }}
+                      formatter={(value: number, name: string, props: any) => [
+                        `${value.toFixed(1)} min (${props.payload.count} commutes)`,
+                        weekdayMetric === 'median' ? 'Median' : 'Average'
+                      ]}
+                      labelStyle={{ color: '#9CA3AF' }}
+                    />
+                    <Bar 
+                      dataKey="value" 
+                      fill="#06B6D4"
+                      radius={[8, 8, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex items-center justify-center mt-4 space-x-2">
+                <label htmlFor="weekdayMetric" className="text-sm text-gray-400">Show:</label>
+                <select
+                  id="weekdayMetric"
+                  value={weekdayMetric}
+                  onChange={(e) => setWeekdayMetric(e.target.value as 'mean' | 'median')}
+                  className="bg-gray-700 border border-gray-600 rounded-md p-1 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                >
+                  <option value="median">Median</option>
+                  <option value="mean">Average</option>
+                </select>
+              </div>
+              <p className="text-xs text-gray-500 mt-4">
+                {includeWeekends 
+                  ? 'Showing all days of the week. Adjust in Settings to hide weekends.'
+                  : 'Showing weekdays only (Mon-Fri). Enable weekends in Settings to see Sat-Sun.'}
+              </p>
+            </>
+          ) : (
+            <div className="py-8">
+              <p className="text-gray-400 text-lg">Needs 5 or more records for weekly analysis</p>
+              <p className="text-xs text-gray-500 mt-2">
+                Currently {records.length} of 5 required
+              </p>
+            </div>
+          )}
         </div>
       </Card>
 
