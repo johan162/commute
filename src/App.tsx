@@ -17,7 +17,8 @@ const App: React.FC = () => {
   const [autoStopRadius, setAutoStopRadius] = useLocalStorage<number>('autoStopRadius', 50);
   const [autoStopEnabled, setAutoStopEnabled] = useLocalStorage<boolean>('autoStopEnabled', true);
   const [autoRecordWorkLocation, setAutoRecordWorkLocation] = useLocalStorage<boolean>('autoRecordWorkLocation', false);
-  const version = '0.5.1';
+  const [includeWeekends, setIncludeWeekends] = useLocalStorage<boolean>('includeWeekends', false);
+  const version = '0.6.0';
 
   const averageWorkLocation = useMemo<Coordinates | null>(() => {
     if (workLocations.length === 0) return null;
@@ -75,7 +76,7 @@ const App: React.FC = () => {
   const renderView = () => {
     switch (view) {
       case 'stats':
-        return <StatsView records={commuteRecords} stats={stats} />;
+        return <StatsView records={commuteRecords} stats={stats} includeWeekends={includeWeekends} />;
       case 'history':
         return <HistoryView records={commuteRecords} median={stats?.median} onDeleteRecords={deleteCommuteRecords} />;
       case 'settings':
@@ -89,6 +90,8 @@ const App: React.FC = () => {
           onAutoStopEnabledChange={setAutoStopEnabled}
           autoRecordWorkLocation={autoRecordWorkLocation}
           onAutoRecordWorkLocationChange={setAutoRecordWorkLocation}
+          includeWeekends={includeWeekends}
+          onIncludeWeekendsChange={setIncludeWeekends}
         />;
       case 'main':
       default:

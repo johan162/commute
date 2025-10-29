@@ -14,9 +14,11 @@ interface SettingsViewProps {
   onAutoStopEnabledChange: (enabled: boolean) => void;
   autoRecordWorkLocation: boolean;
   onAutoRecordWorkLocationChange: (enabled: boolean) => void;
+  includeWeekends: boolean;
+  onIncludeWeekendsChange: (enabled: boolean) => void;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, workLocationCount, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, workLocationCount, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [showAboutDetails, setShowAboutDetails] = useState(false);
@@ -156,6 +158,44 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, workL
               Larger radius = more forgiving but may stop the timer before you actually arrive.
             </p>
           </div>
+        </div>
+      </Card>
+
+      <Card title="Statistics Display">
+        <div className="space-y-4">
+          <p className="text-gray-400">
+            Configure how data is displayed in the Statistics view.
+          </p>
+          <div className="flex items-center justify-between">
+            <div className="flex-1 mr-4">
+              <span className="text-gray-300 font-semibold">Include Weekends in Day-of-Week Chart</span>
+              <p className="text-xs text-gray-500 mt-1">Show Saturday and Sunday in weekly pattern analysis</p>
+            </div>
+            <div className="relative inline-block w-12 h-6 flex-shrink-0">
+              <input
+                type="checkbox"
+                checked={includeWeekends}
+                onChange={(e) => onIncludeWeekendsChange(e.target.checked)}
+                className="sr-only"
+                id="includeWeekendsToggle"
+              />
+              <label
+                htmlFor="includeWeekendsToggle"
+                className={`block w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 ${
+                  includeWeekends ? 'bg-cyan-500' : 'bg-gray-600'
+                }`}
+              >
+                <span
+                  className={`block w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-1 ${
+                    includeWeekends ? 'translate-x-7' : 'translate-x-1'
+                  }`}
+                />
+              </label>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500">
+            When enabled, the day-of-week chart will include weekend data. Most users only commute on weekdays.
+          </p>
         </div>
       </Card>
       

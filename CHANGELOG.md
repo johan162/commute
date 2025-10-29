@@ -1,3 +1,17 @@
+## [0.6.0] - 2025-10-29
+
+Release type: minor
+
+### 📋 Summary 
+- Additional chart for commute times per weekdays
+
+### ✨ Additions
+- [feat] Added chart with selectable mean or median commute time per weekday (Mon-Fri or Mon-Sun)
+
+### 📖 Documentation
+- [feat] Added User Guide
+
+
 ## [0.5.1] - 2025-10-29
 
 Release type: patch
