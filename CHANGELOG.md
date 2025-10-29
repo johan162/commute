@@ -1,3 +1,11 @@
+## [0.8.3] - 2025-10-29
+
+Release type: patch
+
+### 🚀 Improvements
+- [upd] Tweak layout margins of Q-Q plot
+
+
 ## [0.8.2] - 2025-10-29
 
 Release type: patch
