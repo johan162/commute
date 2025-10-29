@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import type { Coordinates } from '../types';
 import { Card } from './Card';
 import { Button } from './Button';
+import { useLocalStorage } from '../hooks/useLocalStorage';
 
 interface SettingsViewProps {
   onAddLocation: (location: Coordinates) => void;
@@ -18,12 +19,39 @@ interface SettingsViewProps {
   onAutoRecordWorkLocationChange: (enabled: boolean) => void;
   includeWeekends: boolean;
   onIncludeWeekendsChange: (enabled: boolean) => void;
+  onLoadDebugData: (records: any[]) => void;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onClearWorkLocations, workLocationCount, averageWorkLocation, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onClearWorkLocations, workLocationCount, averageWorkLocation, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange, onLoadDebugData }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [showAboutDetails, setShowAboutDetails] = useState(false);
+  
+  // Debug mode state - persist debug visibility across tab switches
+  const [debugVisible, setDebugVisible] = useLocalStorage('debugCardVisible', false);
+  const [toggleCount, setToggleCount] = useState(0);
+  const [firstToggleTime, setFirstToggleTime] = useState<number | null>(null);
+  const [debugRecordCount, setDebugRecordCount] = useState(500);
+  const [debugLoading, setDebugLoading] = useState(false);
+  const [debugMessage, setDebugMessage] = useState('');
+  
+  // Distribution parameters
+  const [normalMean, setNormalMean] = useState(25);
+  const [normalStdDev, setNormalStdDev] = useState(5);
+  const [noisyMean, setNoisyMean] = useState(25);
+  const [noisyStdDev, setNoisyStdDev] = useState(5);
+  const [noiseAmplitude, setNoiseAmplitude] = useState(3);
+  const [randomMin, setRandomMin] = useState(15);
+  const [randomMax, setRandomMax] = useState(45);
+  const [tMean, setTMean] = useState(25);
+  const [tStdDev, setTStdDev] = useState(6);
+  const [tDf, setTDf] = useState(5);
+  const [logNormalMin, setLogNormalMin] = useState(15);
+  const [logNormalMax, setLogNormalMax] = useState(60);
+  const [betaAlpha, setBetaAlpha] = useState(2);
+  const [betaBeta, setBetaBeta] = useState(5);
+  const [betaMin, setBetaMin] = useState(10);
+  const [betaMax, setBetaMax] = useState(50);
 
   // Format coordinates in human-readable format
   const formatCoordinates = (coords: Coordinates): string => {
@@ -42,6 +70,87 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
     // Desktop: Opens in default browser map service
     const url = `https://www.google.com/maps?q=${coords.latitude},${coords.longitude}`;
     window.open(url, '_blank');
+  };
+
+  // Statistical distribution generators
+  const boxMullerTransform = () => {
+    const u = Math.random();
+    const v = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  };
+
+  const generateNormal = (mean: number, stdDev: number, count: number): number[] => {
+    return Array.from({ length: count }, () => mean + stdDev * boxMullerTransform());
+  };
+
+  const generateNoisyNormal = (mean: number, stdDev: number, noiseMean: number, noiseAmplitude: number, count: number): number[] => {
+    return Array.from({ length: count }, () => {
+      const normal = mean + stdDev * boxMullerTransform();
+      const noise = noiseMean + noiseAmplitude * (Math.random() - 0.5);
+      return normal + noise;
+    });
+  };
+
+  const generateRandom = (min: number, max: number, count: number): number[] => {
+    return Array.from({ length: count }, () => min + Math.random() * (max - min));
+  };
+
+  const generateTDistribution = (mean: number, stdDev: number, df: number, count: number): number[] => {
+    // Simplified t-distribution approximation using normal + scaling
+    return Array.from({ length: count }, () => {
+      const normal = boxMullerTransform();
+      const chi2Approx = Math.sqrt(df / (df + normal * normal));
+      return mean + stdDev * normal / chi2Approx;
+    });
+  };
+
+  const generateLogNormal = (minVal: number, maxVal: number, count: number): number[] => {
+    const logMin = Math.log(minVal + 1);
+    const logMax = Math.log(maxVal + 1);
+    return Array.from({ length: count }, () => {
+      const normal = boxMullerTransform();
+      const logNormal = Math.exp(logMin + (logMax - logMin) * 0.5 + normal * 0.5);
+      return Math.min(Math.max(logNormal - 1, minVal), maxVal);
+    });
+  };
+
+  const generateBeta = (alpha: number, beta: number, min: number, max: number, count: number): number[] => {
+    // Simple beta distribution approximation
+    return Array.from({ length: count }, () => {
+      let x = 0, y = 0;
+      for (let i = 0; i < alpha; i++) x += -Math.log(Math.random());
+      for (let i = 0; i < beta; i++) y += -Math.log(Math.random());
+      const betaVal = x / (x + y);
+      return min + betaVal * (max - min);
+    });
+  };
+
+  const createDebugRecords = (durations: number[]) => {
+    const now = new Date();
+    return durations.map((duration, index) => {
+      const date = new Date(now.getTime() - (durations.length - index) * 24 * 60 * 60 * 1000);
+      return {
+        id: `debug-${index}`,
+        date: date.toISOString(),
+        duration: Math.max(60, Math.round(duration)) // Ensure minimum 1 minute
+      };
+    });
+  };
+
+  const loadDebugData = (durations: number[], distributionName: string) => {
+    setDebugLoading(true);
+    setDebugMessage('Generating data...');
+    
+    // Simulate async loading for better UX
+    setTimeout(() => {
+      const records = createDebugRecords(durations);
+      onLoadDebugData(records);
+      setDebugLoading(false);
+      setDebugMessage(`✅ Loaded ${records.length} ${distributionName} records successfully!`);
+      
+      // Clear message after 3 seconds
+      setTimeout(() => setDebugMessage(''), 3000);
+    }, 100);
   };
 
   const handleRecordLocation = () => {
@@ -65,6 +174,33 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
   const handleClearWorkLocations = () => {
     onClearWorkLocations();
     setMessage(''); // Clear the message when work locations are cleared
+  };
+
+  const handleWeekendToggle = (enabled: boolean) => {
+    const now = Date.now();
+    
+    if (firstToggleTime === null) {
+      setFirstToggleTime(now);
+      setToggleCount(1);
+    } else {
+      // Reset if more than 60 seconds have passed
+      if (now - firstToggleTime > 60000) {
+        setFirstToggleTime(now);
+        setToggleCount(1);
+      } else {
+        const newCount = toggleCount + 1;
+        setToggleCount(newCount);
+        
+        // Enable debug mode if 10 toggles within 60 seconds
+        if (newCount >= 10) {
+          setDebugVisible(true);
+          setToggleCount(0);
+          setFirstToggleTime(null);
+        }
+      }
+    }
+    
+    onIncludeWeekendsChange(enabled);
   };
 
   return (
@@ -245,7 +381,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
               <input
                 type="checkbox"
                 checked={includeWeekends}
-                onChange={(e) => onIncludeWeekendsChange(e.target.checked)}
+                onChange={(e) => handleWeekendToggle(e.target.checked)}
                 className="sr-only"
                 id="includeWeekendsToggle"
               />
@@ -403,6 +539,303 @@ SOFTWARE.
           )}
         </div>
       </Card>
+
+      {debugVisible && (
+        <Card title="🐛 Debug Tools">
+          <div className="space-y-6">
+            <div className="flex items-center justify-between">
+              <p className="text-gray-400">
+                Generate synthetic commute data with known statistical distributions for testing purposes.
+              </p>
+              <Button 
+                onClick={() => {
+                  setDebugVisible(false);
+                  setDebugMessage('');
+                }}
+                variant="danger"
+              >
+                Hide Debug
+              </Button>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <label htmlFor="recordCount" className="text-sm text-gray-300">
+                Number of records:
+              </label>
+              <input
+                id="recordCount"
+                type="number"
+                min="50"
+                max="5000"
+                value={debugRecordCount}
+                onChange={(e) => setDebugRecordCount(Number(e.target.value))}
+                className="bg-gray-700 border border-gray-600 rounded-md p-2 text-sm w-20"
+              />
+            </div>
+
+            {debugMessage && (
+              <div className={`p-3 rounded-lg ${debugMessage.includes('✅') ? 'bg-green-900 bg-opacity-20 border border-green-700' : 'bg-blue-900 bg-opacity-20 border border-blue-700'}`}>
+                <p className={`text-sm ${debugMessage.includes('✅') ? 'text-green-400' : 'text-blue-400'}`}>
+                  {debugMessage}
+                </p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Normal Distribution */}
+              <div className="bg-gray-800 p-4 rounded-lg space-y-3">
+                <h4 className="text-sm font-semibold text-gray-300">Normal Distribution</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs text-gray-500">Mean (min)</label>
+                    <input
+                      type="number"
+                      value={normalMean}
+                      onChange={(e) => setNormalMean(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Std Dev (min)</label>
+                    <input
+                      type="number"
+                      value={normalStdDev}
+                      onChange={(e) => setNormalStdDev(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => {
+                    const durations = generateNormal(normalMean * 60, normalStdDev * 60, debugRecordCount);
+                    loadDebugData(durations, `Normal(μ=${normalMean}m, σ=${normalStdDev}m)`);
+                  }}
+                  disabled={debugLoading}
+                >
+                  {debugLoading ? 'Loading...' : `Normal (μ=${normalMean}m, σ=${normalStdDev}m)`}
+                </Button>
+              </div>
+
+              {/* Noisy Normal */}
+              <div className="bg-gray-800 p-4 rounded-lg space-y-3">
+                <h4 className="text-sm font-semibold text-gray-300">Noisy Normal Distribution</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="text-xs text-gray-500">Mean (min)</label>
+                    <input
+                      type="number"
+                      value={noisyMean}
+                      onChange={(e) => setNoisyMean(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Std Dev</label>
+                    <input
+                      type="number"
+                      value={noisyStdDev}
+                      onChange={(e) => setNoisyStdDev(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Noise</label>
+                    <input
+                      type="number"
+                      value={noiseAmplitude}
+                      onChange={(e) => setNoiseAmplitude(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => {
+                    const durations = generateNoisyNormal(noisyMean * 60, noisyStdDev * 60, 0, noiseAmplitude * 60, debugRecordCount);
+                    loadDebugData(durations, `Noisy Normal(±${noiseAmplitude}m)`);
+                  }}
+                  disabled={debugLoading}
+                >
+                  {debugLoading ? 'Loading...' : `Noisy Normal (±${noiseAmplitude}m)`}
+                </Button>
+              </div>
+
+              {/* Random/Uniform */}
+              <div className="bg-gray-800 p-4 rounded-lg space-y-3">
+                <h4 className="text-sm font-semibold text-gray-300">Uniform Distribution</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs text-gray-500">Min (min)</label>
+                    <input
+                      type="number"
+                      value={randomMin}
+                      onChange={(e) => setRandomMin(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Max (min)</label>
+                    <input
+                      type="number"
+                      value={randomMax}
+                      onChange={(e) => setRandomMax(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => {
+                    const durations = generateRandom(randomMin * 60, randomMax * 60, debugRecordCount);
+                    loadDebugData(durations, `Uniform(${randomMin}-${randomMax}m)`);
+                  }}
+                  disabled={debugLoading}
+                >
+                  {debugLoading ? 'Loading...' : `Uniform (${randomMin}-${randomMax}m)`}
+                </Button>
+              </div>
+
+              {/* T-Distribution */}
+              <div className="bg-gray-800 p-4 rounded-lg space-y-3">
+                <h4 className="text-sm font-semibold text-gray-300">T-Distribution</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="text-xs text-gray-500">Mean</label>
+                    <input
+                      type="number"
+                      value={tMean}
+                      onChange={(e) => setTMean(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Std Dev</label>
+                    <input
+                      type="number"
+                      value={tStdDev}
+                      onChange={(e) => setTStdDev(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">df</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={tDf}
+                      onChange={(e) => setTDf(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => {
+                    const durations = generateTDistribution(tMean * 60, tStdDev * 60, tDf, debugRecordCount);
+                    loadDebugData(durations, `T-Distribution(df=${tDf})`);
+                  }}
+                  disabled={debugLoading}
+                >
+                  {debugLoading ? 'Loading...' : `T-Distribution (df=${tDf})`}
+                </Button>
+              </div>
+
+              {/* Log-Normal */}
+              <div className="bg-gray-800 p-4 rounded-lg space-y-3">
+                <h4 className="text-sm font-semibold text-gray-300">Log-Normal Distribution</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs text-gray-500">Min (min)</label>
+                    <input
+                      type="number"
+                      value={logNormalMin}
+                      onChange={(e) => setLogNormalMin(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Max (min)</label>
+                    <input
+                      type="number"
+                      value={logNormalMax}
+                      onChange={(e) => setLogNormalMax(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => {
+                    const durations = generateLogNormal(logNormalMin * 60, logNormalMax * 60, debugRecordCount);
+                    loadDebugData(durations, `Log-Normal(${logNormalMin}-${logNormalMax}m)`);
+                  }}
+                  disabled={debugLoading}
+                >
+                  {debugLoading ? 'Loading...' : `Log-Normal (${logNormalMin}-${logNormalMax}m)`}
+                </Button>
+              </div>
+
+              {/* Beta Distribution */}
+              <div className="bg-gray-800 p-4 rounded-lg space-y-3">
+                <h4 className="text-sm font-semibold text-gray-300">Beta Distribution</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-xs text-gray-500">α (Alpha)</label>
+                    <input
+                      type="number"
+                      min="0.1"
+                      step="0.1"
+                      value={betaAlpha}
+                      onChange={(e) => setBetaAlpha(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">β (Beta)</label>
+                    <input
+                      type="number"
+                      min="0.1"
+                      step="0.1"
+                      value={betaBeta}
+                      onChange={(e) => setBetaBeta(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Min (min)</label>
+                    <input
+                      type="number"
+                      value={betaMin}
+                      onChange={(e) => setBetaMin(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Max (min)</label>
+                    <input
+                      type="number"
+                      value={betaMax}
+                      onChange={(e) => setBetaMax(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => {
+                    const durations = generateBeta(betaAlpha, betaBeta, betaMin * 60, betaMax * 60, debugRecordCount);
+                    loadDebugData(durations, `Beta(α=${betaAlpha}, β=${betaBeta})`);
+                  }}
+                  disabled={debugLoading}
+                >
+                  {debugLoading ? 'Loading...' : `Beta (α=${betaAlpha}, β=${betaBeta})`}
+                </Button>
+              </div>
+            </div>
+
+            <div className="bg-red-900 bg-opacity-20 border border-red-700 rounded-lg p-3">
+              <p className="text-red-400 text-sm">
+                ⚠️ Warning: Loading debug data will replace ALL existing commute records!
+              </p>
+            </div>
+          </div>
+        </Card>
+      )}
     </div>
   );
 };

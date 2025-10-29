@@ -1,3 +1,17 @@
+## [0.9.0] - 2025-10-29
+
+Release type: minor
+
+### 📋 Summary 
+- Add better internal debug capability
+
+### 🐛 Bug Fixes
+- [bug] Fix incorrect calculation of R2 statistics in the handling of Q-Q-plot
+
+### 🛠 Internal
+- [chore] Add ha idden debug card at the end of the setting tab to create known distributions to validate the statics calculations with.
+  
+
 ## [0.8.4] - 2025-10-29
 
 Release type: patch

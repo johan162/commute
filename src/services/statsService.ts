@@ -166,6 +166,12 @@ export function generateQQPlotData(data: number[]): Array<{ theoretical: number;
     const mean = getMean(sorted);
     const stdDev = getStdDev(sorted);
     
+    // Check for zero or very small standard deviation
+    if (stdDev <= 1e-10) {
+        // If no variation in data, return a single point at origin
+        return [{ theoretical: 0, observed: 0 }];
+    }
+    
     // Generate plotting positions (theoretical quantiles)
     const qqData: Array<{ theoretical: number; observed: number }> = [];
     
@@ -173,11 +179,22 @@ export function generateQQPlotData(data: number[]): Array<{ theoretical: number;
         // Use the (i + 1 - 0.5) / n formula for plotting positions
         const p = (i + 1 - 0.5) / n;
         
-        // Get theoretical normal quantile
+        // Validate probability is in valid range
+        if (p <= 0 || p >= 1) continue;
+        
+        // Get theoretical normal quantile (standard normal z-score)
         const theoreticalZ = approximateNormalQuantile(p);
         
-        // Standardize observed values (convert to z-scores)
+        // Validate theoretical quantile is reasonable
+        if (!isFinite(theoreticalZ) || Math.abs(theoreticalZ) > 10) continue;
+        
+        // Standardize observed values using SAMPLE statistics
+        // This creates a standardized Q-Q plot where both axes are in z-score units
+        // A perfectly normal distribution would lie on the y=x line
         const observedZ = (sorted[i] - mean) / stdDev;
+        
+        // Validate observed z-score is reasonable
+        if (!isFinite(observedZ) || Math.abs(observedZ) > 10) continue;
         
         qqData.push({
             theoretical: theoreticalZ,
@@ -195,31 +212,61 @@ export function generateQQPlotData(data: number[]): Array<{ theoretical: number;
  * @returns R² value between 0 and 1 (closer to 1 = better fit to normal distribution)
  */
 export function calculateQQPlotRSquared(qqData: Array<{ theoretical: number; observed: number }>): number {
-    if (qqData.length < 3) return 0;
+    if (qqData.length < 2) return 0;
     
-    // Calculate mean of observed values
-    const meanObserved = qqData.reduce((sum, point) => sum + point.observed, 0) / qqData.length;
+    // Simple approach: Calculate the coefficient of determination for
+    // the relationship between theoretical and observed quantiles
+    // BUT use a different baseline for comparison
     
-    // Calculate Sum of Squared Residuals (SSR)
-    // Distance from each point to the y=x line (theoretical line)
-    const ssr = qqData.reduce((sum, point) => {
-        const residual = point.observed - point.theoretical;
-        return sum + residual * residual;
-    }, 0);
+    const n = qqData.length;
     
-    // Calculate Total Sum of Squares (SST)
-    // Variance of observed values from their mean
-    const sst = qqData.reduce((sum, point) => {
-        const deviation = point.observed - meanObserved;
-        return sum + deviation * deviation;
-    }, 0);
+    // Calculate sample statistics
+    const meanTheoretical = qqData.reduce((sum, point) => sum + point.theoretical, 0) / n;
+    const meanObserved = qqData.reduce((sum, point) => sum + point.observed, 0) / n;
     
-    // Calculate R²
-    // R² = 1 - (SSR / SST)
-    if (sst === 0) return 1; // Perfect fit if no variance
-    const rSquared = 1 - (ssr / sst);
+    // Calculate sum of squares for correlation
+    let sumXY = 0;
+    let sumXX = 0;
+    let sumYY = 0;
     
-    // Clamp between 0 and 1 (can be negative for very poor fits)
+    for (const point of qqData) {
+        const x = point.theoretical - meanTheoretical;
+        const y = point.observed - meanObserved;
+        sumXY += x * y;
+        sumXX += x * x;
+        sumYY += y * y;
+    }
+    
+    if (sumXX === 0 || sumYY === 0) return 0;
+    
+    // Calculate correlation coefficient
+    const correlation = sumXY / Math.sqrt(sumXX * sumYY);
+    
+    // For Q-Q plots, we want to penalize deviations from perfect correlation
+    // Apply a more stringent penalty for non-linearity
+    let rSquared = correlation * correlation;
+    
+    // Additional penalty for non-linear patterns (like S-curves)
+    // Calculate average absolute deviation from the best-fit line
+    const slope = sumXY / sumXX;
+    const intercept = meanObserved - slope * meanTheoretical;
+    
+    let totalDeviation = 0;
+    for (const point of qqData) {
+        const predicted = slope * point.theoretical + intercept;
+        const deviation = Math.abs(point.observed - predicted);
+        // Weight deviations more heavily in the tails
+        const weight = 1 + Math.abs(point.theoretical) * 0.3;
+        totalDeviation += weight * deviation;
+    }
+    
+    const avgWeightedDeviation = totalDeviation / n;
+    
+    // Apply penalty based on weighted average deviation
+    // This should detect S-curve patterns better
+    const penalty = Math.exp(-avgWeightedDeviation * 2);
+    rSquared *= penalty;
+    
     return Math.max(0, Math.min(1, rSquared));
 }
 
