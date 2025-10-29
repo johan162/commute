@@ -21,6 +21,14 @@
 
 # Completed features/fixes
 
+- [feat] Add Developer-Guide
+- [feat] Add User-Guide
+- [feat] Add chart with commute times per weekdays
+- [feat] Add Pattern Analysis (Run Test)
+- [feat] Add Mann-Kendall trend test. This will tell you if commute times are trending up/down over time.
+- [feat] Add Shapiro-Wilks Nomrality Test
+- [feat] Add option for auto recording of GPS position when timer is stopped as work location
+- [feat] Add chart with time per weekday
 - [feat] Make it possible (via setting in "Settings" tab) to automatically record the position when the timer is stopped as the work location
 - [feat] Add proper charts for time of day breakdown in PDF export
 - [feat] Add proper histogram charts for commute duration in PDF export
