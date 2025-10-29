@@ -453,6 +453,9 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                       stroke="#9CA3AF"
                       style={{ fontSize: '0.875rem' }}
                       label={{ value: 'Theoretical Quantiles (Standard Normal)', position: 'insideBottom', offset: -10, style: { fill: '#9CA3AF' } }}
+                      domain={['dataMin - 0.2', 'dataMax + 0.2']}
+                      ticks={[-3, -2, -1, 0, 1, 2, 3]}
+                      tickFormatter={(value: number) => value.toString()}
                     />
                     <YAxis 
                       type="number"
@@ -460,6 +463,9 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                       stroke="#9CA3AF"
                       style={{ fontSize: '0.875rem' }}
                       label={{ value: 'Sample Quantiles (Standardized)', angle: -90, position: 'outside', offset: -5, style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
+                      domain={['dataMin - 0.2', 'dataMax + 0.2']}
+                      ticks={[-3, -2, -1, 0, 1, 2, 3]}
+                      tickFormatter={(value: number) => value.toString()}
                     />
                     <Tooltip
                       contentStyle={{
