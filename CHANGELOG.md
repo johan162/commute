@@ -1,3 +1,11 @@
+## [0.6.1] - 2025-10-29
+
+Release type: patch
+
+### 🚀 Improvements
+- [upd] Include MIT License text in "About" card
+
+
 ## [0.6.0] - 2025-10-29
 
 Release type: minor
