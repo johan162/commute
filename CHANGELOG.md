@@ -1,3 +1,14 @@
+## [0.7.0] - 2025-10-29
+
+Release type: minor
+
+### 📋 Summary 
+- Added Q-Q plot to help visually asses the fit to a normal distribution together with R² statistics
+
+### ✨ Additions
+- [feat] Add Q-Q plot to statistics tab
+
+
 ## [0.6.2] - 2025-10-29
 
 Release type: patch

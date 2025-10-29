@@ -5,9 +5,9 @@ import { Card } from './Card';
 import { HistogramChart } from './HistogramChart';
 import { TimeBreakdownView } from './TimeBreakdownView';
 import { exportToCSV, exportToPDF } from '../services/exportService';
-import { getConfidenceInterval, getConfidenceIntervalRank, shapiroWilkTest, mannKendallTest, runsTest, getMean, getMedian } from '../services/statsService';
+import { getConfidenceInterval, getConfidenceIntervalRank, shapiroWilkTest, mannKendallTest, runsTest, getMean, getMedian, generateQQPlotData, calculateQQPlotRSquared, getQQPlotRSquaredInterpretation } from '../services/statsService';
 import { Button } from './Button';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ScatterChart, Scatter, LineChart, Line, ReferenceLine } from 'recharts';
 
 interface StatsViewProps {
   records: CommuteRecord[];
@@ -206,6 +206,43 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
     return shapiroWilkTest(durations);
   }, [records]);
 
+  // Generate Q-Q plot data
+  const qqPlotData = useMemo(() => {
+    if (records.length < 10) return null;
+    const durations = records.map(record => record.duration);
+    const qqData = generateQQPlotData(durations);
+    
+    // Create reference line data (y = x) with multiple points for a smooth line
+    const minValue = Math.min(...qqData.map(d => Math.min(d.theoretical, d.observed)));
+    const maxValue = Math.max(...qqData.map(d => Math.max(d.theoretical, d.observed)));
+    const numLinePoints = 30; // Create 30 points for a smooth line
+    const referenceLine = [];
+    
+    for (let i = 0; i < numLinePoints; i++) {
+      const t = i / (numLinePoints - 1); // Parameter from 0 to 1
+      const value = minValue + t * (maxValue - minValue);
+      referenceLine.push({
+        theoretical: value,
+        observed: value,
+        isReferenceLine: true
+      });
+    }
+    
+    return {
+      data: qqData.map(d => ({ ...d, isReferenceLine: false })),
+      referenceLine,
+      rawData: qqData // Keep raw data for R² calculation
+    };
+  }, [records]);
+
+  // Calculate R² for Q-Q plot
+  const qqRSquared = useMemo(() => {
+    if (!qqPlotData) return null;
+    const rSquared = calculateQQPlotRSquared(qqPlotData.rawData);
+    const interpretation = getQQPlotRSquaredInterpretation(rSquared);
+    return { rSquared, interpretation };
+  }, [qqPlotData]);
+
   // Calculate Mann-Kendall trend test
   const trendTest = useMemo(() => {
     if (records.length < 10) return null;
@@ -402,6 +439,150 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
               </p>
               <p className="text-xs text-gray-500 mt-4">
                 The Shapiro-Wilk test is most reliable with at least 20 samples
+              </p>
+            </div>
+          )}
+        </div>
+      </Card>
+
+      <Card title="Q-Q Plot (Quantile-Quantile)">
+        <div className="text-center">
+          {qqPlotData ? (
+            <>
+              <p className="text-sm text-gray-400 mb-4">
+                Visual assessment of normality - points should follow the diagonal line
+              </p>
+              <div className="h-64 md:h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ScatterChart data={[...qqPlotData.data, ...qqPlotData.referenceLine]} margin={{ top: 20, right: 50, left: 20, bottom: 35 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis 
+                      type="number"
+                      dataKey="theoretical"
+                      stroke="#9CA3AF"
+                      style={{ fontSize: '0.875rem' }}
+                      label={{ value: 'Theoretical Quantiles (Standard Normal)', position: 'insideBottom', offset: -5, style: { fill: '#9CA3AF', fontSize: '0.8rem' } }}
+                      domain={['dataMin', 'dataMax']}
+                      allowDataOverflow={false}
+                      tickCount={7}
+                      tickFormatter={(value: number) => {
+                        return value.toFixed(1);
+                      }}
+                    />
+                    <YAxis 
+                      type="number"
+                      dataKey="observed"
+                      stroke="#9CA3AF"
+                      style={{ fontSize: '0.875rem' }}
+                      label={{ value: 'Sample Quantiles (Standardized)', angle: -90, position: 'insideLeft', offset: 0, style: { fill: '#9CA3AF', textAnchor: 'middle', fontSize: '0.8rem' } }}
+                      domain={['dataMin', 'dataMax']}
+                      allowDataOverflow={false}
+                      tickCount={7}
+                      tickFormatter={(value: number) => {
+                        return value.toFixed(1);
+                      }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1F2937',
+                        border: '1px solid #374151',
+                        borderRadius: '0.5rem',
+                        color: '#F3F4F6'
+                      }}
+                      formatter={(value: number, name: string) => [
+                        value.toFixed(3),
+                        name === 'theoretical' ? 'Theoretical' : 'Observed'
+                      ]}
+                      labelStyle={{ color: '#9CA3AF' }}
+                    />
+                    <Scatter 
+                      dataKey="observed" 
+                      fill="#06B6D4"
+                      strokeWidth={1}
+                      stroke="#0891B2"
+                      shape={(props: any) => {
+                        const { cx, cy, payload } = props;
+                        if (payload?.isReferenceLine) {
+                          // For reference line points, create a small line segment to connect them
+                          return (
+                            <circle 
+                              cx={cx} 
+                              cy={cy} 
+                              r={1}
+                              fill="#EF4444" 
+                              stroke="#EF4444"
+                            />
+                          );
+                        }
+                        return <circle cx={cx} cy={cy} r={3} fill="#06B6D4" stroke="#0891B2" strokeWidth={1} />;
+                      }}
+                    />
+                  </ScatterChart>
+                </ResponsiveContainer>
+              </div>
+              
+              {/* R² Goodness-of-Fit Metric */}
+              {qqRSquared && (
+                <div className="bg-gray-800 p-4 rounded-lg mt-4 text-left">
+                  <div className="grid grid-cols-[1fr,auto] gap-4 mb-3">
+                    <div className="text-left">
+                      <p className="text-sm font-semibold text-gray-300">R² (Coefficient of Determination)</p>
+                      <p className="text-xs text-gray-500 mt-1">Measures how well data fits normal distribution</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-2xl font-bold text-cyan-400">{qqRSquared.rSquared.toFixed(4)}</p>
+                      <p className={`text-sm font-semibold ${qqRSquared.interpretation.color} mt-1`}>
+                        {qqRSquared.interpretation.rating}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-400 text-left">
+                    {qqRSquared.interpretation.description}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-2 text-left">
+                    R² = 1.0 indicates perfect fit to normal distribution. Values closer to 1.0 suggest better normality.
+                  </p>
+                </div>
+              )}
+
+              <div className="bg-gray-800 p-4 rounded-lg text-left mt-4">
+                <p className="text-sm font-semibold text-gray-300 mb-2">How to interpret this plot:</p>
+                <div className="text-xs text-gray-400 space-y-2">
+                  <p>
+                    <span className="text-red-400">Red dashed line:</span> Perfect normal distribution reference line
+                  </p>
+                  <p>
+                    <span className="text-cyan-400">Blue dots:</span> Your actual commute time data points
+                  </p>
+                  <p>
+                    <strong>If points closely follow the red line:</strong> Your data is approximately normally distributed
+                  </p>
+                  <p>
+                    <strong>If points curve away from the line:</strong> Your data deviates from normality
+                  </p>
+                  <p>
+                    <strong>S-shaped curve:</strong> Data has heavier tails than normal distribution
+                  </p>
+                  <p>
+                    <strong>Reverse S-curve:</strong> Data has lighter tails than normal distribution
+                  </p>
+                  <p>
+                    <strong>Points scattered randomly:</strong> Data may have outliers or multiple modes
+                  </p>
+                </div>
+                <p className="text-xs text-gray-500 mt-3">
+                  Based on {records.length} standardized commute times
+                </p>
+              </div>
+            </>
+          ) : (
+            <div className="py-8">
+              <p className="text-gray-400 text-lg">Needs 10 or more records for Q-Q plot</p>
+              <p className="text-xs text-gray-500 mt-2">
+                Currently {records.length} of 10 required
+              </p>
+              <p className="text-xs text-gray-500 mt-4">
+                Q-Q plots are most informative with at least 10 data points
               </p>
             </div>
           )}
