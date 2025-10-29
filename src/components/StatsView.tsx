@@ -212,6 +212,36 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
     const durations = records.map(record => record.duration);
     const qqData = generateQQPlotData(durations);
     
+    // Calculate smart tick intervals
+    const theoreticalValues = qqData.map(d => d.theoretical);
+    const observedValues = qqData.map(d => d.observed);
+    const minTheoretical = Math.min(...theoreticalValues);
+    const maxTheoretical = Math.max(...theoreticalValues);
+    const minObserved = Math.min(...observedValues);
+    const maxObserved = Math.max(...observedValues);
+    
+    // Function to generate nice tick intervals
+    const generateNiceTicks = (min: number, max: number) => {
+      const range = max - min;
+      let interval: number;
+      
+      if (range <= 2) interval = 0.2;
+      else if (range <= 4) interval = 0.5;
+      else interval = 1.0;
+      
+      const start = Math.floor(min / interval) * interval;
+      const end = Math.ceil(max / interval) * interval;
+      const ticks = [];
+      
+      for (let i = start; i <= end; i += interval) {
+        ticks.push(Math.round(i / interval) * interval); // Avoid floating point errors
+      }
+      return ticks;
+    };
+    
+    const theoreticalTicks = generateNiceTicks(minTheoretical, maxTheoretical);
+    const observedTicks = generateNiceTicks(minObserved, maxObserved);
+    
     // Create reference line data (y = x) with multiple points for a smooth line
     const minValue = Math.min(...qqData.map(d => Math.min(d.theoretical, d.observed)));
     const maxValue = Math.max(...qqData.map(d => Math.max(d.theoretical, d.observed)));
@@ -230,7 +260,9 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
     
     return {
       data: qqData.map(d => ({ ...d, isReferenceLine: false })),
-      referenceLine
+      referenceLine,
+      theoreticalTicks,
+      observedTicks
     };
   }, [records]);
 
@@ -445,27 +477,55 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
               </p>
               <div className="h-64 md:h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ScatterChart data={[...qqPlotData.data, ...qqPlotData.referenceLine]} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                  <ScatterChart data={[...qqPlotData.data, ...qqPlotData.referenceLine]} margin={{ top: 20, right: 20, left: 35, bottom: 35 }}>
+                    {/* Manual grid lines using ReferenceLine for precise positioning */}
+                    {qqPlotData.theoreticalTicks.map((tick: number) => (
+                      <ReferenceLine 
+                        key={`vertical-${tick}`}
+                        x={tick} 
+                        stroke="#374151" 
+                        strokeDasharray="3 3" 
+                        strokeWidth={1}
+                      />
+                    ))}
+                    {qqPlotData.observedTicks.map((tick: number) => (
+                      <ReferenceLine 
+                        key={`horizontal-${tick}`}
+                        y={tick} 
+                        stroke="#374151" 
+                        strokeDasharray="3 3" 
+                        strokeWidth={1}
+                      />
+                    ))}
                     <XAxis 
                       type="number"
                       dataKey="theoretical"
                       stroke="#9CA3AF"
                       style={{ fontSize: '0.875rem' }}
-                      label={{ value: 'Theoretical Quantiles (Standard Normal)', position: 'insideBottom', offset: -10, style: { fill: '#9CA3AF' } }}
-                      domain={['dataMin - 0.2', 'dataMax + 0.2']}
-                      ticks={[-3, -2, -1, 0, 1, 2, 3]}
-                      tickFormatter={(value: number) => value.toString()}
+                      label={{ value: 'Theoretical Quantiles (Standard Normal)', position: 'insideBottom', offset: -5, style: { fill: '#9CA3AF', fontSize: '0.8rem' } }}
+                      domain={[qqPlotData.theoreticalTicks[0], qqPlotData.theoreticalTicks[qqPlotData.theoreticalTicks.length - 1]]}
+                      ticks={qqPlotData.theoreticalTicks}
+                      axisLine={true}
+                      tickLine={true}
+                      tickFormatter={(value: number) => {
+                        // Format based on whether it's a whole number or decimal
+                        return value % 1 === 0 ? value.toString() : value.toFixed(1);
+                      }}
                     />
                     <YAxis 
                       type="number"
                       dataKey="observed"
                       stroke="#9CA3AF"
                       style={{ fontSize: '0.875rem' }}
-                      label={{ value: 'Sample Quantiles (Standardized)', angle: -90, position: 'outside', offset: -5, style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
-                      domain={['dataMin - 0.2', 'dataMax + 0.2']}
-                      ticks={[-3, -2, -1, 0, 1, 2, 3]}
-                      tickFormatter={(value: number) => value.toString()}
+                      label={{ value: 'Sample Quantiles (Standardized)', angle: -90, position: 'outside', offset: -15, style: { fill: '#9CA3AF', textAnchor: 'middle', fontSize: '0.8rem' } }}
+                      domain={[qqPlotData.observedTicks[0], qqPlotData.observedTicks[qqPlotData.observedTicks.length - 1]]}
+                      ticks={qqPlotData.observedTicks}
+                      axisLine={true}
+                      tickLine={true}
+                      tickFormatter={(value: number) => {
+                        // Format based on whether it's a whole number or decimal
+                        return value % 1 === 0 ? value.toString() : value.toFixed(1);
+                      }}
                     />
                     <Tooltip
                       contentStyle={{
