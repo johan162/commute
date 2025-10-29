@@ -42,6 +42,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
     );
   };
 
+  const handleClearWorkLocations = () => {
+    onClearWorkLocations();
+    setMessage(''); // Clear the message when work locations are cleared
+  };
+
   return (
     <div className="space-y-6">
       <Card title="AutoStop Feature">
@@ -125,7 +130,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
               {loading ? 'Recording...' : 'Record Current Location'}
             </Button>
             <Button 
-              onClick={onClearWorkLocations} 
+              onClick={handleClearWorkLocations} 
               disabled={workLocationCount === 0 || !autoStopEnabled}
               variant="danger"
             >
