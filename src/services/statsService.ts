@@ -153,6 +153,43 @@ export const shapiroWilkTest = (data: number[]): { W: number; pValue: number; is
 };
 
 /**
+ * Generate Q-Q plot data for normality assessment
+ * Returns paired quantiles: theoretical normal vs. observed sample quantiles
+ */
+export function generateQQPlotData(data: number[]): Array<{ theoretical: number; observed: number }> {
+    const n = data.length;
+    if (n < 3) return [];
+    
+    // Sort the data
+    const sorted = [...data].sort((a, b) => a - b);
+    
+    // Calculate sample mean and standard deviation
+    const mean = getMean(sorted);
+    const stdDev = getStdDev(sorted);
+    
+    // Generate plotting positions (theoretical quantiles)
+    const qqData: Array<{ theoretical: number; observed: number }> = [];
+    
+    for (let i = 0; i < n; i++) {
+        // Use the (i + 1 - 0.5) / n formula for plotting positions
+        const p = (i + 1 - 0.5) / n;
+        
+        // Get theoretical normal quantile
+        const theoreticalZ = approximateNormalQuantile(p);
+        
+        // Standardize observed values (convert to z-scores)
+        const observedZ = (sorted[i] - mean) / stdDev;
+        
+        qqData.push({
+            theoretical: theoreticalZ,
+            observed: observedZ
+        });
+    }
+    
+    return qqData;
+}
+
+/**
  * Approximation of inverse normal CDF (quantile function)
  * Uses Beasley-Springer-Moro algorithm
  */

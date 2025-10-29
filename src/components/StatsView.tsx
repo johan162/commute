@@ -5,9 +5,9 @@ import { Card } from './Card';
 import { HistogramChart } from './HistogramChart';
 import { TimeBreakdownView } from './TimeBreakdownView';
 import { exportToCSV, exportToPDF } from '../services/exportService';
-import { getConfidenceInterval, getConfidenceIntervalRank, shapiroWilkTest, mannKendallTest, runsTest, getMean, getMedian } from '../services/statsService';
+import { getConfidenceInterval, getConfidenceIntervalRank, shapiroWilkTest, mannKendallTest, runsTest, getMean, getMedian, generateQQPlotData } from '../services/statsService';
 import { Button } from './Button';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, ScatterChart, Scatter, LineChart, Line, ReferenceLine } from 'recharts';
 
 interface StatsViewProps {
   records: CommuteRecord[];
@@ -206,6 +206,26 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
     return shapiroWilkTest(durations);
   }, [records]);
 
+  // Generate Q-Q plot data
+  const qqPlotData = useMemo(() => {
+    if (records.length < 10) return null;
+    const durations = records.map(record => record.duration);
+    const qqData = generateQQPlotData(durations);
+    
+    // Create reference line data (y = x)
+    const minValue = Math.min(...qqData.map(d => Math.min(d.theoretical, d.observed)));
+    const maxValue = Math.max(...qqData.map(d => Math.max(d.theoretical, d.observed)));
+    const referenceLine = [
+      { theoretical: minValue, observed: minValue, isReferenceLine: true },
+      { theoretical: maxValue, observed: maxValue, isReferenceLine: true }
+    ];
+    
+    return {
+      data: qqData.map(d => ({ ...d, isReferenceLine: false })),
+      referenceLine
+    };
+  }, [records]);
+
   // Calculate Mann-Kendall trend test
   const trendTest = useMemo(() => {
     if (records.length < 10) return null;
@@ -402,6 +422,119 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
               </p>
               <p className="text-xs text-gray-500 mt-4">
                 The Shapiro-Wilk test is most reliable with at least 20 samples
+              </p>
+            </div>
+          )}
+        </div>
+      </Card>
+
+      <Card title="Q-Q Plot (Quantile-Quantile)">
+        <div className="text-center">
+          {qqPlotData ? (
+            <>
+              <p className="text-sm text-gray-400 mb-4">
+                Visual assessment of normality - points should follow the diagonal line if data is normally distributed
+              </p>
+              <div className="h-64 md:h-80 relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ScatterChart data={qqPlotData.data} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis 
+                      type="number"
+                      dataKey="theoretical"
+                      stroke="#9CA3AF"
+                      style={{ fontSize: '0.875rem' }}
+                      label={{ value: 'Theoretical Quantiles (Standard Normal)', position: 'insideBottom', offset: -10, style: { fill: '#9CA3AF' } }}
+                    />
+                    <YAxis 
+                      type="number"
+                      dataKey="observed"
+                      stroke="#9CA3AF"
+                      style={{ fontSize: '0.875rem' }}
+                      label={{ value: 'Sample Quantiles (Standardized)', angle: -90, position: 'insideLeft', style: { fill: '#9CA3AF' } }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1F2937',
+                        border: '1px solid #374151',
+                        borderRadius: '0.5rem',
+                        color: '#F3F4F6'
+                      }}
+                      formatter={(value: number, name: string) => [
+                        value.toFixed(3),
+                        name === 'theoretical' ? 'Theoretical' : 'Observed'
+                      ]}
+                      labelStyle={{ color: '#9CA3AF' }}
+                    />
+                    <Scatter 
+                      dataKey="observed" 
+                      fill="#06B6D4"
+                      strokeWidth={1}
+                      stroke="#0891B2"
+                    />
+                  </ScatterChart>
+                </ResponsiveContainer>
+                <ResponsiveContainer width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
+                  <LineChart data={qqPlotData.referenceLine} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
+                    <XAxis 
+                      type="number"
+                      dataKey="theoretical"
+                      hide
+                    />
+                    <YAxis 
+                      type="number"
+                      dataKey="observed"
+                      hide
+                    />
+                    <Line 
+                      type="linear"
+                      dataKey="observed"
+                      stroke="#EF4444" 
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="bg-gray-800 p-4 rounded-lg text-left mt-4">
+                <p className="text-sm font-semibold text-gray-300 mb-2">How to interpret this plot:</p>
+                <div className="text-xs text-gray-400 space-y-2">
+                  <p>
+                    <span className="text-red-400">Red dashed line:</span> Perfect normal distribution reference line
+                  </p>
+                  <p>
+                    <span className="text-cyan-400">Blue dots:</span> Your actual commute time data points
+                  </p>
+                  <p>
+                    <strong>If points closely follow the red line:</strong> Your data is approximately normally distributed
+                  </p>
+                  <p>
+                    <strong>If points curve away from the line:</strong> Your data deviates from normality
+                  </p>
+                  <p>
+                    <strong>S-shaped curve:</strong> Data has heavier tails than normal distribution
+                  </p>
+                  <p>
+                    <strong>Reverse S-curve:</strong> Data has lighter tails than normal distribution
+                  </p>
+                  <p>
+                    <strong>Points scattered randomly:</strong> Data may have outliers or multiple modes
+                  </p>
+                </div>
+                <p className="text-xs text-gray-500 mt-3">
+                  Based on {records.length} standardized commute times
+                </p>
+              </div>
+            </>
+          ) : (
+            <div className="py-8">
+              <p className="text-gray-400 text-lg">Needs 10 or more records for Q-Q plot</p>
+              <p className="text-xs text-gray-500 mt-2">
+                Currently {records.length} of 10 required
+              </p>
+              <p className="text-xs text-gray-500 mt-4">
+                Q-Q plots are most informative with at least 10 data points
               </p>
             </div>
           )}
