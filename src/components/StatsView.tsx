@@ -212,13 +212,21 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
     const durations = records.map(record => record.duration);
     const qqData = generateQQPlotData(durations);
     
-    // Create reference line data (y = x)
+    // Create reference line data (y = x) with multiple points for a smooth line
     const minValue = Math.min(...qqData.map(d => Math.min(d.theoretical, d.observed)));
     const maxValue = Math.max(...qqData.map(d => Math.max(d.theoretical, d.observed)));
-    const referenceLine = [
-      { theoretical: minValue, observed: minValue, isReferenceLine: true },
-      { theoretical: maxValue, observed: maxValue, isReferenceLine: true }
-    ];
+    const numLinePoints = 30; // Create 30 points for a smooth line
+    const referenceLine = [];
+    
+    for (let i = 0; i < numLinePoints; i++) {
+      const t = i / (numLinePoints - 1); // Parameter from 0 to 1
+      const value = minValue + t * (maxValue - minValue);
+      referenceLine.push({
+        theoretical: value,
+        observed: value,
+        isReferenceLine: true
+      });
+    }
     
     return {
       data: qqData.map(d => ({ ...d, isReferenceLine: false })),
@@ -435,9 +443,9 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
               <p className="text-sm text-gray-400 mb-4">
                 Visual assessment of normality - points should follow the diagonal line if data is normally distributed
               </p>
-              <div className="h-64 md:h-80 relative">
+              <div className="h-64 md:h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ScatterChart data={qqPlotData.data} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
+                  <ScatterChart data={[...qqPlotData.data, ...qqPlotData.referenceLine]} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis 
                       type="number"
@@ -451,7 +459,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                       dataKey="observed"
                       stroke="#9CA3AF"
                       style={{ fontSize: '0.875rem' }}
-                      label={{ value: 'Sample Quantiles (Standardized)', angle: -90, position: 'insideLeft', style: { fill: '#9CA3AF' } }}
+                      label={{ value: 'Sample Quantiles (Standardized)', angle: -90, position: 'outside', offset: -5, style: { fill: '#9CA3AF', textAnchor: 'middle' } }}
                     />
                     <Tooltip
                       contentStyle={{
@@ -471,30 +479,24 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                       fill="#06B6D4"
                       strokeWidth={1}
                       stroke="#0891B2"
+                      shape={(props: any) => {
+                        const { cx, cy, payload } = props;
+                        if (payload?.isReferenceLine) {
+                          // For reference line points, create a small line segment to connect them
+                          return (
+                            <circle 
+                              cx={cx} 
+                              cy={cy} 
+                              r={1}
+                              fill="#EF4444" 
+                              stroke="#EF4444"
+                            />
+                          );
+                        }
+                        return <circle cx={cx} cy={cy} r={3} fill="#06B6D4" stroke="#0891B2" strokeWidth={1} />;
+                      }}
                     />
                   </ScatterChart>
-                </ResponsiveContainer>
-                <ResponsiveContainer width="100%" height="100%" style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}>
-                  <LineChart data={qqPlotData.referenceLine} margin={{ top: 20, right: 20, left: 20, bottom: 20 }}>
-                    <XAxis 
-                      type="number"
-                      dataKey="theoretical"
-                      hide
-                    />
-                    <YAxis 
-                      type="number"
-                      dataKey="observed"
-                      hide
-                    />
-                    <Line 
-                      type="linear"
-                      dataKey="observed"
-                      stroke="#EF4444" 
-                      strokeWidth={2}
-                      strokeDasharray="5 5"
-                      dot={false}
-                    />
-                  </LineChart>
                 </ResponsiveContainer>
               </div>
               <div className="bg-gray-800 p-4 rounded-lg text-left mt-4">
