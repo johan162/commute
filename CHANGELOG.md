@@ -1,3 +1,11 @@
+## [0.8.1] - 2025-10-29
+
+Release type: patch
+
+### 🚀 Improvements
+- [upd] Tweak layout of Q-Q plot
+
+
 ## [0.8.0] - 2025-10-29
 
 Release type: minor
