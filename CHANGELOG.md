@@ -1,3 +1,14 @@
+## [0.9.1] - 2025-10-29
+
+Release type: patch
+
+### 📋 Summary 
+- Improve setting logic for AutoStop
+
+### 🚀 Improvements
+- [upd] Make it possibke to adjust all settings of auto-stop even though the feature itself is turned off.
+
+
 ## [0.9.0] - 2025-10-29
 
 Release type: minor
