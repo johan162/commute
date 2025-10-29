@@ -460,7 +460,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
               </p>
               <div className="h-64 md:h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ScatterChart data={[...qqPlotData.data, ...qqPlotData.referenceLine]} margin={{ top: 15, right: 20, left: 20, bottom: 25 }}>
+                  <ScatterChart data={[...qqPlotData.data, ...qqPlotData.referenceLine]} margin={{ top: 15, right: 20, left: 5, bottom: 25 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis 
                       type="number"
@@ -478,7 +478,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                       dataKey="observed"
                       stroke="#9CA3AF"
                       style={{ fontSize: '0.875rem' }}
-                      label={{ value: 'Sample Quantiles', angle: -90, position: 'insideLeft', offset: 0, style: { fill: '#9CA3AF', textAnchor: 'middle', fontSize: '0.8rem' } }}
+                      label={{ value: 'Sample Quantiles', angle: -90, position: 'insideLeft', offset: 10, style: { fill: '#9CA3AF', textAnchor: 'middle', fontSize: '0.8rem' } }}
                       domain={qqPlotData.domain}
                       ticks={qqPlotData.ticks}
                       allowDataOverflow={false}
