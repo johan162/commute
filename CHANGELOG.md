@@ -1,3 +1,23 @@
+## [0.5.0] - 2025-10-29
+
+Release type: minor
+
+### 📋 Summary 
+- Add more advanced statistical analysis to help analyze commute patterns.
+
+### ✨ Additions
+- [feat] Added Shapiro-Wilk normality test
+- [feat] Added Mann-Kendall trend test. This will tell you if commute times are trending up/down over time.
+- [feat] Autocorrelation/Runs Test To help reveal weekly patterns or clustering of good/bad commute days.
+
+### 🚀 Improvements
+- [upd] Better PWA chunking to improve performance
+
+### 🛠 Internal
+- [chore] Store artifacts in separate directory
+- [chore] Updated badges shown inn README.md
+
+
 ## [0.4.0] - 2025-10-28
 
 Release type: **minor**
