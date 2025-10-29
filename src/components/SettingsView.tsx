@@ -272,7 +272,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
       </Card>
 
       <Card title="Work Location">
-        <div className={`space-y-4 ${!autoStopEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
+        <div className="space-y-4">
           <p className="text-gray-400">
             To enable automatic arrival detection, please record your work location. You can record it multiple times for better accuracy. The application will use the average of all recorded points.
           </p>
@@ -281,12 +281,12 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
             Current Recordings: <span className="text-cyan-400">{workLocationCount}</span>
           </p>
           <div className="flex gap-4">
-            <Button onClick={handleRecordLocation} disabled={loading || !autoStopEnabled}>
+            <Button onClick={handleRecordLocation} disabled={loading}>
               {loading ? 'Recording...' : 'Record Current Location'}
             </Button>
             <Button 
               onClick={handleClearWorkLocations} 
-              disabled={workLocationCount === 0 || !autoStopEnabled}
+              disabled={workLocationCount === 0}
               variant="danger"
             >
               Clear Work Locations
@@ -332,7 +332,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
       </Card>
 
       <Card title="Auto-Stop Settings">
-        <div className={`space-y-4 ${!autoStopEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
+        <div className="space-y-4">
           <p className="text-gray-400">
             Set the radius around your work location where the timer will automatically stop when you arrive.
           </p>
@@ -351,8 +351,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
               step="10"
               value={autoStopRadius}
               onChange={(e) => onAutoStopRadiusChange(Number(e.target.value))}
-              disabled={!autoStopEnabled}
-              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider disabled:cursor-not-allowed"
+              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
             />
             <div className="flex justify-between text-xs text-gray-500">
               <span>10m</span>
