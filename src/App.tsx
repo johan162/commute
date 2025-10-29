@@ -101,6 +101,7 @@ const App: React.FC = () => {
           onAutoRecordWorkLocationChange={setAutoRecordWorkLocation}
           includeWeekends={includeWeekends}
           onIncludeWeekendsChange={setIncludeWeekends}
+          onLoadDebugData={setCommuteRecords}
         />;
       case 'main':
       default:
