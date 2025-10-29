@@ -523,9 +523,9 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
               
               {/* R² Goodness-of-Fit Metric */}
               {qqRSquared && (
-                <div className="bg-gray-800 p-4 rounded-lg mt-4">
-                  <div className="flex items-center justify-between">
-                    <div>
+                <div className="bg-gray-800 p-4 rounded-lg mt-4 text-left">
+                  <div className="grid grid-cols-[1fr,auto] gap-4 mb-3">
+                    <div className="text-left">
                       <p className="text-sm font-semibold text-gray-300">R² (Coefficient of Determination)</p>
                       <p className="text-xs text-gray-500 mt-1">Measures how well data fits normal distribution</p>
                     </div>
@@ -536,10 +536,10 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                       </p>
                     </div>
                   </div>
-                  <p className="text-xs text-gray-400 mt-3">
+                  <p className="text-xs text-gray-400 text-left">
                     {qqRSquared.interpretation.description}
                   </p>
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className="text-xs text-gray-500 mt-2 text-left">
                     R² = 1.0 indicates perfect fit to normal distribution. Values closer to 1.0 suggest better normality.
                   </p>
                 </div>
