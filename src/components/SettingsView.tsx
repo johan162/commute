@@ -268,6 +268,38 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
           <p className="text-xs text-gray-500">
             When enabled, your GPS location will be automatically recorded as a work location each time you stop the commute timer manually. This helps build up accurate work location data even when AutoStop is disabled.
           </p>
+
+          <div className="mt-4 pt-4 border-t border-gray-700">
+            <p className="text-gray-400 mb-3">
+              Set the radius around your work location where the timer will automatically stop when you arrive.
+            </p>
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <label htmlFor="autoStopRadius" className="text-gray-300 font-semibold">
+                  Auto-Stop Radius
+                </label>
+                <span className="text-cyan-400 font-bold">{autoStopRadius}m</span>
+              </div>
+              <input
+                id="autoStopRadius"
+                type="range"
+                min="10"
+                max="250"
+                step="10"
+                value={autoStopRadius}
+                onChange={(e) => onAutoStopRadiusChange(Number(e.target.value))}
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+              />
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>10m</span>
+                <span>250m</span>
+              </div>
+              <p className="text-xs text-gray-500">
+                Smaller radius = more precise arrival detection but may require you to be very close to your work location.
+                Larger radius = more forgiving but may stop the timer before you actually arrive.
+              </p>
+            </div>
+          </div>
         </div>
       </Card>
 
@@ -328,40 +360,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
           )}
           
           {message && <p className="text-sm text-gray-400 mt-2">{message}</p>}
-        </div>
-      </Card>
-
-      <Card title="Auto-Stop Settings">
-        <div className="space-y-4">
-          <p className="text-gray-400">
-            Set the radius around your work location where the timer will automatically stop when you arrive.
-          </p>
-          <div className="space-y-3">
-            <div className="flex justify-between items-center">
-              <label htmlFor="autoStopRadius" className="text-gray-300 font-semibold">
-                Auto-Stop Radius
-              </label>
-              <span className="text-cyan-400 font-bold">{autoStopRadius}m</span>
-            </div>
-            <input
-              id="autoStopRadius"
-              type="range"
-              min="10"
-              max="250"
-              step="10"
-              value={autoStopRadius}
-              onChange={(e) => onAutoStopRadiusChange(Number(e.target.value))}
-              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-            />
-            <div className="flex justify-between text-xs text-gray-500">
-              <span>10m</span>
-              <span>250m</span>
-            </div>
-            <p className="text-xs text-gray-500">
-              Smaller radius = more precise arrival detection but may require you to be very close to your work location.
-              Larger radius = more forgiving but may stop the timer before you actually arrive.
-            </p>
-          </div>
         </div>
       </Card>
 
