@@ -1,3 +1,11 @@
+## [0.8.4] - 2025-10-29
+
+Release type: patch
+
+### 📖 Documentation
+- [upd] Add information in README.md about automatic Application update after it has been installed
+
+
 ## [0.8.3] - 2025-10-29
 
 Release type: patch
