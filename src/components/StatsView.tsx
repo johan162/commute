@@ -454,14 +454,14 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
               </p>
               <div className="h-64 md:h-80">
                 <ResponsiveContainer width="100%" height="100%">
-                  <ScatterChart data={[...qqPlotData.data, ...qqPlotData.referenceLine]} margin={{ top: 20, right: 50, left: 20, bottom: 35 }}>
+                  <ScatterChart data={[...qqPlotData.data, ...qqPlotData.referenceLine]} margin={{ top: 15, right: 20, left: 20, bottom: 25 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                     <XAxis 
                       type="number"
                       dataKey="theoretical"
                       stroke="#9CA3AF"
                       style={{ fontSize: '0.875rem' }}
-                      label={{ value: 'Theoretical Quantiles (Standard Normal)', position: 'insideBottom', offset: -5, style: { fill: '#9CA3AF', fontSize: '0.8rem' } }}
+                      label={{ value: 'Theoretical Quantiles', position: 'insideBottom', offset: -5, style: { fill: '#9CA3AF', fontSize: '0.8rem' } }}
                       domain={['dataMin', 'dataMax']}
                       allowDataOverflow={false}
                       tickCount={7}
@@ -474,7 +474,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                       dataKey="observed"
                       stroke="#9CA3AF"
                       style={{ fontSize: '0.875rem' }}
-                      label={{ value: 'Sample Quantiles (Standardized)', angle: -90, position: 'insideLeft', offset: 0, style: { fill: '#9CA3AF', textAnchor: 'middle', fontSize: '0.8rem' } }}
+                      label={{ value: 'Sample Quantiles', angle: -90, position: 'insideLeft', offset: 0, style: { fill: '#9CA3AF', textAnchor: 'middle', fontSize: '0.8rem' } }}
                       domain={['dataMin', 'dataMax']}
                       allowDataOverflow={false}
                       tickCount={7}
