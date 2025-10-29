@@ -60,6 +60,13 @@ const App: React.FC = () => {
   const addWorkLocation = (location: Coordinates) => {
     setWorkLocations(prev => [...prev, location]);
   };
+
+  const clearWorkLocations = () => {
+    if (window.confirm('Are you sure you want to clear all work location recordings? This will disable automatic arrival detection until you record new locations.')) {
+      setWorkLocations([]);
+      alert('All work location recordings have been cleared.');
+    }
+  };
   
   const deleteCommuteRecords = (recordIds: number[]) => {
     setCommuteRecords(prev => prev.filter(record => !recordIds.includes(record.id)));
@@ -81,7 +88,8 @@ const App: React.FC = () => {
         return <HistoryView records={commuteRecords} median={stats?.median} onDeleteRecords={deleteCommuteRecords} />;
       case 'settings':
         return <SettingsView 
-          onAddLocation={addWorkLocation} 
+          onAddLocation={addWorkLocation}
+          onClearWorkLocations={clearWorkLocations}
           workLocationCount={workLocations.length} 
           onClearAllData={clearAllData}
           autoStopRadius={autoStopRadius}
