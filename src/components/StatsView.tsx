@@ -185,31 +185,33 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
       exportToPDF(records, stats);
   }
 
+  // Memoize durations array extraction to avoid recreating it multiple times
+  // This is a minor optimization that saves O(n) array allocations across multiple useMemo blocks
+  const durations = useMemo(() => {
+    return records.map(record => record.duration);
+  }, [records]);
+
   // Calculate confidence interval using interpolation
   const confidenceInterval = useMemo(() => {
     if (records.length < 5) return null;
-    const durations = records.map(record => record.duration);
     return getConfidenceInterval(durations, 90);
-  }, [records]);
+  }, [durations]);
 
   // Calculate confidence interval using Nearest Rank method
   const confidenceIntervalRank = useMemo(() => {
     if (records.length < 5) return null;
-    const durations = records.map(record => record.duration);
     return getConfidenceIntervalRank(durations, 90);
-  }, [records]);
+  }, [durations]);
 
   // Calculate Shapiro-Wilk test for normality
   const normalityTest = useMemo(() => {
     if (records.length < 20) return null;
-    const durations = records.map(record => record.duration);
     return shapiroWilkTest(durations);
-  }, [records]);
+  }, [durations]);
 
   // Generate Q-Q plot data
   const qqPlotData = useMemo(() => {
     if (records.length < 10) return null;
-    const durations = records.map(record => record.duration);
     const qqData = generateQQPlotData(durations);
     
     const allValues = qqData.flatMap(d => [d.theoretical, d.observed]);
@@ -252,16 +254,14 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
   // Calculate Mann-Kendall trend test
   const trendTest = useMemo(() => {
     if (records.length < 10) return null;
-    const durations = records.map(record => record.duration);
     return mannKendallTest(durations);
-  }, [records]);
+  }, [durations]);
 
   // Calculate Runs test for randomness
   const randomnessTest = useMemo(() => {
     if (records.length < 10) return null;
-    const durations = records.map(record => record.duration);
     return runsTest(durations);
-  }, [records]);
+  }, [durations]);
 
   // Calculate weekday statistics
   const weekdayData = useMemo(() => {

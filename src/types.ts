@@ -3,6 +3,12 @@
 export interface Coordinates {
   latitude: number;
   longitude: number;
+  accuracy?: number;  // GPS accuracy in meters
+}
+
+export interface WorkLocation extends Coordinates {
+  timestamp: string;
+  accuracy: number;   // Required for work locations
 }
 
 export interface CommuteRecord {

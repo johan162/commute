@@ -8,31 +8,47 @@ import { HistoryView } from './components/HistoryView';
 import { SettingsView } from './components/SettingsView';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import * as statsService from './services/statsService';
-import type { CommuteRecord, Coordinates, View } from './types';
+import type { CommuteRecord, Coordinates, WorkLocation, View } from './types';
 
 const App: React.FC = () => {
   const [view, setView] = useState<View>('main');
   const [commuteRecords, setCommuteRecords] = useLocalStorage<CommuteRecord[]>('commuteRecords', []);
-  const [workLocations, setWorkLocations] = useLocalStorage<Coordinates[]>('workLocations', []);
+  const [workLocations, setWorkLocations] = useLocalStorage<WorkLocation[]>('workLocations', []);
   const [autoStopRadius, setAutoStopRadius] = useLocalStorage<number>('autoStopRadius', 50);
   const [autoStopEnabled, setAutoStopEnabled] = useLocalStorage<boolean>('autoStopEnabled', true);
   const [autoRecordWorkLocation, setAutoRecordWorkLocation] = useLocalStorage<boolean>('autoRecordWorkLocation', false);
   const [includeWeekends, setIncludeWeekends] = useLocalStorage<boolean>('includeWeekends', false);
-  const version = '0.9.1';
+  const version = '0.10.0';
 
   const averageWorkLocation = useMemo<Coordinates | null>(() => {
     if (workLocations.length === 0) return null;
-    const total = workLocations.reduce(
-      (acc, loc) => {
-        acc.latitude += loc.latitude;
-        acc.longitude += loc.longitude;
-        return acc;
-      },
-      { latitude: 0, longitude: 0 }
-    );
-    return {
-      latitude: total.latitude / workLocations.length,
-      longitude: total.longitude / workLocations.length,
+    
+    // Bayesian weighted average based on GPS accuracy
+    // More accurate readings (lower accuracy values) get higher weights
+    const locationsWithWeights = workLocations.map(loc => ({
+      ...loc,
+      weight: 1 / (loc.accuracy * loc.accuracy)  // Inverse square weighting
+    }));
+    
+    const totalWeight = locationsWithWeights.reduce((sum, loc) => sum + loc.weight, 0);
+    
+    // Calculate weighted averages
+    const weightedLat = locationsWithWeights.reduce(
+      (sum, loc) => sum + (loc.latitude * loc.weight), 0
+    ) / totalWeight;
+    
+    const weightedLon = locationsWithWeights.reduce(
+      (sum, loc) => sum + (loc.longitude * loc.weight), 0
+    ) / totalWeight;
+    
+    // Calculate effective accuracy of the weighted average
+    // The effective accuracy decreases as we add more accurate measurements
+    const effectiveAccuracy = Math.sqrt(1 / totalWeight);
+    
+    return { 
+      latitude: weightedLat, 
+      longitude: weightedLon,
+      accuracy: effectiveAccuracy
     };
   }, [workLocations]);
   
@@ -58,7 +74,17 @@ const App: React.FC = () => {
   };
 
   const addWorkLocation = (location: Coordinates) => {
-    setWorkLocations(prev => [...prev, location]);
+    const timestamp = new Date().toISOString();
+    const accuracy = location.accuracy || 50; // Default to 50m if accuracy not provided
+    
+    const workLocation: WorkLocation = {
+      latitude: location.latitude,
+      longitude: location.longitude,
+      accuracy,
+      timestamp
+    };
+    
+    setWorkLocations(prev => [...prev, workLocation]);
   };
 
   const clearWorkLocations = () => {
@@ -92,6 +118,7 @@ const App: React.FC = () => {
           onClearWorkLocations={clearWorkLocations}
           workLocationCount={workLocations.length}
           averageWorkLocation={averageWorkLocation}
+          workLocations={workLocations}
           onClearAllData={clearAllData}
           autoStopRadius={autoStopRadius}
           onAutoStopRadiusChange={setAutoStopRadius}

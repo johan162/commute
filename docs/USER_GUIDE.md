@@ -557,14 +557,24 @@ When your phone's GPS detects you've crossed the boundary, it triggers an action
 2. Every time you stop the timer manually, your current location is recorded
 3. Perfect for learning your work location over time
 
-**Multiple Recordings:**
-- Record your work location multiple times (5-10 times is ideal)
-- The app averages all recordings for accuracy
-- Accounts for GPS drift and parking spot variations
-- More recordings = more accurate center point
+**Multiple Recordings (Recommended):**
+- Record your work location multiple times (5–10 times is ideal)
+- The app uses a Bayesian, accuracy‑weighted average of all recordings
+- More accurate readings (lower GPS error in meters) count more
+- Accounts for GPS drift and different parking spots
+- More recordings = higher confidence and better precision
 
 **Why Multiple Recordings?**
-GPS isn't perfect - it can be off by 5-20 meters. By recording multiple times from different spots (your parking space, the building entrance, your desk by a window), the app calculates the true center of your work area.
+GPS isn't perfect — it can be off by 5–20 meters (sometimes more indoors). By recording multiple times from different spots (your parking space, the entrance, near windows), the app combines them using their reported accuracies. This Bayesian update makes the best possible use of the information you provide: precise measurements influence the result more than rough ones, giving you a truer center point.
+
+#### How accuracy is used
+- Every recording comes with an estimated GPS accuracy (e.g., ±8 m)
+- The app gives more weight to precise points and less to noisy ones
+- The combined result shows an “Effective accuracy,” which improves as you add good measurements
+- In Settings, you’ll see:
+  - “Bayesian Weighted Average Work Location” with coordinates
+  - A color badge showing effective accuracy (green = excellent, red = poor)
+  - An optional breakdown listing each recording and how much it contributed
 
 **Clearing Work Location:**
 
