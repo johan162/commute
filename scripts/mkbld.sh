@@ -114,7 +114,7 @@ if ! git rev-parse --git-dir >/dev/null 2>&1; then
 fi
 
 # Check if there are uncommitted changes
-if ! git diff-index --quiet HEAD --; then
+if [ -n "$(git status --porcelain)" ]; then
     log_warn "You have uncommitted changes in your working directory."
     read -p "Continue anyway? (y/n) " -n 1 -r
     echo
