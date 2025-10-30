@@ -17,6 +17,7 @@
 13. [Release Process](#release-process)
 14. [Coding Guidelines](#coding-guidelines)
 15. [Development Workflow](#development-workflow)
+16. [Testing](#testing)
 
 ---
 
@@ -1377,6 +1378,458 @@ npm install
 # Start development server
 npm run dev
 ```
+
+---
+
+## Testing
+
+### Test Framework Setup
+
+The project uses **Vitest** with **React Testing Library** for unit and integration testing.
+
+**Testing Stack:**
+- **Test Runner**: Vitest 4.0
+- **React Testing**: @testing-library/react 16.3
+- **DOM Matchers**: @testing-library/jest-dom 6.9
+- **Coverage**: @vitest/coverage-v8
+- **Environment**: jsdom 27.0
+
+### Prerequisites
+
+All testing dependencies are included in `package.json` and installed with:
+
+```bash
+npm install
+```
+
+**What gets installed (119 packages):**
+- Vitest test runner and UI
+- React Testing Library utilities
+- Coverage reporting tools
+- DOM environment (jsdom)
+- Mock APIs for localStorage and geolocation
+
+### Configuration Files
+
+**`vitest.config.ts`** - Main test configuration:
+```typescript
+export default defineConfig({
+  plugins: [react()],
+  test: {
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.ts',
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      thresholds: {
+        statements: 70,
+        branches: 70,
+        functions: 70,
+        lines: 70
+      }
+    }
+  }
+});
+```
+
+**`src/test/setup.ts`** - Test environment setup:
+- Imports custom matchers from `@testing-library/jest-dom`
+- Mocks `localStorage` API (getItem, setItem, removeItem, clear)
+- Mocks `navigator.geolocation` for GPS tests
+- Configures automatic cleanup after each test
+
+### Testing the statistics
+
+The statisticsl functions are the most sensitive in this projecte and most likely to have errors. To minimize this risk we have an extensive testing
+suit so that to the best of our ability all statistics are done correctly. Unfortunately, there exists no comprehensive commonly used (to my knowledge)
+statistical methods library for TypeScript/JavaScript. For that reason I have had to implement all this from scratch. Not ideal! 
+Some of these methods are complex and other libraries that implement similar methods have taken years of fine-tuning to get correct. 
+
+Tests that cover our statistical services can be found in `statsService.test.ts` and comprises of:
+
+#### Basic Statistics (6 tests)
+- ✓ Min, max, mean, median calculations
+- ✓ Standard deviation (sample)
+- ✓ Percentile interpolation
+- ✓ Edge cases: empty arrays, single values
+
+#### Shapiro-Wilk Normality Test (4 tests)
+- ✓ Identifies normally distributed data (W > 0.9, p > 0.05)
+- ✓ Detects non-normal distributions (uniform)
+- ✓ Handles degenerate cases (identical values → W = 1.0)
+- ✓ Returns null for insufficient data (n < 3)
+
+#### Q-Q Plot & R² Calculation (5 tests)
+- ✓ Generates theoretical vs. observed quantiles
+- ✓ High R² (>0.75) for normal distributions
+- ✓ Low R² (<0.80) for uniform distributions
+- ✓ Interpretation thresholds: Excellent (≥0.99), Very Good (≥0.95), Good (≥0.90), Moderate (≥0.80), Fair (≥0.70), Poor (<0.70)
+
+#### Mann-Kendall Trend Test (4 tests)
+- ✓ Detects increasing trends (S > 0, p < 0.05)
+- ✓ Detects decreasing trends (S < 0, p < 0.05)
+- ✓ Identifies no trend in random data (p > 0.05)
+- ✓ Requires minimum n = 10
+
+#### Runs Test (5 tests)
+- ✓ Detects random patterns (p > 0.05)
+- ✓ Detects clustered patterns (runs < expected)
+- ✓ Detects oscillating patterns (runs > expected)
+- ✓ Returns null for insufficient data or all equal values
+
+#### generateNiceTicks (5 tests)
+- ✓ Creates human-readable axis tick values
+- ✓ Handles min === max case (expands domain)
+- ✓ Uses nice step sizes: 1, 2, 5, 10 (scaled by powers of 10)
+- ✓ Works with negative and decimal ranges
+
+### Testing the location service
+
+Found in `locationService.test.ts`
+
+#### Haversine Distance Formula (9 tests)
+- ✓ San Francisco to Los Angeles: ~559 km (±1%)
+- ✓ New York to Boston: ~306 km (±1%)
+- ✓ Identical coordinates: 0 meters
+- ✓ Close coordinates: ~100 meters (±10m)
+- ✓ Equator crossing: 20° latitude ≈ 2,223 km
+- ✓ Prime meridian crossing: 20° longitude at 51.5°N ≈ 1,380 km
+- ✓ International date line: 179° to -179° ≈ 222 km
+- ✓ Near poles: 89°N with 180° longitude ≈ 222 km
+- ✓ Symmetry: distance(A→B) === distance(B→A)
+
+### Testing the local storage
+
+Found in `useLocalStorage.test.ts`
+
+#### LocalStorage Hook (13 tests)
+- ✓ Initializes with default value when empty
+- ✓ Reads existing value from localStorage
+- ✓ Updates localStorage on value change
+- ✓ Handles objects, arrays, booleans, numbers
+- ✓ Falls back to initialValue on invalid JSON
+- ✓ Works with null values
+- ✓ Supports updater functions: `setValue(prev => prev + 1)`
+- ✓ Persists across multiple hook instances with same key
+- ✓ Handles complex nested objects
+- ✓ Uses different keys independently
+
+
+### Running Tests
+
+**Using npm scripts:**
+
+```bash
+# Run all tests once
+npm test
+
+# Run tests in watch mode (auto-rerun on file changes)
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:coverage
+
+# Open interactive test UI in browser
+npm run test:ui
+```
+
+**Using Makefile (recommended):**
+
+```bash
+# Run tests once
+make test
+
+# Run tests in watch mode
+make test-watch
+
+# Generate and display coverage report
+make test-coverage
+
+# Open test UI
+make test-ui
+```
+
+### Test Execution Output
+
+**Successful test run:**
+```
+ ✓ src/services/locationService.test.ts (9 tests) 4ms
+ ✓ src/services/statsService.test.ts (41 tests) 15ms
+ ✓ src/hooks/useLocalStorage.test.ts (13 tests) 33ms
+
+ Test Files  3 passed (3)
+      Tests  63 passed (63)
+   Start at  13:01:15
+   Duration  1.05s
+```
+
+**Coverage report:**
+```
+---------------------|---------|----------|---------|---------|
+File                 | % Stmts | % Branch | % Funcs | % Lines |
+---------------------|---------|----------|---------|---------|
+All files            |   93.72 |    84.05 |     100 |   93.72 |
+ hooks               |   91.66 |       75 |     100 |   91.66 |
+  useLocalStorage.ts |   91.66 |       75 |     100 |   91.66 |
+ services            |   93.81 |    84.51 |     100 |   93.81 |
+  locationService.ts |     100 |      100 |     100 |     100 |
+  statsService.ts    |   93.60 |    84.51 |     100 |   93.60 |
+---------------------|---------|----------|---------|---------|
+```
+
+### Test Structure
+
+**Test files follow naming convention:**
+- Service tests: `*.test.ts` (e.g., `statsService.test.ts`)
+- Hook tests: `*.test.ts` (e.g., `useLocalStorage.test.ts`)
+- Component tests: `*.test.tsx` (e.g., `MainView.test.tsx`)
+
+**Typical test structure:**
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { myFunction } from './myService';
+
+describe('myService', () => {
+  describe('myFunction', () => {
+    it('should calculate correctly for valid input', () => {
+      const result = myFunction([1, 2, 3]);
+      expect(result).toBe(6);
+    });
+
+    it('should handle edge case: empty array', () => {
+      const result = myFunction([]);
+      expect(result).toBe(0);
+    });
+  });
+});
+```
+
+### Current Test Coverage
+
+**Test suites:** 3 files, 63 tests total
+
+1. **`statsService.test.ts`** (41 tests)
+   - Basic statistics (min, max, mean, median, stddev, percentiles)
+   - Shapiro-Wilk normality test
+   - Q-Q plot R² calculation
+   - Mann-Kendall trend test
+   - Runs test for randomness
+   - Chart axis tick generation
+
+2. **`locationService.test.ts`** (9 tests)
+   - Haversine distance formula
+   - Known coordinate distances (SF-LA, NYC-Boston)
+   - Edge cases (identical coords, poles, date line)
+   - Symmetry verification
+
+3. **`useLocalStorage.test.ts`** (13 tests)
+   - Hook initialization and updates
+   - localStorage sync
+   - JSON parsing/serialization
+   - Error handling (invalid JSON)
+   - Updater functions
+   - Multiple instances with shared keys
+
+### Writing New Tests
+
+**For services (pure functions):**
+
+```typescript
+import { describe, it, expect } from 'vitest';
+import { myCalculation } from '../services/myService';
+
+describe('myCalculation', () => {
+  it('should return expected value', () => {
+    expect(myCalculation(10)).toBe(20);
+  });
+
+  it('should handle edge cases', () => {
+    expect(myCalculation(0)).toBe(0);
+    expect(myCalculation(-5)).toBe(-10);
+  });
+});
+```
+
+**For React hooks:**
+
+```typescript
+import { renderHook, act } from '@testing-library/react';
+import { useMyHook } from '../hooks/useMyHook';
+
+describe('useMyHook', () => {
+  it('should initialize with default value', () => {
+    const { result } = renderHook(() => useMyHook('initial'));
+    expect(result.current[0]).toBe('initial');
+  });
+
+  it('should update value', () => {
+    const { result } = renderHook(() => useMyHook('initial'));
+    
+    act(() => {
+      result.current[1]('updated');
+    });
+    
+    expect(result.current[0]).toBe('updated');
+  });
+});
+```
+
+**For React components:**
+
+```typescript
+import { render, screen, fireEvent } from '@testing-library/react';
+import { MyComponent } from '../components/MyComponent';
+
+describe('MyComponent', () => {
+  it('should render with correct text', () => {
+    render(<MyComponent title="Test" />);
+    expect(screen.getByText('Test')).toBeInTheDocument();
+  });
+
+  it('should call callback on button click', () => {
+    const handleClick = vi.fn();
+    render(<MyComponent onClick={handleClick} />);
+    
+    fireEvent.click(screen.getByRole('button'));
+    expect(handleClick).toHaveBeenCalledTimes(1);
+  });
+});
+```
+
+### Quality Gates
+
+**Coverage thresholds enforced:**
+- Statements: 75%
+- Branches: 75%
+- Functions: 75%
+- Lines: 75%
+
+These thresholds are enforced by:
+1. `vitest.config.ts` (fails test run if below threshold)
+2. `scripts/mkrelease.sh` (blocks releases with low coverage)
+3. `scripts/mkbld.sh` (blocks builds with insufficient tests)
+
+**To check coverage:**
+```bash
+make test-coverage
+
+# Or using npm
+npm run test:coverage
+```
+
+The build and release scripts will automatically fail if coverage drops below 75%.
+
+### Debugging Tests
+
+**Run tests in watch mode:**
+```bash
+make test-watch
+```
+This will automatically re-run tests when files change.
+
+**Use test UI for debugging:**
+```bash
+make test-ui
+```
+Opens an interactive browser interface at `http://localhost:51204/__vitest__/`
+
+**Add debug output:**
+```typescript
+it('should calculate correctly', () => {
+  const result = myFunction(10);
+  console.log('Result:', result);  // Appears in test output
+  expect(result).toBe(20);
+});
+```
+
+**Run specific test file:**
+```bash
+npx vitest run src/services/statsService.test.ts
+```
+
+**Run tests matching pattern:**
+```bash
+npx vitest run -t "should calculate percentiles"
+```
+
+### Continuous Integration
+
+Tests run automatically on:
+- Pre-release checks (`mkrelease.sh`)
+- Build verification (`mkbld.sh`)
+- Manual execution (`make test`)
+
+**Expected CI workflow:**
+```bash
+make install       # Install dependencies
+make typecheck     # TypeScript validation
+make test          # Run test suite
+make test-coverage # Verify coverage thresholds
+make build         # Build production assets
+```
+
+### Test Maintenance
+
+**When adding new features:**
+1. Write tests alongside feature code
+2. Ensure coverage stays above 75%
+3. Test edge cases and error conditions
+4. Run full test suite before committing
+
+**When refactoring:**
+1. Run tests first to establish baseline
+2. Make incremental changes
+3. Re-run tests after each change
+4. Ensure all tests still pass
+
+**When fixing bugs:**
+1. Write failing test that reproduces bug
+2. Fix the bug
+3. Verify test now passes
+4. Add additional tests for related edge cases
+
+### Common Test Patterns
+
+**Testing async operations:**
+```typescript
+it('should handle async operation', async () => {
+  const result = await asyncFunction();
+  expect(result).toBe('expected');
+});
+```
+
+**Mocking functions:**
+```typescript
+import { vi } from 'vitest';
+
+it('should call callback', () => {
+  const mockFn = vi.fn();
+  myComponent(mockFn);
+  expect(mockFn).toHaveBeenCalledWith('arg');
+});
+```
+
+**Testing localStorage:**
+```typescript
+it('should save to localStorage', () => {
+  myFunction();
+  expect(localStorage.getItem('key')).toBe('value');
+});
+```
+
+**Testing geolocation:**
+```typescript
+it('should get current position', async () => {
+  const position = await getCurrentPosition();
+  expect(position.latitude).toBeDefined();
+  expect(position.longitude).toBeDefined();
+});
+```
+
+For more detailed testing information, see `TEST_SUITE_SUMMARY.md`.
+
+---
 
 ### Development Cycle
 

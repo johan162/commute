@@ -136,9 +136,12 @@ if ! git show-ref --verify --quiet refs/heads/gh-pages; then
 fi
 
 # =====================================
-# Step 2: Build Project
+# Step 2: Build Project, check types, run tests
 # =====================================
 
+# --------------------------------------
+# Step 2.1: Build Project
+# --------------------------------------
 log_step 2 "Building project..."
 
 # Clean previous build
@@ -164,6 +167,82 @@ if [ -z "$(ls -A dist)" ]; then
 fi
 
 log_info "Build successful!"
+
+# --------------------------------------
+# Step 2.1: Type Check
+# --------------------------------------
+log_step 2.1 "Typescript type check..."
+if ! npx tsc --noEmit --strict >/dev/null 2>&1; then
+    log_error "Type check failed. Run 'npm run type-check' manually to see errors."
+    exit 1
+fi
+log_info "Type check passed!"
+
+# --------------------------------------
+# Step 2.2: Check test coverage meets minimum threshold
+# --------------------------------------
+log_step 2.2 "Checking test coverage..."
+
+COVERAGE_THRESHOLD=75
+log_info "Required coverage threshold: ${COVERAGE_THRESHOLD}%"
+
+# Run tests with coverage and capture output
+COVERAGE_OUTPUT=$(npm run test:coverage 2>&1)
+
+# Extract coverage percentages from the output
+# Looking for the "All files" line which contains overall coverage
+COVERAGE_LINE=$(echo "$COVERAGE_OUTPUT" | grep "All files" | head -1)
+
+if [ -z "$COVERAGE_LINE" ]; then
+    log_error "Could not extract coverage information from test output"
+    log_error "Please ensure 'npm run test:coverage' produces coverage report"
+    exit 1
+fi
+
+# Extract the percentage values (Statements, Branch, Functions, Lines)
+# Format: "All files     |   92.7 |    84.05 |     100 |   93.72 |"
+STMT_COV=$(echo "$COVERAGE_LINE" | awk '{print $4}' | cut -d'|' -f1 | xargs)
+BRANCH_COV=$(echo "$COVERAGE_LINE" | awk '{print $6}' | cut -d'|' -f1 | xargs)
+FUNC_COV=$(echo "$COVERAGE_LINE" | awk '{print $8}' | cut -d'|' -f1 | xargs)
+LINE_COV=$(echo "$COVERAGE_LINE" | awk '{print $10}' | cut -d'|' -f1 | xargs)
+
+log_info "Coverage Report:"
+log_info "  Statements: ${STMT_COV}%"
+log_info "  Branches:   ${BRANCH_COV}%"
+log_info "  Functions:  ${FUNC_COV}%"
+log_info "  Lines:      ${LINE_COV}%"
+
+# Check if any metric is below threshold
+COVERAGE_FAILED=0
+
+if (( $(echo "$STMT_COV < $COVERAGE_THRESHOLD" | bc -l) )); then
+    log_error "Statement coverage (${STMT_COV}%) is below threshold (${COVERAGE_THRESHOLD}%)"
+    COVERAGE_FAILED=1
+fi
+
+if (( $(echo "$BRANCH_COV < $COVERAGE_THRESHOLD" | bc -l) )); then
+    log_error "Branch coverage (${BRANCH_COV}%) is below threshold (${COVERAGE_THRESHOLD}%)"
+    COVERAGE_FAILED=1
+fi
+
+if (( $(echo "$FUNC_COV < $COVERAGE_THRESHOLD" | bc -l) )); then
+    log_error "Function coverage (${FUNC_COV}%) is below threshold (${COVERAGE_THRESHOLD}%)"
+    COVERAGE_FAILED=1
+fi
+
+if (( $(echo "$LINE_COV < $COVERAGE_THRESHOLD" | bc -l) )); then
+    log_error "Line coverage (${LINE_COV}%) is below threshold (${COVERAGE_THRESHOLD}%)"
+    COVERAGE_FAILED=1
+fi
+
+if [ $COVERAGE_FAILED -eq 1 ]; then
+    log_error "Test coverage is below minimum threshold of ${COVERAGE_THRESHOLD}%"
+    log_error "Please add more tests to increase coverage before creating a release"
+    exit 1
+fi
+
+log_info "✓ Test coverage meets minimum threshold (${COVERAGE_THRESHOLD}%)"   
+
 
 # =====================================
 # Step 3: Deploy to gh-pages

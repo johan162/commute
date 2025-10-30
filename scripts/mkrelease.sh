@@ -102,6 +102,32 @@ EXAMPLES:
 REQUIREMENTS:
     • Must be run from project root directory
     • Must be on 'develop' branch with clean working directory
+    • All tests must pass
+    • Test coverage must meet minimum threshold (75% for all metrics)
+    • Build must succeed without errors
+    • TypeScript type check must pass
+
+QUALITY GATES:
+    This script enforces the following quality gates before creating a release:
+    
+    1. Repository Status
+       - Clean working directory (no uncommitted changes)
+       - On 'develop' branch
+       
+    2. Build Validation
+       - npm run build succeeds
+       - TypeScript type check (tsc --noEmit) passes
+       
+    3. Test Coverage (NEW!)
+       - Statements:  >= 75%
+       - Branches:    >= 75%
+       - Functions:   >= 75%
+       - Lines:       >= 75%
+       
+    4. Version Management
+       - Updates version in App.tsx, README.md, package.json
+       - Creates version tag
+       - Builds distribution artifacts
 
 EOF
 }
@@ -229,15 +255,80 @@ fi
 log_info "✓ TypeScript type check passed"
 
 # ===============================================================
-# Step 5: Update the version number string in 
+# Step 5: Check test coverage meets minimum threshold
+# ===============================================================
+log_step 5 "Checking test coverage..."
+
+COVERAGE_THRESHOLD=75
+log_info "Required coverage threshold: ${COVERAGE_THRESHOLD}%"
+
+# Run tests with coverage and capture output
+COVERAGE_OUTPUT=$(npm run test:coverage 2>&1 | tee -a "$RELEASE_LOGFILE")
+
+# Extract coverage percentages from the output
+# Looking for the "All files" line which contains overall coverage
+COVERAGE_LINE=$(echo "$COVERAGE_OUTPUT" | grep "All files" | head -1)
+
+if [ -z "$COVERAGE_LINE" ]; then
+    log_error "Could not extract coverage information from test output"
+    log_error "Please ensure 'npm run test:coverage' produces coverage report"
+    exit 1
+fi
+
+# Extract the percentage values (Statements, Branch, Functions, Lines)
+# Format: "All files     |   92.7 |    84.05 |     100 |   93.72 |"
+STMT_COV=$(echo "$COVERAGE_LINE" | awk '{print $4}' | cut -d'|' -f1 | xargs)
+BRANCH_COV=$(echo "$COVERAGE_LINE" | awk '{print $6}' | cut -d'|' -f1 | xargs)
+FUNC_COV=$(echo "$COVERAGE_LINE" | awk '{print $8}' | cut -d'|' -f1 | xargs)
+LINE_COV=$(echo "$COVERAGE_LINE" | awk '{print $10}' | cut -d'|' -f1 | xargs)
+
+log_info "Coverage Report:"
+log_info "  Statements: ${STMT_COV}%"
+log_info "  Branches:   ${BRANCH_COV}%"
+log_info "  Functions:  ${FUNC_COV}%"
+log_info "  Lines:      ${LINE_COV}%"
+
+# Check if any metric is below threshold
+COVERAGE_FAILED=0
+
+if (( $(echo "$STMT_COV < $COVERAGE_THRESHOLD" | bc -l) )); then
+    log_error "Statement coverage (${STMT_COV}%) is below threshold (${COVERAGE_THRESHOLD}%)"
+    COVERAGE_FAILED=1
+fi
+
+if (( $(echo "$BRANCH_COV < $COVERAGE_THRESHOLD" | bc -l) )); then
+    log_error "Branch coverage (${BRANCH_COV}%) is below threshold (${COVERAGE_THRESHOLD}%)"
+    COVERAGE_FAILED=1
+fi
+
+if (( $(echo "$FUNC_COV < $COVERAGE_THRESHOLD" | bc -l) )); then
+    log_error "Function coverage (${FUNC_COV}%) is below threshold (${COVERAGE_THRESHOLD}%)"
+    COVERAGE_FAILED=1
+fi
+
+if (( $(echo "$LINE_COV < $COVERAGE_THRESHOLD" | bc -l) )); then
+    log_error "Line coverage (${LINE_COV}%) is below threshold (${COVERAGE_THRESHOLD}%)"
+    COVERAGE_FAILED=1
+fi
+
+if [ $COVERAGE_FAILED -eq 1 ]; then
+    log_error "Test coverage is below minimum threshold of ${COVERAGE_THRESHOLD}%"
+    log_error "Please add more tests to increase coverage before creating a release"
+    exit 1
+fi
+
+log_info "✓ Test coverage meets minimum threshold (${COVERAGE_THRESHOLD}%)"
+
+# ===============================================================
+# Step 6: Update the version number string in 
 # src/App.tsx, README.md, package.json, package-lock.json
 # ===============================================================
-log_step 5 "Updating version in files..."
+log_step 6 "Updating version in files..."
 
 # --------------------------------------------------------------
-# Step 5.1: Update version number in badge in App.tsx
+# Step 6.1: Update version number in badge in App.tsx
 # --------------------------------------------------------------
-log_step 5.1 "Updating version badge in App.tsx..."
+log_step 6.1 "Updating version badge in App.tsx..."
 
 if [ ! -f "src/App.tsx" ]; then
     log_error "src/App.tsx not found"
@@ -266,9 +357,9 @@ if ! grep -q "const version = '$VERSION';" src/App.tsx; then
 fi
 
 # --------------------------------------------------------------
-# Step 5.2: Update version number in badge in README.md
+# Step 6.2: Update version number in badge in README.md
 # --------------------------------------------------------------
-log_step 5.2 "Updating version badge in README.md..."
+log_step 6.2 "Updating version badge in README.md..."
 
 if [ ! -f "README.md" ]; then
     log_error "README.md not found"
@@ -293,9 +384,9 @@ fi
 rm -f README.md.bak
 
 # --------------------------------------------------------------
-# Step 5.3: Update version in package.json
+# Step 6.3: Update version in package.json
 # --------------------------------------------------------------
-log_step 5.3 "Updating version in package.json..."
+log_step 6.3 "Updating version in package.json..."
 if [ ! -f "package.json" ]; then
     log_error "package.json not found"
     exit 1
@@ -309,9 +400,9 @@ else
 fi
 
 # ===============================================================
-# Step 6: Updated CHANGELOG.md
+# Step 7: Updated CHANGELOG.md
 # ==============================================================
-log_step 6 "Updating CHANGELOG.md..."
+log_step 7 "Updating CHANGELOG.md..."
 
 echo "  ✓ Preparing changelog..."
 CHANGELOG_DATE=$(date +%Y-%m-%d)
@@ -373,9 +464,9 @@ while true; do
 done
 
 # ===============================================================
-# Step 7: Stage and commit the updated src/App.tsx and CHANGELOG.md files
+# Step 8: Stage and commit the updated src/App.tsx and CHANGELOG.md files
 # ===============================================================
-log_step 7 "Committing version update, README.md and CHANGELOG.md..."
+log_step 8 "Committing version update, README.md and CHANGELOG.md..."
 
 if git add src/App.tsx CHANGELOG.md README.md package.json package-lock.json >>"$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Staged src/App.tsx, CHANGELOG.md, README.md, package.json and package-lock.json"
@@ -392,9 +483,9 @@ else
 fi
 
 # ===============================================================
-# Step 8: Switch to main branch and merge develop and tag main
+# Step 9: Switch to main branch and merge develop and tag main
 # ===============================================================
-log_step 8 "Switching to main branch..."
+log_step 9 "Switching to main branch..."
 
 if ! git checkout main >>"$RELEASE_LOGFILE" 2>&1; then
     log_error "Failed to checkout main branch. Directory dirty?"
@@ -447,9 +538,9 @@ else
 fi
 
 # ===============================================================
-# Step 9: Build and deploy to gh-pages using existing script
+# Step 10: Build and deploy to gh-pages using existing script
 # ===============================================================
-log_step 9 "Building and deploying to gh-pages..."
+log_step 10 "Building and deploying to gh-pages..."
 
 if [ ! -f "scripts/mkbld.sh" ]; then
     log_error "scripts/mkbld.sh not found"
@@ -471,9 +562,9 @@ else
 fi
 
 # ===============================================================
-# Step 10: Switch back to develop branch and merge back main
+# Step 11: Switch back to develop branch and merge back main
 # ===============================================================
-log_step 10 "Switching back to develop branch..."
+log_step 11 "Switching back to develop branch..."
 
 if git checkout develop >>"$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Switched back to develop branch"
@@ -498,9 +589,9 @@ else
 fi
 
 # ==============================================================
-# Step 11: Create build artifacts by compressing dist/ directory
+# Step 12: Create build artifacts by compressing dist/ directory
 # ==============================================================
-log_step 11 "Creating build artifacts..."
+log_step 12 "Creating build artifacts..."
 
 if [ ! -d "dist" ]; then
     log_error "dist directory not found"
@@ -539,7 +630,7 @@ else
 fi
 
 # ===============================================================
-# Step 12: Print summary and next steps
+# Step 13: Print summary and next steps
 # ===============================================================
 
 echo ""

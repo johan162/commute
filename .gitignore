@@ -17,3 +17,9 @@ commute-*.zip
 artifacts/
 commute*.zip
 commute*.tar.gz
+.release_logs/
+.build-stamp
+.test-stamp
+.typecheck-stamp
+.cache/
+tsconfig.tsbuildinfo

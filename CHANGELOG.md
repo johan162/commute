@@ -1,3 +1,19 @@
+## [0.11.0] - 2025-10-30
+
+Release type: minor
+
+### 📋 Summary 
+- Major internal improvements by adding test-frameworks.
+
+### 📖 Documentation
+- [upd] Added detailed information on how to setup tests, write tests and execute the test-suite.
+
+### 🛠 Internal
+- [feat] Added unit-test and intgration-test framework
+- [feat] Added Quality gates of > 75% code coverage to all build and release processes
+- [feat] Added a Makefile as the central point of execution and status checking
+
+
 ## [0.10.0] - 2025-10-30
 
 Release type: minor
