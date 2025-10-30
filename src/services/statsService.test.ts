@@ -6,6 +6,9 @@ import {
   getMedian,
   getStdDev,
   getPercentile,
+  getPercentileNearestRank,
+  getConfidenceInterval,
+  getConfidenceIntervalRank,
   shapiroWilkTest,
   generateQQPlotData,
   calculateQQPlotRSquared,
@@ -64,6 +67,56 @@ describe('statsService', () => {
       
       expect(getPercentile([], 50)).toBe(0);
     });
+
+    it('should calculate percentile using nearest rank method', () => {
+      const data = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+      
+      expect(getPercentileNearestRank(data, 0)).toBe(1);
+      expect(getPercentileNearestRank(data, 50)).toBe(5);
+      expect(getPercentileNearestRank(data, 100)).toBe(10);
+      expect(getPercentileNearestRank(data, 25)).toBe(3);
+      expect(getPercentileNearestRank(data, 90)).toBe(9);
+      
+      expect(getPercentileNearestRank([], 50)).toBe(0);
+    });
+
+    it('should calculate confidence intervals', () => {
+      const data = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+      
+      // 90% confidence interval (5th to 95th percentile)
+      const ci90 = getConfidenceInterval(data, 90);
+      expect(ci90).not.toBeNull();
+      if (ci90) {
+        expect(ci90.low).toBeLessThan(ci90.high);
+        expect(ci90.low).toBeGreaterThanOrEqual(10);
+        expect(ci90.high).toBeLessThanOrEqual(100);
+      }
+      
+      // 95% confidence interval (2.5th to 97.5th percentile)
+      const ci95 = getConfidenceInterval(data, 95);
+      expect(ci95).not.toBeNull();
+      if (ci95) {
+        expect(ci95.low).toBeLessThan(ci95.high);
+      }
+      
+      // Should return null for insufficient data
+      expect(getConfidenceInterval([1, 2, 3], 90)).toBeNull();
+    });
+
+    it('should calculate confidence intervals using nearest rank', () => {
+      const data = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+      
+      const ci = getConfidenceIntervalRank(data, 90);
+      expect(ci).not.toBeNull();
+      if (ci) {
+        expect(ci.low).toBeLessThan(ci.high);
+        expect(ci.low).toBeGreaterThanOrEqual(10);
+        expect(ci.high).toBeLessThanOrEqual(100);
+      }
+      
+      // Should return null for insufficient data
+      expect(getConfidenceIntervalRank([1, 2, 3, 4], 90)).toBeNull();
+    });
   });
 
   describe('Shapiro-Wilk Test', () => {
@@ -113,6 +166,44 @@ describe('statsService', () => {
         expect(result.W).toBeCloseTo(1.0);
         expect(result.pValue).toBeCloseTo(1.0);
         expect(result.isNormal).toBe(true);
+      }
+    });
+
+    it('should test with various sample sizes for p-value interpolation', () => {
+      // Test with n=20 (exact table match)
+      const data20 = Array.from({ length: 20 }, (_, i) => 40 + Math.random() * 20);
+      const result20 = shapiroWilkTest(data20);
+      expect(result20).not.toBeNull();
+      
+      // Test with n=100 (exact table match)
+      const data100 = Array.from({ length: 100 }, (_, i) => 40 + Math.random() * 20);
+      const result100 = shapiroWilkTest(data100);
+      expect(result100).not.toBeNull();
+      
+      // Test with n=75 (interpolation needed)
+      const data75 = Array.from({ length: 75 }, (_, i) => 40 + Math.random() * 20);
+      const result75 = shapiroWilkTest(data75);
+      expect(result75).not.toBeNull();
+      
+      // Test with very large n=250 (at table boundary)
+      const data250 = Array.from({ length: 250 }, (_, i) => 40 + Math.random() * 20);
+      const result250 = shapiroWilkTest(data250);
+      expect(result250).not.toBeNull();
+    });
+
+    it('should handle data with very low W statistic (strong non-normality)', () => {
+      // Highly skewed data (bimodal)
+      const bimodalData = [
+        ...Array(25).fill(20),  // Cluster at 20
+        ...Array(25).fill(80)   // Cluster at 80
+      ];
+      
+      const result = shapiroWilkTest(bimodalData);
+      expect(result).not.toBeNull();
+      if (result) {
+        // This should have very low W and low p-value
+        expect(result.W).toBeLessThan(0.9);
+        expect(result.isNormal).toBe(false);
       }
     });
   });
@@ -226,6 +317,38 @@ describe('statsService', () => {
       expect(mannKendallTest([1, 2, 3, 4, 5])).toBeNull();
       expect(mannKendallTest([1, 2, 3, 4, 5, 6, 7, 8, 9])).toBeNull();
     });
+
+    it('should handle edge cases in z-score calculation', () => {
+      // Case where S = 1 (should use special formula)
+      const dataWithSmallS = [50, 51, 50, 51, 50, 51, 50, 51, 50, 51];
+      const result1 = mannKendallTest(dataWithSmallS);
+      expect(result1).not.toBeNull();
+      
+      // Case where S = -1
+      const dataWithNegativeSmallS = [51, 50, 51, 50, 51, 50, 51, 50, 51, 50];
+      const result2 = mannKendallTest(dataWithNegativeSmallS);
+      expect(result2).not.toBeNull();
+      
+      // Case where S = 0 (no trend at all)
+      const dataPerfectBalance = [50, 50, 50, 50, 50, 50, 50, 50, 50, 50];
+      const result3 = mannKendallTest(dataPerfectBalance);
+      expect(result3).not.toBeNull();
+      if (result3) {
+        expect(result3.S).toBe(0);
+        expect(result3.trend).toBe('no trend');
+      }
+    });
+
+    it('should categorize significance levels correctly', () => {
+      // Strong increasing trend (p < 0.01)
+      const strongTrend = [40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95];
+      const result = mannKendallTest(strongTrend);
+      expect(result).not.toBeNull();
+      if (result) {
+        expect(result.trend).toBe('increasing');
+        expect(result.significance).toBe('strong');
+      }
+    });
   });
 
   describe('Runs Test', () => {
@@ -272,6 +395,39 @@ describe('statsService', () => {
     it('should return null when all values are equal', () => {
       const identicalData = Array(20).fill(50);
       expect(runsTest(identicalData)).toBeNull();
+    });
+
+    it('should handle edge cases in z-score calculation', () => {
+      // Case where runs > expectedRuns (oscillating, should use runs - 0.5)
+      const oscillating = [40, 60, 42, 62, 44, 64, 46, 66, 48, 68, 50, 70];
+      const result1 = runsTest(oscillating);
+      expect(result1).not.toBeNull();
+      if (result1) {
+        expect(result1.runs).toBeGreaterThan(result1.expectedRuns);
+      }
+      
+      // Case where runs < expectedRuns (clustered, should use runs + 0.5)
+      const clustered = [40, 41, 42, 43, 44, 45, 60, 61, 62, 63, 64, 65];
+      const result2 = runsTest(clustered);
+      expect(result2).not.toBeNull();
+      if (result2) {
+        expect(result2.runs).toBeLessThan(result2.expectedRuns);
+      }
+      
+      // Case where runs === expectedRuns (perfectly random)
+      // This is rare but the code handles it with zScore = 0
+    });
+
+    it('should categorize significance levels correctly', () => {
+      // Strong pattern (p < 0.01)
+      const strongOscillating = Array.from({ length: 50 }, (_, i) => i % 2 === 0 ? 30 : 70);
+      const result = runsTest(strongOscillating);
+      expect(result).not.toBeNull();
+      if (result) {
+        expect(result.pattern).toBe('oscillating');
+        expect(result.pValue).toBeLessThan(0.01);
+        expect(result.significance).toBe('strong');
+      }
     });
   });
 
@@ -321,6 +477,40 @@ describe('statsService', () => {
       
       expect(result.domain[0]).toBeLessThanOrEqual(0.5);
       expect(result.domain[1]).toBeGreaterThanOrEqual(2.5);
+      expect(result.ticks.length).toBeGreaterThan(0);
+    });
+
+    it('should handle different normalizedStep branches', () => {
+      // Test normalizedStep <= 1 (should use step 1)
+      const result1 = generateNiceTicks(0, 10, 15);
+      expect(result1.ticks.length).toBeGreaterThan(0);
+      
+      // Test normalizedStep <= 2 (should use step 2)
+      const result2 = generateNiceTicks(0, 20, 15);
+      expect(result2.ticks.length).toBeGreaterThan(0);
+      
+      // Test normalizedStep <= 5 (should use step 5)
+      const result5 = generateNiceTicks(0, 50, 15);
+      expect(result5.ticks.length).toBeGreaterThan(0);
+      
+      // Test normalizedStep > 5 (should use step 10)
+      const result10 = generateNiceTicks(0, 100, 8);
+      expect(result10.ticks.length).toBeGreaterThan(0);
+    });
+
+    it('should handle very small ranges', () => {
+      const result = generateNiceTicks(0.001, 0.009, 5);
+      
+      expect(result.domain[0]).toBeLessThanOrEqual(0.001);
+      expect(result.domain[1]).toBeGreaterThanOrEqual(0.009);
+      expect(result.ticks.length).toBeGreaterThan(0);
+    });
+
+    it('should handle very large ranges', () => {
+      const result = generateNiceTicks(0, 1000000, 5);
+      
+      expect(result.domain[0]).toBeLessThanOrEqual(0);
+      expect(result.domain[1]).toBeGreaterThanOrEqual(1000000);
       expect(result.ticks.length).toBeGreaterThan(0);
     });
   });
