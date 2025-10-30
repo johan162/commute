@@ -76,9 +76,8 @@ export const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ records, metri
       Object.keys(dayWeeks).forEach(weekKey => allWeekKeys.add(weekKey));
     });
 
-    // Get the last 16 weeks
-    const windowSize = 16;
-    const sortedWeekKeys = Array.from(allWeekKeys).sort((a, b) => a.localeCompare(b)).slice(-windowSize);
+    // Get ALL weeks (removed 16-week limit)
+    const sortedWeekKeys = Array.from(allWeekKeys).sort((a, b) => a.localeCompare(b));
 
     // Create the grid: 7 rows (days) x 16 columns (weeks)
     // Reorder so Monday is first (dayOfWeek 1) and Sunday is last (dayOfWeek 0)
@@ -157,56 +156,59 @@ export const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ records, metri
       {/* Add some space to the heatmap */}
       <div className="h-2" />
 
-      {/* Calendar Grid */}
-      <div className="flex flex-col items-center">
-        {/* Week labels */}
-        <div className="flex mb-1 ml-6">
-          {heatmapData.weeks.map((weekKey, index) => {
-            const weekNum = parseInt(weekKey.split('-')[1]);
-            return (
-              <div key={weekKey} className="w-5 text-center">
-                {index % 2 === 0 && (
-                  <div className="text-xs text-gray-500 transform -rotate-45 origin-center whitespace-nowrap">
-                    W{weekNum}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Days and cells */}
-        {heatmapData.grid.map((weekData, dayOfWeek) => (
-          <div key={dayOfWeek} className="flex items-center mb-0.5">
-            {/* Day label */}
-            <div className="w-5 text-xs text-gray-500 text-center leading-tight mr-1">
-              {['M', 'T', 'W', 'T', 'F', 'S', 'S'][dayOfWeek]}
-            </div>
-
-            {/* Week cells */}
-            <div className="flex">
-              {weekData.map((day, weekIndex) => (
-                <div
-                  key={weekIndex}
-                  className="w-5 h-5 rounded-sm cursor-pointer transition-all hover:ring-2 hover:ring-cyan-400 hover:ring-opacity-50"
-                  style={{
-                    backgroundColor: getColor(
-                      day?.value || null,
-                      heatmapData.maxValue,
-                      heatmapData.minValue
-                    )
-                  }}
-                  title={day ? formatTooltip(day) : 'No data'}
-                />
-              ))}
-            </div>
+      {/* Calendar Grid - Only heatmap scrolls, not legend */}
+      <div className="w-full overflow-x-auto">
+        <div className="flex flex-col min-w-max max-w-none">
+          {/* Week labels */}
+          <div className="flex mb-2 ml-6 h-8 items-end">
+            {heatmapData.weeks.map((weekKey, index) => {
+              const weekNum = parseInt(weekKey.split('-')[1]);
+              const year = parseInt(weekKey.split('-')[0]);
+              return (
+                <div key={weekKey} className="w-5 text-center">
+                  {index % 4 === 0 && ( // Show every 4th week to avoid crowding
+                    <div className="text-xs text-gray-500 transform -rotate-45 origin-bottom whitespace-nowrap">
+                      {year !== new Date().getFullYear() ? `${String(year).slice(-2)}-W${weekNum}` : `W${weekNum}`}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
-        ))}
+
+          {/* Days and cells */}
+          {heatmapData.grid.map((weekData, dayOfWeek) => (
+            <div key={dayOfWeek} className="flex items-center mb-0.5">
+              {/* Day label */}
+              <div className="w-5 text-xs text-gray-500 text-center leading-tight mr-1">
+                {['M', 'T', 'W', 'T', 'F', 'S', 'S'][dayOfWeek]}
+              </div>
+
+              {/* Week cells */}
+              <div className="flex">
+                {weekData.map((day, weekIndex) => (
+                  <div
+                    key={weekIndex}
+                    className="w-5 h-5 rounded-sm cursor-pointer transition-all hover:ring-2 hover:ring-cyan-400 hover:ring-opacity-50"
+                    style={{
+                      backgroundColor: getColor(
+                        day?.value || null,
+                        heatmapData.maxValue,
+                        heatmapData.minValue
+                      )
+                    }}
+                    title={day ? formatTooltip(day) : 'No data'}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* Stats */}
+      {/* Stats - Updated to show actual week count */}
       <div className="mt-4 text-xs text-gray-500 text-center">
-        Showing maximum 16 weeks • {records.length} total commutes
+        Showing {heatmapData.weeks.length} weeks • {records.length} total commutes
       </div>
     </div>
   );
