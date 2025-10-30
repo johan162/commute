@@ -321,6 +321,182 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
         </div>
       </Card>
 
+      <Card title="Total Commute Time">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {/* Per Day */}
+          <div className="bg-gray-800 p-4 rounded-lg">
+            <p className="text-sm text-gray-400 mb-2">Per Day</p>
+            <p className="text-2xl font-bold text-cyan-400 mb-2">{formatTotalDuration(dayTotal)}</p>
+            <select
+              value={selectedDay}
+              onChange={(e) => setSelectedDay(e.target.value)}
+              className="w-full bg-gray-700 border border-gray-600 rounded-md p-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            >
+              {availableOptions.days.map(day => (
+                <option key={day} value={day}>
+                  {new Date(day).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Per Week */}
+          <div className="bg-gray-800 p-4 rounded-lg">
+            <p className="text-sm text-gray-400 mb-2">Per Week</p>
+            <p className="text-2xl font-bold text-cyan-400 mb-2">{formatTotalDuration(weekTotal)}</p>
+            <select
+              value={selectedWeek}
+              onChange={(e) => setSelectedWeek(e.target.value)}
+              className="w-full bg-gray-700 border border-gray-600 rounded-md p-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            >
+              {availableOptions.weeks.map(week => (
+                <option key={week} value={week}>
+                  Week of {formatWeekLabel(week)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Per Month */}
+          <div className="bg-gray-800 p-4 rounded-lg">
+            <p className="text-sm text-gray-400 mb-2">Per Month</p>
+            <p className="text-2xl font-bold text-cyan-400 mb-2">{formatTotalDuration(monthTotal)}</p>
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="w-full bg-gray-700 border border-gray-600 rounded-md p-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            >
+              {availableOptions.months.map(month => (
+                <option key={month} value={month}>
+                  {getMonthName(month)}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Per Year */}
+          <div className="bg-gray-800 p-4 rounded-lg">
+            <p className="text-sm text-gray-400 mb-2">Per Year</p>
+            <p className="text-2xl font-bold text-cyan-400 mb-2">{formatTotalDuration(yearTotal)}</p>
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(e.target.value)}
+              className="w-full bg-gray-700 border border-gray-600 rounded-md p-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            >
+              {availableOptions.years.map(year => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Total */}
+          <div className="bg-gray-800 p-4 rounded-lg">
+            <p className="text-sm text-gray-400 mb-2">Total Time</p>
+            <p className="text-2xl font-bold text-cyan-400">{formatTotalDuration(totalTime)}</p>
+            <p className="text-xs text-gray-500 mt-2">Since start</p>
+          </div>
+        </div>
+      </Card>
+
+      <Card title="Commute Duration Distribution">
+         <div className="h-64 md:h-80">
+           <HistogramChart records={records} binSizeMinutes={binSize} />
+         </div>
+         <div className="flex items-center justify-center mt-4 space-x-2">
+            <label htmlFor="binSize" className="text-sm text-gray-400">Bin Size (minutes):</label>
+            <select
+                id="binSize"
+                value={binSize}
+                onChange={(e) => setBinSize(Number(e.target.value))}
+                className="bg-gray-700 border border-gray-600 rounded-md p-1 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            >
+                <option value={1}>1</option>
+                <option value={2}>2</option>
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+            </select>
+        </div>
+      </Card>
+
+      <Card title="Commute Time by Day of Week">
+        <div className="text-center">
+          {records.length >= 5 ? (
+            <>
+              <p className="text-sm text-gray-400 mb-4">
+                {weekdayMetric === 'median' ? 'Median' : 'Average'} commute time for each day
+              </p>
+              <div className="h-64 md:h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={weekdayData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
+                    <XAxis 
+                      dataKey="day" 
+                      stroke="#9CA3AF"
+                      style={{ fontSize: '0.875rem' }}
+                    />
+                    <YAxis 
+                      stroke="#9CA3AF"
+                      style={{ fontSize: '0.875rem' }}
+                      label={{ value: 'Minutes', angle: -90, position: 'insideLeft', style: { fill: '#9CA3AF' } }}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#1F2937',
+                        border: '1px solid #374151',
+                        borderRadius: '0.5rem',
+                        color: '#F3F4F6'
+                      }}
+                      formatter={(value: number, name: string, props: any) => [
+                        `${value.toFixed(1)} min (${props.payload.count} commutes)`,
+                        weekdayMetric === 'median' ? 'Median' : 'Average'
+                      ]}
+                      labelStyle={{ color: '#9CA3AF' }}
+                    />
+                    <Bar 
+                      dataKey="value" 
+                      fill="#06B6D4"
+                      radius={[8, 8, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex items-center justify-center mt-4 space-x-2">
+                <label htmlFor="weekdayMetric" className="text-sm text-gray-400">Show:</label>
+                <select
+                  id="weekdayMetric"
+                  value={weekdayMetric}
+                  onChange={(e) => setWeekdayMetric(e.target.value as 'mean' | 'median')}
+                  className="bg-gray-700 border border-gray-600 rounded-md p-1 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                >
+                  <option value="median">Median</option>
+                  <option value="mean">Average</option>
+                </select>
+              </div>
+              <p className="text-xs text-gray-500 mt-4">
+                {includeWeekends 
+                  ? 'Showing all days of the week. Adjust in Settings to hide weekends.'
+                  : 'Showing weekdays only (Mon-Fri). Enable weekends in Settings to see Sat-Sun.'}
+              </p>
+            </>
+          ) : (
+            <div className="py-8">
+              <p className="text-gray-400 text-lg">Needs 5 or more records for weekly analysis</p>
+              <p className="text-xs text-gray-500 mt-2">
+                Currently {records.length} of 5 required
+              </p>
+            </div>
+          )}
+        </div>
+      </Card>
+
+      <Card title="Time of Day Breakdown">
+          <div className="h-64 md:h-80">
+            <TimeBreakdownView records={records} />
+          </div>
+      </Card>
+      
       <Card title="90% Confidence Interval (Interpolated)">
         <div className="text-center">
           {confidenceInterval ? (
@@ -590,177 +766,6 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
           )}
         </div>
       </Card>
-
-      <Card title="Total Commute Time">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {/* Per Day */}
-          <div className="bg-gray-800 p-4 rounded-lg">
-            <p className="text-sm text-gray-400 mb-2">Per Day</p>
-            <p className="text-2xl font-bold text-cyan-400 mb-2">{formatTotalDuration(dayTotal)}</p>
-            <select
-              value={selectedDay}
-              onChange={(e) => setSelectedDay(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded-md p-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500"
-            >
-              {availableOptions.days.map(day => (
-                <option key={day} value={day}>
-                  {new Date(day).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Per Week */}
-          <div className="bg-gray-800 p-4 rounded-lg">
-            <p className="text-sm text-gray-400 mb-2">Per Week</p>
-            <p className="text-2xl font-bold text-cyan-400 mb-2">{formatTotalDuration(weekTotal)}</p>
-            <select
-              value={selectedWeek}
-              onChange={(e) => setSelectedWeek(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded-md p-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500"
-            >
-              {availableOptions.weeks.map(week => (
-                <option key={week} value={week}>
-                  Week of {formatWeekLabel(week)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Per Month */}
-          <div className="bg-gray-800 p-4 rounded-lg">
-            <p className="text-sm text-gray-400 mb-2">Per Month</p>
-            <p className="text-2xl font-bold text-cyan-400 mb-2">{formatTotalDuration(monthTotal)}</p>
-            <select
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded-md p-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500"
-            >
-              {availableOptions.months.map(month => (
-                <option key={month} value={month}>
-                  {getMonthName(month)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Per Year */}
-          <div className="bg-gray-800 p-4 rounded-lg">
-            <p className="text-sm text-gray-400 mb-2">Per Year</p>
-            <p className="text-2xl font-bold text-cyan-400 mb-2">{formatTotalDuration(yearTotal)}</p>
-            <select
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(e.target.value)}
-              className="w-full bg-gray-700 border border-gray-600 rounded-md p-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500"
-            >
-              {availableOptions.years.map(year => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Total */}
-          <div className="bg-gray-800 p-4 rounded-lg">
-            <p className="text-sm text-gray-400 mb-2">Total Time</p>
-            <p className="text-2xl font-bold text-cyan-400">{formatTotalDuration(totalTime)}</p>
-            <p className="text-xs text-gray-500 mt-2">Since start</p>
-          </div>
-        </div>
-      </Card>
-
-      <Card title="Commute Duration Distribution">
-         <div className="h-64 md:h-80">
-           <HistogramChart records={records} binSizeMinutes={binSize} />
-         </div>
-         <div className="flex items-center justify-center mt-4 space-x-2">
-            <label htmlFor="binSize" className="text-sm text-gray-400">Bin Size (minutes):</label>
-            <select
-                id="binSize"
-                value={binSize}
-                onChange={(e) => setBinSize(Number(e.target.value))}
-                className="bg-gray-700 border border-gray-600 rounded-md p-1 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
-            >
-                <option value={1}>1</option>
-                <option value={2}>2</option>
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-            </select>
-        </div>
-      </Card>
-
-      <Card title="Commute Time by Day of Week">
-        <div className="text-center">
-          {records.length >= 5 ? (
-            <>
-              <p className="text-sm text-gray-400 mb-4">
-                {weekdayMetric === 'median' ? 'Median' : 'Average'} commute time for each day
-              </p>
-              <div className="h-64 md:h-80">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={weekdayData} margin={{ top: 10, right: 30, left: 0, bottom: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
-                    <XAxis 
-                      dataKey="day" 
-                      stroke="#9CA3AF"
-                      style={{ fontSize: '0.875rem' }}
-                    />
-                    <YAxis 
-                      stroke="#9CA3AF"
-                      style={{ fontSize: '0.875rem' }}
-                      label={{ value: 'Minutes', angle: -90, position: 'insideLeft', style: { fill: '#9CA3AF' } }}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: '#1F2937',
-                        border: '1px solid #374151',
-                        borderRadius: '0.5rem',
-                        color: '#F3F4F6'
-                      }}
-                      formatter={(value: number, name: string, props: any) => [
-                        `${value.toFixed(1)} min (${props.payload.count} commutes)`,
-                        weekdayMetric === 'median' ? 'Median' : 'Average'
-                      ]}
-                      labelStyle={{ color: '#9CA3AF' }}
-                    />
-                    <Bar 
-                      dataKey="value" 
-                      fill="#06B6D4"
-                      radius={[8, 8, 0, 0]}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-              <div className="flex items-center justify-center mt-4 space-x-2">
-                <label htmlFor="weekdayMetric" className="text-sm text-gray-400">Show:</label>
-                <select
-                  id="weekdayMetric"
-                  value={weekdayMetric}
-                  onChange={(e) => setWeekdayMetric(e.target.value as 'mean' | 'median')}
-                  className="bg-gray-700 border border-gray-600 rounded-md p-1 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                >
-                  <option value="median">Median</option>
-                  <option value="mean">Average</option>
-                </select>
-              </div>
-              <p className="text-xs text-gray-500 mt-4">
-                {includeWeekends 
-                  ? 'Showing all days of the week. Adjust in Settings to hide weekends.'
-                  : 'Showing weekdays only (Mon-Fri). Enable weekends in Settings to see Sat-Sun.'}
-              </p>
-            </>
-          ) : (
-            <div className="py-8">
-              <p className="text-gray-400 text-lg">Needs 5 or more records for weekly analysis</p>
-              <p className="text-xs text-gray-500 mt-2">
-                Currently {records.length} of 5 required
-              </p>
-            </div>
-          )}
-        </div>
-      </Card>
-
       <Card title="Trend Analysis (Mann-Kendall Test)">
         <div className="text-center">
           {trendTest ? (
@@ -969,12 +974,6 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
         </div>
       </Card>
 
-      <Card title="Time of Day Breakdown">
-          <div className="h-64 md:h-80">
-            <TimeBreakdownView records={records} />
-          </div>
-      </Card>
-      
       <Card title="Export Data">
         <div className="flex flex-col sm:flex-row gap-4 items-center">
             <p className="text-gray-400 flex-grow text-center sm:text-left mb-4 sm:mb-0">Export your commute history as a CSV or a PDF summary report.</p>
