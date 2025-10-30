@@ -1,3 +1,22 @@
+## [0.10.0] - 2025-10-30
+
+Release type: minor
+
+### 📋 Summary 
+- Add Bayesian weighted calculation of Work location
+
+### 🚀 Improvements
+- [upd] Use Bayesian update of work locations that takes accuracy of new GPS position into account.
+- [upd] Removed some uneccessary long Guide texts in the Settings tab and rewrote other tk be more succint
+
+### 📖 Documentation
+- [upd] Add information in User Guide about the Bayesian update
+- [upd] Add detailed technical description of the Bayesian update in the Developer Guide
+
+### 🛠 Internal
+- [upd] Minor optimization in StatsView to avoid recreating the `duration` array multiple times.
+
+
 ## [0.9.1] - 2025-10-29
 
 Release type: patch
