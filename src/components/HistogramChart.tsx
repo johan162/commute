@@ -89,7 +89,14 @@ export const HistogramChart: React.FC<HistogramChartProps> = ({ records, binSize
         <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#4A5568" />
-                <XAxis dataKey="name" stroke="#A0AEC0" tick={{ fontSize: 12 }} />
+                <XAxis 
+                    dataKey="name" 
+                    stroke="#A0AEC0" 
+                    tick={{ fontSize: 12 }} 
+                    angle={-45}
+                    textAnchor="end"
+                    height={60}
+                />
                 <YAxis 
                     allowDecimals={false} 
                     stroke="#A0AEC0" 

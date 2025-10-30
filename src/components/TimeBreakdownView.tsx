@@ -5,15 +5,17 @@ import type { CommuteRecord } from '../types.ts';
 interface TimeBreakdownViewProps {
     records: CommuteRecord[];
     binSizeMinutes?: number;
+    metric?: 'mean' | 'median';
 }
 
 interface BreakdownData {
     timeSlot: string;
     averageDuration: number;
     count: number;
+    durations: number[]; // Store all durations for median calculation
 }
 
-export const TimeBreakdownView: React.FC<TimeBreakdownViewProps> = ({ records, binSizeMinutes = 60 }) => {
+export const TimeBreakdownView: React.FC<TimeBreakdownViewProps> = ({ records, binSizeMinutes = 60, metric = 'mean' }) => {
     const data = useMemo<BreakdownData[]>(() => {
         if (records.length === 0) return [];
         
@@ -21,7 +23,7 @@ export const TimeBreakdownView: React.FC<TimeBreakdownViewProps> = ({ records, b
         const totalMinutesInDay = 24 * 60;
         const numBins = Math.ceil(totalMinutesInDay / binSizeMinutes);
         
-        const groupedByTimeSlot: Record<number, { totalDuration: number; count: number }> = {};
+        const groupedByTimeSlot: Record<number, { durations: number[]; count: number }> = {};
 
         records.forEach(record => {
             const date = new Date(record.date);
@@ -29,9 +31,9 @@ export const TimeBreakdownView: React.FC<TimeBreakdownViewProps> = ({ records, b
             const binIndex = Math.floor(minuteOfDay / binSizeMinutes);
             
             if (!groupedByTimeSlot[binIndex]) {
-                groupedByTimeSlot[binIndex] = { totalDuration: 0, count: 0 };
+                groupedByTimeSlot[binIndex] = { durations: [], count: 0 };
             }
-            groupedByTimeSlot[binIndex].totalDuration += record.duration;
+            groupedByTimeSlot[binIndex].durations.push(record.duration);
             groupedByTimeSlot[binIndex].count++;
         });
 
@@ -48,17 +50,31 @@ export const TimeBreakdownView: React.FC<TimeBreakdownViewProps> = ({ records, b
                 
                 const timeSlot = `${String(startHour).padStart(2, '0')}:${String(startMin).padStart(2, '0')}-${String(endHour).padStart(2, '0')}:${String(endMin).padStart(2, '0')}`;
                 
+                // Calculate mean or median
+                let value: number;
+                if (metric === 'median') {
+                    const sorted = [...group.durations].sort((a, b) => a - b);
+                    const mid = Math.floor(sorted.length / 2);
+                    value = sorted.length % 2 === 0 
+                        ? (sorted[mid - 1] + sorted[mid]) / 2 
+                        : sorted[mid];
+                } else {
+                    const sum = group.durations.reduce((acc, d) => acc + d, 0);
+                    value = sum / group.count;
+                }
+                
                 result.push({
                     timeSlot,
-                    averageDuration: (group.totalDuration / group.count) / 60, // in minutes
+                    averageDuration: value / 60, // in minutes
                     count: group.count,
+                    durations: group.durations,
                 });
             }
         }
         
         return result;
 
-    }, [records, binSizeMinutes]);
+    }, [records, binSizeMinutes, metric]);
 
     if(data.length === 0) {
         return <div className="flex items-center justify-center h-full text-gray-500">No commute data to display.</div>;
@@ -89,7 +105,7 @@ export const TimeBreakdownView: React.FC<TimeBreakdownViewProps> = ({ records, b
                     itemStyle={{ color: '#81E6D9' }}
                     formatter={(value: number, name: string, props) => {
                         if (name === 'averageDuration') {
-                            return [`${(value as number).toFixed(1)} min (average of ${props.payload.count} trips)`, 'Duration'];
+                            return [`${(value as number).toFixed(1)} min (${metric} of ${props.payload.count} trips)`, 'Duration'];
                         }
                         return [value, name];
                     }}

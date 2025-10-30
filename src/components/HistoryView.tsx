@@ -178,7 +178,7 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ records, median, onDel
 
   return (
     <Card 
-      title="Commute History" 
+      title={`Commute History (${records.length} records)`} 
       headerAction={
         <div className="flex items-center space-x-2">
           {isEditMode && selectedRecords.size > 0 && (

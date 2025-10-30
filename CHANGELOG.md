@@ -1,3 +1,16 @@
+## [0.14.0] - 2025-10-30
+
+Release type: minor
+
+### 📋 Summary 
+- Improve statistical chart display
+
+### 🚀 Improvements
+- [upd] Make X-axis ticsks for time of day have 45 degree angles
+- [upd] Make it selectable to display either mean or median for time of day breakdown
+- [upd] Show number of records in History View
+
+
 ## [0.13.1] - 2025-10-30
 
 Release type: patch
