@@ -206,7 +206,7 @@ export const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ records, metri
 
       {/* Stats */}
       <div className="mt-4 text-xs text-gray-500 text-center">
-        Showing up to last 25 weeks • {records.length} total commutes
+        Showing maximum 16 weeks • {records.length} total commutes
       </div>
     </div>
   );
