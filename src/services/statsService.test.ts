@@ -62,6 +62,9 @@ describe('statsService', () => {
       expect(getPercentile(data, 0)).toBe(1);
       expect(getPercentile(data, 50)).toBe(5.5);
       expect(getPercentile(data, 100)).toBe(10);
+      // For p=25, rank = (10-1)*0.25 = 2.25.
+      // Index = 2, fraction = 0.25.
+      // Value = data[2] + (data[3] - data[2]) * 0.25 = 3 + (4-3)*0.25 = 3.25
       expect(getPercentile(data, 25)).toBe(3.25);
       expect(getPercentile(data, 75)).toBe(7.75);
       
