@@ -1,3 +1,20 @@
+## [0.12.0] - 2025-10-30
+
+Release type: minor
+
+### 📋 Summary 
+- Usability improvements
+
+### ✨ Additions
+- [feat] Add sorting of data in history view
+
+### 🚀 Improvements
+- [upd] Improved data formatting and order of apperance in the statistic tab
+  
+### 🛠 Internal
+- [upd] More realistic generation of test data in the "Debug" card for testing statistics with large data sets.
+
+
 ## [0.11.0] - 2025-10-30
 
 Release type: minor

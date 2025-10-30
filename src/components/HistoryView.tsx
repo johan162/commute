@@ -65,9 +65,29 @@ const HistoryItem: React.FC<{
     );
 };
 
+type SortField = 'date' | 'duration';
+type SortOrder = 'asc' | 'desc';
+
 export const HistoryView: React.FC<HistoryViewProps> = ({ records, median, onDeleteRecords }) => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedRecords, setSelectedRecords] = useState<Set<number>>(new Set());
+  const [sortField, setSortField] = useState<SortField>('date');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc'); // Most recent first by default
+
+  // Sort records based on current sort field and order
+  const sortedRecords = React.useMemo(() => {
+    const sorted = [...records].sort((a, b) => {
+      if (sortField === 'date') {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+      } else {
+        // Sort by duration
+        return sortOrder === 'asc' ? a.duration - b.duration : b.duration - a.duration;
+      }
+    });
+    return sorted;
+  }, [records, sortField, sortOrder]);
 
   if (records.length === 0) {
     return (
@@ -119,6 +139,43 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ records, median, onDel
     }
   };
 
+  const handleSortChange = (field: SortField) => {
+    if (sortField === field) {
+      // Toggle order if clicking the same field
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      // Switch to new field with default order
+      setSortField(field);
+      setSortOrder(field === 'date' ? 'desc' : 'desc'); // Most recent / longest first
+    }
+  };
+
+  const SortButton: React.FC<{ field: SortField; label: string }> = ({ field, label }) => {
+    const isActive = sortField === field;
+    return (
+      <button
+        onClick={() => handleSortChange(field)}
+        className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+          isActive
+            ? 'bg-cyan-600 text-white'
+            : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+        }`}
+      >
+        <span>{label}</span>
+        {isActive && (
+          <svg 
+            className={`w-4 h-4 transition-transform ${sortOrder === 'desc' ? 'rotate-180' : ''}`} 
+            fill="none" 
+            stroke="currentColor" 
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+          </svg>
+        )}
+      </button>
+    );
+  };
+
   return (
     <Card 
       title="Commute History" 
@@ -150,9 +207,16 @@ export const HistoryView: React.FC<HistoryViewProps> = ({ records, median, onDel
         </div>
       }
     >
+      {/* Sort controls */}
+      <div className="mb-4 flex items-center space-x-2">
+        <span className="text-sm text-gray-400">Sort by:</span>
+        <SortButton field="date" label="Date & Time" />
+        <SortButton field="duration" label="Duration" />
+      </div>
+
       <div className="max-h-[70vh] overflow-y-auto">
         <ul className="divide-y divide-gray-700">
-          {records.map(record => (
+          {sortedRecords.map(record => (
             <HistoryItem 
               key={record.id} 
               record={record} 

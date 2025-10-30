@@ -21,6 +21,8 @@
 
 # Completed features/fixes
 
+- [feat] Add sorting of data in history view
+- [feat] Add sorting to the history view 
 - [feat] Add display of averaged work location (coordinates)
 - [feat] Add Q-Q plot for normality test
 - [feat] Add Developer-Guide
