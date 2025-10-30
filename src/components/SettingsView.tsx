@@ -140,10 +140,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
     const now = new Date();
     const records = [];
     
-    // Start from N/2 weekdays ago (since we create 2 commutes per weekday)
-    const daysNeeded = Math.ceil(durations.length / 2);
+    // Calculate how many weekdays we need (2 commutes per weekday)
+    const weekdaysNeeded = Math.ceil(durations.length / 2);
+    
+    // Account for weekends: roughly N/5 weeks means N/5 * 2 weekend days
+    // Total calendar days = weekdays + weekends = N/2 + (N/2 / 5) * 2 ≈ N/2 * 1.4
+    const calendarDaysToGoBack = Math.ceil(weekdaysNeeded * 1.5); // Use 1.5 to be safe
+    
     let currentDate = new Date(now);
-    currentDate.setDate(currentDate.getDate() - daysNeeded);
+    currentDate.setDate(currentDate.getDate() - calendarDaysToGoBack);
     
     // Move to the most recent Monday before our start date
     while (currentDate.getDay() !== 1) { // 1 = Monday
@@ -155,6 +160,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
     while (durationIndex < durations.length) {
       const dayOfWeek = currentDate.getDay();
       
+      // Cap at current date to avoid generating future data
+      if (currentDate > now) {
+        break;
+      }
+      
       // Skip weekends (0 = Sunday, 6 = Saturday)
       if (dayOfWeek !== 0 && dayOfWeek !== 6) {
         // Morning commute: random time between 07:00 - 08:00
@@ -164,12 +174,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
           const morningMinute = Math.floor(Math.random() * 60); // 0-59 minutes
           morningDate.setHours(morningHour, morningMinute, 0, 0);
           
-          records.push({
-            id: Date.now() + durationIndex,
-            date: morningDate.toISOString(),
-            duration: Math.max(60, Math.round(durations[durationIndex]))
-          });
-          durationIndex++;
+          // Only add if not in the future
+          if (morningDate <= now) {
+            records.push({
+              id: Date.now() + durationIndex,
+              date: morningDate.toISOString(),
+              duration: Math.max(60, Math.round(durations[durationIndex]))
+            });
+            durationIndex++;
+          }
         }
         
         // Evening commute: random time between 16:30 - 18:30
@@ -180,12 +193,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
           const eveningMinute = eveningMinutes % 60;
           eveningDate.setHours(eveningHour, eveningMinute, 0, 0);
           
-          records.push({
-            id: Date.now() + durationIndex + 1000000,
-            date: eveningDate.toISOString(),
-            duration: Math.max(60, Math.round(durations[durationIndex]))
-          });
-          durationIndex++;
+          // Only add if not in the future
+          if (eveningDate <= now) {
+            records.push({
+              id: Date.now() + durationIndex + 1000000,
+              date: eveningDate.toISOString(),
+              duration: Math.max(60, Math.round(durations[durationIndex]))
+            });
+            durationIndex++;
+          }
         }
       }
       

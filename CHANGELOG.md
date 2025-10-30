@@ -1,3 +1,11 @@
+## [0.13.1] - 2025-10-30
+
+Release type: patch
+
+### 🛠 Internal
+- [bug] Generated debug data to test statistics could have dates in the future
+ 
+
 ## [0.13.0] - 2025-10-30
 
 Release type: minor
