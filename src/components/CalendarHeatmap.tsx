@@ -76,10 +76,11 @@ export const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ records, metri
       Object.keys(dayWeeks).forEach(weekKey => allWeekKeys.add(weekKey));
     });
 
-    // Get the last 25 weeks
-    const sortedWeekKeys = Array.from(allWeekKeys).sort((a, b) => a.localeCompare(b)).slice(-25);
+    // Get the last 16 weeks
+    const windowSize = 16;
+    const sortedWeekKeys = Array.from(allWeekKeys).sort((a, b) => a.localeCompare(b)).slice(-windowSize);
 
-    // Create the grid: 7 rows (days) x 25 columns (weeks)
+    // Create the grid: 7 rows (days) x 16 columns (weeks)
     // Reorder so Monday is first (dayOfWeek 1) and Sunday is last (dayOfWeek 0)
     const dayOrder = [1, 2, 3, 4, 5, 6, 0]; // Mon, Tue, Wed, Thu, Fri, Sat, Sun
     const grid = dayOrder.map(dayOfWeek => {
