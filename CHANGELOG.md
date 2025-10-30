@@ -1,3 +1,14 @@
+## [0.16.0] - 2025-10-30
+
+Release type: minor
+
+### 📋 Summary 
+- Added som heat!
+
+### ✨ Additions
+- [feat] Added heatmap modelled after GitHub commit heat map
+
+
 ## [0.15.2] - 2025-10-30
 
 Release type: patch
