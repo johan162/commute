@@ -32,6 +32,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
   const [binSize, setBinSize] = useState(5); // bin size in minutes
   const [weekdayMetric, setWeekdayMetric] = useState<'mean' | 'median'>('median');
   const [timeBinSize, setTimeBinSize] = useState(60); // time of day bin size in minutes
+  const [timeOfDayMetric, setTimeOfDayMetric] = useState<'mean' | 'median'>('mean');
   
   // State for time period selections
   const [selectedDay, setSelectedDay] = useState<string>('');
@@ -412,7 +413,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
         </div>
       </Card>
 
-      <Card title="Commute Duration Histogram">
+      <Card title="Commute Time Histogram">
          <div className="h-64 md:h-80">
            <HistogramChart records={records} binSizeMinutes={binSize} />
          </div>
@@ -503,33 +504,47 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
         </div>
       </Card>
 
-      <Card title="Time of Day Breakdown">
+      <Card title="Caommute time by Time of Day">
           <div className="h-64 md:h-80">
-            <TimeBreakdownView records={records} binSizeMinutes={timeBinSize} />
+            <TimeBreakdownView records={records} binSizeMinutes={timeBinSize} metric={timeOfDayMetric} />
           </div>
-          <div className="flex items-center justify-center mt-4 space-x-2">
-            <label htmlFor="timeBinSize" className="text-sm text-gray-400">Bin Size (minutes):</label>
-            <select
-                id="timeBinSize"
-                value={timeBinSize}
-                onChange={(e) => setTimeBinSize(Number(e.target.value))}
+          <div className="flex items-center justify-center mt-4 space-x-4">
+            <div className="flex items-center space-x-2">
+              <label htmlFor="timeBinSize" className="text-sm text-gray-400">Bin Size (minutes):</label>
+              <select
+                  id="timeBinSize"
+                  value={timeBinSize}
+                  onChange={(e) => setTimeBinSize(Number(e.target.value))}
+                  className="bg-gray-700 border border-gray-600 rounded-md p-1 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={15}>15</option>
+                  <option value={30}>30</option>
+                  <option value={60}>60</option>
+              </select>
+            </div>
+            <div className="flex items-center space-x-2">
+              <label htmlFor="timeOfDayMetric" className="text-sm text-gray-400">Show:</label>
+              <select
+                id="timeOfDayMetric"
+                value={timeOfDayMetric}
+                onChange={(e) => setTimeOfDayMetric(e.target.value as 'mean' | 'median')}
                 className="bg-gray-700 border border-gray-600 rounded-md p-1 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
-            >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={15}>15</option>
-                <option value={30}>30</option>
-                <option value={60}>60</option>
-            </select>
-        </div>
+              >
+                <option value="mean">Average</option>
+                <option value="median">Median</option>
+              </select>
+            </div>
+          </div>
       </Card>
       
-      <Card title="90% Confidence Interval (Interpolated)">
+      <Card title="90% Commute Times (Interpolated CI)">
         <div className="text-center">
           {confidenceInterval ? (
             <>
               <p className="text-sm text-gray-400 mb-4">
-                90% of commutes fall within this range, interpolated values might not exist exactly
+                90% of commutes fall within this range. Uses interpolated values, might not exist as data points (but is statistically more accurate).
               </p>
               <div className="flex justify-center items-center space-x-4">
                 <div className="bg-gray-800 p-4 rounded-lg">
@@ -557,12 +572,12 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
         </div>
       </Card>
 
-      <Card title="90% Confidence Interval (Nearest Rank)">
+      <Card title="90% Commute Times (Nearest Rank CI)">
         <div className="text-center">
           {confidenceIntervalRank ? (
             <>
               <p className="text-sm text-gray-400 mb-4">
-                90% of commutes fall within this time range, the closest actual times are used.
+                90% of commutes fall within this time range, the closest actual recorded times are shown (less statistically accurate).
               </p>
               <div className="flex justify-center items-center space-x-4">
                 <div className="bg-gray-800 p-4 rounded-lg">
