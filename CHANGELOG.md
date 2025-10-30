@@ -1,3 +1,11 @@
+## [0.16.2] - 2025-10-30
+
+Release type: patch
+
+### 🚀 Improvements
+- [upd] Fewer weeks (16w) in heatmap to fit phone screen better
+
+
 ## [0.16.1] - 2025-10-30
 
 Release type: patch
