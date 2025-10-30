@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import type { Coordinates } from '../types';
+import type { Coordinates, WorkLocation } from '../types';
 import { Card } from './Card';
 import { Button } from './Button';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -10,6 +10,7 @@ interface SettingsViewProps {
   onClearWorkLocations: () => void;
   workLocationCount: number;
   averageWorkLocation: Coordinates | null;
+  workLocations: WorkLocation[];
   onClearAllData: () => void;
   autoStopRadius: number;
   onAutoStopRadiusChange: (radius: number) => void;
@@ -22,7 +23,7 @@ interface SettingsViewProps {
   onLoadDebugData: (records: any[]) => void;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onClearWorkLocations, workLocationCount, averageWorkLocation, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange, onLoadDebugData }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onClearWorkLocations, workLocationCount, averageWorkLocation, workLocations, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange, onLoadDebugData }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [showAboutDetails, setShowAboutDetails] = useState(false);
@@ -59,7 +60,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
     const lonDirection = coords.longitude >= 0 ? 'E' : 'W';
     const lat = Math.abs(coords.latitude).toFixed(6);
     const lon = Math.abs(coords.longitude).toFixed(6);
-    return `${lat}° ${latDirection}, ${lon}° ${lonDirection}`;
+    const accuracyText = coords.accuracy ? ` (±${Math.round(coords.accuracy)}m)` : '';
+    return `${lat}° ${latDirection}, ${lon}° ${lonDirection}${accuracyText}`;
+  };
+
+  // Get accuracy quality indicator
+  const getAccuracyQuality = (accuracy: number) => {
+    if (accuracy <= 5) return { color: 'bg-green-500', label: 'Excellent' };
+    if (accuracy <= 10) return { color: 'bg-green-400', label: 'Very Good' };
+    if (accuracy <= 25) return { color: 'bg-yellow-500', label: 'Good' };
+    if (accuracy <= 50) return { color: 'bg-orange-500', label: 'Fair' };
+    return { color: 'bg-red-500', label: 'Poor' };
   };
 
   // Open map application with coordinates
@@ -155,19 +166,40 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
 
   const handleRecordLocation = () => {
     setLoading(true);
-    setMessage('Getting your current location...');
+    setMessage('Getting your current location with high precision...');
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const { latitude, longitude } = position.coords;
-        onAddLocation({ latitude, longitude });
+        const { latitude, longitude, accuracy } = position.coords;
+        
+        // Create location object with accuracy information
+        const locationWithAccuracy = { 
+          latitude, 
+          longitude, 
+          accuracy: accuracy || 50 // Default to 50m if accuracy not available
+        };
+        
+        onAddLocation(locationWithAccuracy);
         setLoading(false);
-        setMessage(`Location recorded! Total recordings: ${workLocationCount + 1}. The average is used as your work location.`);
+        
+        const accuracyText = accuracy ? `±${Math.round(accuracy)}m accuracy` : '±50m accuracy (estimated)';
+        const weightText = workLocationCount > 0 ? 
+          ` New measurement weighted by accuracy in Bayesian average.` : 
+          ` This is your first work location recording.`;
+        
+        setMessage(
+          `✅ Location recorded with ${accuracyText}! ` +
+          `Total recordings: ${workLocationCount + 1}.${weightText}`
+        );
       },
       (error) => {
         setLoading(false);
-        setMessage(`Error: ${error.message}`);
+        setMessage(`❌ Error: ${error.message}`);
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { 
+        enableHighAccuracy: true,    // Request highest accuracy available
+        timeout: 20000,              // Increased timeout for better accuracy
+        maximumAge: 0                // Force fresh GPS reading
+      }
     );
   };
 
@@ -325,10 +357,30 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
             <div className="bg-gray-800 p-3 rounded-lg mt-4">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-xs text-gray-500 mb-1">Averaged Work Location:</p>
+                  <p className="text-xs text-gray-500 mb-1">
+                    Bayesian Weighted Average Work Location:
+                  </p>
                   <p className="text-sm text-gray-300 font-mono">
                     {formatCoordinates(averageWorkLocation)}
                   </p>
+                  {averageWorkLocation.accuracy && (
+                    <div className="mt-2 flex items-center space-x-2">
+                      <div className={`h-2 w-2 rounded-full ${
+                        getAccuracyQuality(averageWorkLocation.accuracy).color
+                      }`}></div>
+                      <p className="text-xs text-gray-500">
+                        Effective accuracy: ±{Math.round(averageWorkLocation.accuracy)}m
+                        <span className="ml-2 text-gray-400">
+                          ({getAccuracyQuality(averageWorkLocation.accuracy).label})
+                        </span>
+                        {workLocationCount > 1 && (
+                          <span className="ml-2">
+                            from {workLocationCount} weighted measurements
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                  )}
                 </div>
                 <button
                   onClick={() => openInMap(averageWorkLocation)}
@@ -352,6 +404,49 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
                   </svg>
                 </button>
               </div>
+
+              {/* Individual location details with accuracy weighting information */}
+              {workLocations.length > 1 && (
+                <div className="mt-3 text-xs text-gray-500">
+                  <details className="cursor-pointer">
+                    <summary className="hover:text-gray-400 flex items-center space-x-2">
+                      <span>📍 Show individual recordings with accuracy weights ({workLocationCount} total)</span>
+                    </summary>
+                    <div className="mt-2 space-y-2 max-h-40 overflow-y-auto bg-gray-900 p-3 rounded">
+                      {workLocations.map((loc, index) => {
+                        const weight = 1 / (loc.accuracy * loc.accuracy);
+                        const totalWeight = workLocations.reduce((sum, l) => sum + (1 / (l.accuracy * l.accuracy)), 0);
+                        const contribution = (weight / totalWeight) * 100;
+                        const quality = getAccuracyQuality(loc.accuracy);
+                        
+                        return (
+                          <div key={index} className="flex justify-between items-center text-xs bg-gray-800 p-2 rounded">
+                            <div className="flex flex-col space-y-1">
+                              <span className="font-mono text-gray-400">
+                                {new Date(loc.timestamp).toLocaleDateString()}
+                              </span>
+                              <span className="text-gray-500">
+                                {contribution.toFixed(1)}% weight in average
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <div className={`h-2 w-2 rounded-full ${quality.color}`}></div>
+                              <span className={`px-2 py-1 rounded text-xs ${
+                                loc.accuracy <= 10 ? 'bg-green-900 text-green-300' :
+                                loc.accuracy <= 25 ? 'bg-yellow-900 text-yellow-300' :
+                                loc.accuracy <= 50 ? 'bg-orange-900 text-orange-300' :
+                                'bg-red-900 text-red-300'
+                              }`}>
+                                ±{Math.round(loc.accuracy)}m
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </details>
+                </div>
+              )}
             </div>
           )}
           
