@@ -42,10 +42,13 @@ help: ## Show this help message
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-18s$(NC) %s\n", $$1, $$2}'
 	@echo ""
 	@echo "$(YELLOW)Examples:$(NC)"
-	@echo "  make install        # Install dependencies"
-	@echo "  make dev            # Start development server"
-	@echo "  make test           # Run tests once"
-	@echo "  make build          # Build for production"
+	@echo "  make release VERSION=1.0.0 TYPE=minor    # Example release command"
+	@echo "  make release VERSION=2.0.0 TYPE=major    # Example release command"
+	@echo "  make release VERSION=1.0.1 TYPE=patch    # Example release command"
+	@echo "  make install        	                   # Install dependencies"
+	@echo "  make dev            	                   # Start development server"
+	@echo "  make test           	                   # Run tests once"
+	@echo "  make build          	                   # Build for production"
 	@echo ""
 
 # =====================================
@@ -127,6 +130,25 @@ deploy: $(BUILD_STAMP) ## Build and deploy to gh-pages branch
 deploy-push: $(BUILD_STAMP) ## Build, deploy, and push to gh-pages branch
 	@echo "$(BLUE)Deploying and pushing to gh-pages...$(NC)"
 	bash $(SCRIPTS_DIR)/mkbld.sh --deploy --push
+
+# =====================================
+# Release Management
+# =====================================
+
+release: ## Create a release (usage: make release VERSION=1.0.0 TYPE=minor)
+	@if [ -z "$(VERSION)" ]; then \
+		echo "$(YELLOW)Error: VERSION is required$(NC)"; \
+		echo "Usage: make release VERSION=1.0.0 TYPE=minor"; \
+		echo ""; \
+		echo "Examples:"; \
+		echo "  make release VERSION=1.0.0 TYPE=minor"; \
+		echo "  make release VERSION=2.0.0 TYPE=major"; \
+		echo "  make release VERSION=1.0.1 TYPE=patch"; \
+		exit 1; \
+	fi
+	@TYPE=$${TYPE:-minor}; \
+	echo "$(BLUE)Creating release $(VERSION) ($$TYPE)...$(NC)"; \
+	bash $(SCRIPTS_DIR)/mkrelease.sh $(VERSION) $$TYPE
 
 # =====================================
 # Code Quality
