@@ -1,3 +1,11 @@
+## [0.15.1] - 2025-10-30
+
+Release type: patch
+
+### 🚀 Improvements
+- [upd] Adjust height of Nixie digits
+
+
 ## [0.15.0] - 2025-10-30
 
 Release type: minor

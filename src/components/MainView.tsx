@@ -23,7 +23,7 @@ const formatTime = (totalSeconds: number): string => {
 const NixieDigit: React.FC<{ digit: string; isColon?: boolean }> = ({ digit, isColon = false }) => {
   if (isColon) {
     return (
-      <div className="flex flex-col items-center justify-center h-28 w-4 mx-1">
+      <div className="flex flex-col items-center justify-center h-24 w-4 mx-1">
         <div className="w-1.5 h-1.5 bg-orange-400 rounded-full shadow-lg shadow-orange-400/50 animate-pulse"></div>
         <div className="w-1.5 h-1.5 bg-orange-400 rounded-full shadow-lg shadow-orange-400/50 animate-pulse mt-2"></div>
       </div>
@@ -31,7 +31,7 @@ const NixieDigit: React.FC<{ digit: string; isColon?: boolean }> = ({ digit, isC
   }
 
   return (
-    <div className="relative h-28 w-16 mx-1 bg-gray-900 border-2 border-gray-700 rounded-lg shadow-inner overflow-hidden">
+    <div className="relative h-24 w-16 mx-1 bg-gray-900 border-2 border-gray-700 rounded-lg shadow-inner overflow-hidden">
       {/* Glow effect */}
       <div className="absolute inset-0 bg-gradient-to-b from-orange-500/20 to-orange-600/20"></div>
 
