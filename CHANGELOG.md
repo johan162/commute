@@ -1,3 +1,11 @@
+## [0.16.1] - 2025-10-30
+
+Release type: patch
+
+### 🐛 Bug Fixes
+- [bug] Possibly undefined varable before usage in CalendarHeatmap component
+
+
 ## [0.16.0] - 2025-10-30
 
 Release type: minor
