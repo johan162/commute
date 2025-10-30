@@ -138,14 +138,62 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
 
   const createDebugRecords = (durations: number[]) => {
     const now = new Date();
-    return durations.map((duration, index) => {
-      const date = new Date(now.getTime() - (durations.length - index) * 24 * 60 * 60 * 1000);
-      return {
-        id: `debug-${index}`,
-        date: date.toISOString(),
-        duration: Math.max(60, Math.round(duration)) // Ensure minimum 1 minute
-      };
-    });
+    const records = [];
+    
+    // Start from N/2 weekdays ago (since we create 2 commutes per weekday)
+    const daysNeeded = Math.ceil(durations.length / 2);
+    let currentDate = new Date(now);
+    currentDate.setDate(currentDate.getDate() - daysNeeded);
+    
+    // Move to the most recent Monday before our start date
+    while (currentDate.getDay() !== 1) { // 1 = Monday
+      currentDate.setDate(currentDate.getDate() - 1);
+    }
+    
+    let durationIndex = 0;
+    
+    while (durationIndex < durations.length) {
+      const dayOfWeek = currentDate.getDay();
+      
+      // Skip weekends (0 = Sunday, 6 = Saturday)
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        // Morning commute: random time between 07:00 - 08:00
+        if (durationIndex < durations.length) {
+          const morningDate = new Date(currentDate);
+          const morningHour = 7;
+          const morningMinute = Math.floor(Math.random() * 60); // 0-59 minutes
+          morningDate.setHours(morningHour, morningMinute, 0, 0);
+          
+          records.push({
+            id: Date.now() + durationIndex,
+            date: morningDate.toISOString(),
+            duration: Math.max(60, Math.round(durations[durationIndex]))
+          });
+          durationIndex++;
+        }
+        
+        // Evening commute: random time between 16:30 - 18:30
+        if (durationIndex < durations.length) {
+          const eveningDate = new Date(currentDate);
+          const eveningMinutes = 16 * 60 + 30 + Math.floor(Math.random() * 120); // 16:30 to 18:30
+          const eveningHour = Math.floor(eveningMinutes / 60);
+          const eveningMinute = eveningMinutes % 60;
+          eveningDate.setHours(eveningHour, eveningMinute, 0, 0);
+          
+          records.push({
+            id: Date.now() + durationIndex + 1000000,
+            date: eveningDate.toISOString(),
+            duration: Math.max(60, Math.round(durations[durationIndex]))
+          });
+          durationIndex++;
+        }
+      }
+      
+      // Move to next day
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+    
+    return records;
   };
 
   const loadDebugData = (durations: number[], distributionName: string) => {
