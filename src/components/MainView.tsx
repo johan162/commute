@@ -23,21 +23,21 @@ const formatTime = (totalSeconds: number): string => {
 const NixieDigit: React.FC<{ digit: string; isColon?: boolean }> = ({ digit, isColon = false }) => {
   if (isColon) {
     return (
-      <div className="flex flex-col items-center justify-center h-16 w-4 mx-1">
-        <div className="w-1 h-1 bg-orange-400 rounded-full shadow-lg shadow-orange-400/50 animate-pulse"></div>
-        <div className="w-1 h-1 bg-orange-400 rounded-full shadow-lg shadow-orange-400/50 animate-pulse mt-2"></div>
+      <div className="flex flex-col items-center justify-center h-28 w-4 mx-1">
+        <div className="w-1.5 h-1.5 bg-orange-400 rounded-full shadow-lg shadow-orange-400/50 animate-pulse"></div>
+        <div className="w-1.5 h-1.5 bg-orange-400 rounded-full shadow-lg shadow-orange-400/50 animate-pulse mt-2"></div>
       </div>
     );
   }
 
   return (
-    <div className="relative h-16 w-10 mx-1 bg-gray-900 border-2 border-gray-700 rounded-lg shadow-inner overflow-hidden">
+    <div className="relative h-28 w-16 mx-1 bg-gray-900 border-2 border-gray-700 rounded-lg shadow-inner overflow-hidden">
       {/* Glow effect */}
       <div className="absolute inset-0 bg-gradient-to-b from-orange-500/20 to-orange-600/20"></div>
 
       {/* Digit */}
       <div className="relative z-10 flex items-center justify-center h-full">
-        <span className="text-4xl sm:text-5xl md:text-6xl font-bold text-orange-400 font-mono tracking-wider drop-shadow-lg">
+        <span className="text-6xl sm:text-7xl md:text-8xl font-bold text-orange-400 font-mono tracking-wider drop-shadow-lg">
           {digit}
         </span>
       </div>
