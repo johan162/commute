@@ -18,7 +18,7 @@ interface DayData {
 
 export const CalendarHeatmap: React.FC<CalendarHeatmapProps> = ({ records, metric = 'mean' }) => {
   const heatmapData = useMemo(() => {
-    if (records.length === 0) return { weeks: [], maxValue: 0, minValue: 0 };
+    if (records.length === 0) return { grid: [], weeks: [], maxValue: 0, minValue: 0 };
 
     // Group records by date
     const dateGroups: Record<string, number[]> = {};

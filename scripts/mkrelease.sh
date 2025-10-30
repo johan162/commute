@@ -248,7 +248,7 @@ fi
 log_info "✓ Build successful"
 
 # Check with npx for type errors
-if ! npx tsc --noEmit >>"$RELEASE_LOGFILE" 2>&1; then
+if ! npx tsc --noEmit --strict >>"$RELEASE_LOGFILE" 2>&1; then
     log_error "TypeScript type check failed. Please fix type errors before creating a release."
     exit 1
 fi
