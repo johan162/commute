@@ -18,7 +18,8 @@ const App: React.FC = () => {
   const [autoStopEnabled, setAutoStopEnabled] = useLocalStorage<boolean>('autoStopEnabled', true);
   const [autoRecordWorkLocation, setAutoRecordWorkLocation] = useLocalStorage<boolean>('autoRecordWorkLocation', false);
   const [includeWeekends, setIncludeWeekends] = useLocalStorage<boolean>('includeWeekends', false);
-  const version = '0.14.0';
+  const [useNixieDisplay, setUseNixieDisplay] = useLocalStorage<boolean>('useNixieDisplay', false);
+  const version = '0.15.0';
 
   const averageWorkLocation = useMemo<Coordinates | null>(() => {
     if (workLocations.length === 0) return null;
@@ -129,6 +130,8 @@ const App: React.FC = () => {
           includeWeekends={includeWeekends}
           onIncludeWeekendsChange={setIncludeWeekends}
           onLoadDebugData={setCommuteRecords}
+          useNixieDisplay={useNixieDisplay}
+          onUseNixieDisplayChange={setUseNixieDisplay}
         />;
       case 'main':
       default:
@@ -138,6 +141,7 @@ const App: React.FC = () => {
           autoStopRadius={autoStopRadius} 
           autoRecordWorkLocation={autoRecordWorkLocation}
           onAddWorkLocation={addWorkLocation}
+          useNixieDisplay={useNixieDisplay}
         />;
     }
   };

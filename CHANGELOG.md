@@ -1,3 +1,14 @@
+## [0.15.0] - 2025-10-30
+
+Release type: minor
+
+### 📋 Summary 
+- Made the timer digits more interesting
+
+### ✨ Additions
+- [feat] Added styling of timer to look lke old style Nixie-tubes (with CSS - not images)
+
+
 ## [0.14.0] - 2025-10-30
 
 Release type: minor

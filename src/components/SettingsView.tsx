@@ -21,9 +21,11 @@ interface SettingsViewProps {
   includeWeekends: boolean;
   onIncludeWeekendsChange: (enabled: boolean) => void;
   onLoadDebugData: (records: any[]) => void;
+  useNixieDisplay: boolean;
+  onUseNixieDisplayChange: (enabled: boolean) => void;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onClearWorkLocations, workLocationCount, averageWorkLocation, workLocations, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange, onLoadDebugData }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onClearWorkLocations, workLocationCount, averageWorkLocation, workLocations, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange, onLoadDebugData, useNixieDisplay, onUseNixieDisplayChange }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [showAboutDetails, setShowAboutDetails] = useState(false);
@@ -542,6 +544,34 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
                 <span
                   className={`block w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-1 ${
                     includeWeekends ? 'translate-x-7' : 'translate-x-1'
+                  }`}
+                />
+              </label>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex-1 mr-4">
+              <span className="text-gray-300 font-semibold">Nixie Tube Timer Display</span>
+              <p className="text-xs text-gray-500 mt-1">Show timer with retro nixie tube style digits</p>
+            </div>
+            <div className="relative inline-block w-12 h-6 flex-shrink-0">
+              <input
+                type="checkbox"
+                checked={useNixieDisplay}
+                onChange={(e) => onUseNixieDisplayChange(e.target.checked)}
+                className="sr-only"
+                id="useNixieDisplayToggle"
+              />
+              <label
+                htmlFor="useNixieDisplayToggle"
+                className={`block w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 ${
+                  useNixieDisplay ? 'bg-orange-500' : 'bg-gray-600'
+                }`}
+              >
+                <span
+                  className={`block w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-1 ${
+                    useNixieDisplay ? 'translate-x-7' : 'translate-x-1'
                   }`}
                 />
               </label>
