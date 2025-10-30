@@ -129,6 +129,16 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
     return `${h}h ${m}m`;
   };
 
+  // Format duration in days and hours (for large totals)
+  const formatTotalDurationDays = (seconds: number): string => {
+    if (isNaN(seconds) || seconds < 0) return "N/A";
+    const days = Math.floor(seconds / (24 * 3600));
+    const hours = Math.floor((seconds % (24 * 3600)) / 3600);
+    if (days === 0) return `${hours}h`;
+    if (hours === 0) return `${days}d`;
+    return `${days}d ${hours}h`;
+  };
+
   // Get month name from YYYY-MM format
   const getMonthName = (monthKey: string): string => {
     const [year, month] = monthKey.split('-');
@@ -374,10 +384,11 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
             </select>
           </div>
 
-          {/* Per Year */}
+          {/* Per Year . If the total is above 100h then use formatTotalDurationDays */}
           <div className="bg-gray-800 p-4 rounded-lg">
             <p className="text-sm text-gray-400 mb-2">Per Year</p>
-            <p className="text-2xl font-bold text-cyan-400 mb-2">{formatTotalDuration(yearTotal)}</p>
+            {/* If total is above 100h, use formatTotalDurationDays */}
+            <p className="text-2xl font-bold text-cyan-400 mb-2">{yearTotal > 360000 ? formatTotalDurationDays(yearTotal) : formatTotalDuration(yearTotal)}</p>
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
@@ -394,7 +405,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
           {/* Total */}
           <div className="bg-gray-800 p-4 rounded-lg">
             <p className="text-sm text-gray-400 mb-2">Total Time</p>
-            <p className="text-2xl font-bold text-cyan-400">{formatTotalDuration(totalTime)}</p>
+            <p className="text-2xl font-bold text-cyan-400">{formatTotalDurationDays(totalTime)}</p>
             <p className="text-xs text-gray-500 mt-2">Since start</p>
           </div>
         </div>
