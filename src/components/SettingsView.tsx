@@ -207,9 +207,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
     <div className="space-y-6">
       <Card title="AutoStop Feature">
         <div className="space-y-4">
-          <p className="text-gray-400">
-            Enable or disable automatic timer stopping when you arrive at your work location.
-          </p>
           <div className="flex items-center justify-between">
             <span className="text-gray-300 font-semibold">Enable AutoStop</span>
             <div className="relative inline-block w-12 h-6 flex-shrink-0">
@@ -235,13 +232,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
             </div>
           </div>
           <p className="text-xs text-gray-500">
-            When disabled, you will need to manually stop the timer when you arrive at work.
+            When enabled the timer will automatically stop when entering the Geo-Fence of your work location.
           </p>
 
           <div className="mt-4 pt-4 border-t border-gray-700">
-            <p className="text-gray-400 mb-3">
-              Automatically record your GPS position when manually stopping the timer to build up accurate work location data.
-            </p>
             <div className="flex items-center justify-between">
               <span className="text-gray-300 font-semibold">Auto-record Work Location</span>
               <div className="relative inline-block w-12 h-6 flex-shrink-0">
@@ -267,18 +261,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
               </div>
             </div>
             <p className="text-xs text-gray-500 mt-2">
-              When enabled, your GPS location will be automatically recorded as a work location each time you stop the commute timer manually. This helps build up accurate work location data even when AutoStop is disabled.
+              Automatically record your GPS location as a work each time you stop the timer.
             </p>
           </div>
 
           <div className="mt-4 pt-4 border-t border-gray-700">
-            <p className="text-gray-400 mb-3">
-              Set the radius around your work location where the timer will automatically stop when you arrive.
-            </p>
             <div className="space-y-3">
               <div className="flex justify-between items-center">
                 <label htmlFor="autoStopRadius" className="text-gray-300 font-semibold">
-                  Auto-Stop Radius
+                  AutoStop GeoFence
                 </label>
                 <span className="text-cyan-400 font-bold">{autoStopRadius}m</span>
               </div>
@@ -297,7 +288,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
                 <span>250m</span>
               </div>
               <p className="text-xs text-gray-500">
-                Smaller radius = more precise arrival detection but may require you to be very close to your work location.
+                Smaller radius = more precise arrival detection but may require you to be very close.
+                <br />
                 Larger radius = more forgiving but may stop the timer before you actually arrive.
               </p>
             </div>
@@ -308,9 +300,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
       <Card title="Work Location">
         <div className="space-y-4">
           <p className="text-gray-400">
-            To enable automatic arrival detection, please record your work location. You can record it multiple times for better accuracy. The application will use the average of all recorded points.
+            Record your work location to enable automatic arrival detection. 
           </p>
-          
+          <p className="text-xs text-gray-500">
+            The application will use the average of all recorded points.
+          </p>
           <p className="text-gray-300 font-semibold">
             Current Recordings: <span className="text-cyan-400">{workLocationCount}</span>
           </p>
@@ -367,9 +361,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
 
       <Card title="Statistics Display">
         <div className="space-y-4">
-          <p className="text-gray-400">
-            Configure how data is displayed in the Statistics view.
-          </p>
           <div className="flex items-center justify-between">
             <div className="flex-1 mr-4">
               <span className="text-gray-300 font-semibold">Include Weekends in Day-of-Week Chart</span>
@@ -397,16 +388,15 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
               </label>
             </div>
           </div>
-          <p className="text-xs text-gray-500">
-            When enabled, the day-of-week chart will include weekend data. Most users only commute on weekdays.
-          </p>
         </div>
       </Card>
       
       <Card title="Data Management">
         <div className="space-y-4">
             <p className="text-gray-400">
-                Permanently delete all your commute records and saved work locations. This action cannot be undone.
+                Permanently delete all your commute records and saved work locations. 
+                <br />
+                This action cannot be undone!
             </p>
             <Button onClick={onClearAllData} variant="danger">
                 Clear All Data
