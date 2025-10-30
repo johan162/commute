@@ -136,9 +136,12 @@ if ! git show-ref --verify --quiet refs/heads/gh-pages; then
 fi
 
 # =====================================
-# Step 2: Build Project
+# Step 2: Build Project, check types, run tests
 # =====================================
 
+# --------------------------------------
+# Step 2.1: Build Project
+# --------------------------------------
 log_step 2 "Building project..."
 
 # Clean previous build
@@ -164,6 +167,27 @@ if [ -z "$(ls -A dist)" ]; then
 fi
 
 log_info "Build successful!"
+
+# --------------------------------------
+# Step 2.1: Type Check
+# --------------------------------------
+log_step 2.1 "Typescript type check..."
+if ! npx tsc --noEmit --strict >/dev/null 2>&1; then
+    log_error "Type check failed. Run 'npm run type-check' manually to see errors."
+    exit 1
+fi
+log_info "Type check passed!"
+
+# --------------------------------------    
+# Step 2.2: Run Tests
+# --------------------------------------
+log_step 2.2 "Running tests..."
+if ! npm run test:coverage >/dev/null 2>&1; then
+    log_error "Tests failed. Run 'npm test' manually to see errors."
+    exit 1
+fi
+log_info "All tests passed!"    
+
 
 # =====================================
 # Step 3: Deploy to gh-pages
