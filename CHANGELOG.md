@@ -1,3 +1,14 @@
+## [0.13.0] - 2025-10-30
+
+Release type: minor
+
+### 📋 Summary 
+- Minor chart improvement
+
+### 🚀 Improvements
+- [upd] Add adjustable bin sizes to Time of Day Breakdown Chart
+
+
 ## [0.12.0] - 2025-10-30
 
 Release type: minor
