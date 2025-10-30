@@ -90,16 +90,16 @@ describe('statsService', () => {
       const ci90 = getConfidenceInterval(data, 90);
       expect(ci90).not.toBeNull();
       if (ci90) {
-        expect(ci90.low).toBeLessThan(ci90.high);
-        expect(ci90.low).toBeGreaterThanOrEqual(10);
-        expect(ci90.high).toBeLessThanOrEqual(100);
+        expect(ci90.low).toBeCloseTo(14.5, 10);
+        expect(ci90.high).toBeCloseTo(95.5, 10);
       }
       
       // 95% confidence interval (2.5th to 97.5th percentile)
       const ci95 = getConfidenceInterval(data, 95);
       expect(ci95).not.toBeNull();
       if (ci95) {
-        expect(ci95.low).toBeLessThan(ci95.high);
+        expect(ci95.low).toBeCloseTo(12.25, 10);
+        expect(ci95.high).toBeCloseTo(97.75, 10);
       }
       
       // Should return null for insufficient data
@@ -112,9 +112,8 @@ describe('statsService', () => {
       const ci = getConfidenceIntervalRank(data, 90);
       expect(ci).not.toBeNull();
       if (ci) {
-        expect(ci.low).toBeLessThan(ci.high);
-        expect(ci.low).toBeGreaterThanOrEqual(10);
-        expect(ci.high).toBeLessThanOrEqual(100);
+        expect(ci.low).toBe(10);
+        expect(ci.high).toBe(100);
       }
       
       // Should return null for insufficient data
@@ -356,14 +355,15 @@ describe('statsService', () => {
 
   describe('Runs Test', () => {
     it('should detect random pattern', () => {
-      // More evenly distributed random data
-      const randomData = [48, 52, 46, 54, 50, 49, 51, 47, 53, 50, 52, 48];
+  // Binary pattern chosen to keep runs near expectation
+  const randomData = [40, 40, 60, 60, 40, 60, 40, 60, 60, 40, 40, 60, 40, 40, 60, 60];
       
       const result = runsTest(randomData);
       expect(result).not.toBeNull();
       if (result) {
-        // Test should detect pattern - either random, clustered, or oscillating
-        expect(['random', 'clustered', 'oscillating']).toContain(result.pattern);
+        expect(result.pattern).toBe('random');
+        expect(result.pValue).toBeGreaterThan(0.05);
+        expect(result.significance).toBe('none');
       }
     });
 
