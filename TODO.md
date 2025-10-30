@@ -21,6 +21,7 @@
 
 # Completed features/fixes
 
+- [chore] Add test framework and test enough to reach > 75% test coverage
 - [feat] Add sorting of data in history view
 - [feat] Add sorting to the history view 
 - [feat] Add display of averaged work location (coordinates)

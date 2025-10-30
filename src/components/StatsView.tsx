@@ -31,6 +31,7 @@ const formatDuration = (seconds: number): string => {
 export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWeekends }) => {
   const [binSize, setBinSize] = useState(5); // bin size in minutes
   const [weekdayMetric, setWeekdayMetric] = useState<'mean' | 'median'>('median');
+  const [timeBinSize, setTimeBinSize] = useState(60); // time of day bin size in minutes
   
   // State for time period selections
   const [selectedDay, setSelectedDay] = useState<string>('');
@@ -504,8 +505,23 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
 
       <Card title="Time of Day Breakdown">
           <div className="h-64 md:h-80">
-            <TimeBreakdownView records={records} />
+            <TimeBreakdownView records={records} binSizeMinutes={timeBinSize} />
           </div>
+          <div className="flex items-center justify-center mt-4 space-x-2">
+            <label htmlFor="timeBinSize" className="text-sm text-gray-400">Bin Size (minutes):</label>
+            <select
+                id="timeBinSize"
+                value={timeBinSize}
+                onChange={(e) => setTimeBinSize(Number(e.target.value))}
+                className="bg-gray-700 border border-gray-600 rounded-md p-1 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={15}>15</option>
+                <option value={30}>30</option>
+                <option value={60}>60</option>
+            </select>
+        </div>
       </Card>
       
       <Card title="90% Confidence Interval (Interpolated)">
