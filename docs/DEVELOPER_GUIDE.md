@@ -117,6 +117,13 @@ commute/
 export interface Coordinates {
   latitude: number;
   longitude: number;
+  accuracy?: number;  // GPS accuracy in meters (optional)
+}
+
+// Work location with timestamp and required accuracy
+export interface WorkLocation extends Coordinates {
+  timestamp: string;  // ISO 8601 date string
+  accuracy: number;   // GPS accuracy in meters (required)
 }
 
 // Single commute record
@@ -151,7 +158,7 @@ const [view, setView] = useState<View>('main');
 
 // Persisted state (localStorage)
 const [commuteRecords, setCommuteRecords] = useLocalStorage<CommuteRecord[]>('commuteRecords', []);
-const [workLocations, setWorkLocations] = useLocalStorage<Coordinates[]>('workLocations', []);
+const [workLocations, setWorkLocations] = useLocalStorage<WorkLocation[]>('workLocations', []);
 const [autoStopRadius, setAutoStopRadius] = useLocalStorage<number>('autoStopRadius', 50);
 const [autoStopEnabled, setAutoStopEnabled] = useLocalStorage<boolean>('autoStopEnabled', true);
 ```
@@ -159,10 +166,33 @@ const [autoStopEnabled, setAutoStopEnabled] = useLocalStorage<boolean>('autoStop
 ### Computed State (useMemo)
 
 ```typescript
-// Average work location from all recorded arrival points
+// Bayesian weighted average work location from all recorded GPS points
 const averageWorkLocation = useMemo<Coordinates | null>(() => {
   if (workLocations.length === 0) return null;
-  // Calculate centroid of all work locations
+  
+  // Calculate accuracy-weighted average (see Bayesian Work Location Update section)
+  const locationsWithWeights = workLocations.map(loc => ({
+    ...loc,
+    weight: 1 / (loc.accuracy * loc.accuracy)  // Inverse square weighting
+  }));
+  
+  const totalWeight = locationsWithWeights.reduce((sum, loc) => sum + loc.weight, 0);
+  
+  const weightedLat = locationsWithWeights.reduce(
+    (sum, loc) => sum + (loc.latitude * loc.weight), 0
+  ) / totalWeight;
+  
+  const weightedLon = locationsWithWeights.reduce(
+    (sum, loc) => sum + (loc.longitude * loc.weight), 0
+  ) / totalWeight;
+  
+  const effectiveAccuracy = Math.sqrt(1 / totalWeight);
+  
+  return { 
+    latitude: weightedLat, 
+    longitude: weightedLon,
+    accuracy: effectiveAccuracy
+  };
 }, [workLocations]);
 
 // Statistical summary
@@ -395,6 +425,277 @@ getDistance(coord1: Coordinates, coord2: Coordinates): number
 ```
 
 Returns distance in meters between two GPS points.
+
+### Bayesian Work Location Update
+
+#### Overview
+
+The app uses a **Bayesian accuracy-weighted averaging** algorithm to compute the optimal work location from multiple GPS recordings. This approach makes the best use of available information by giving more weight to precise measurements and less to noisy ones.
+
+#### Mathematical Foundation
+
+**Gaussian Error Model Assumption:**
+
+GPS measurements are subject to random errors that are commonly modeled as Gaussian (normal) distributions. When a GPS device reports a position with accuracy σ (in meters), it means:
+
+- The true location lies within a 68% confidence interval of radius σ
+- The measurement error follows a normal distribution: **N(0, σ²)**
+- This is a standard model in geodesy and location-based systems
+
+Each GPS reading provides:
+- Measured position: **(lat<sub>i</sub>, lon<sub>i</sub>)**
+- Accuracy (standard deviation): **σ<sub>i</sub>** meters
+
+#### Bayesian Update Formula
+
+For each coordinate dimension (latitude and longitude are treated independently):
+
+**Prior:** Previous estimate with variance **σ²<sub>prior</sub>**  
+**Measurement:** New observation **x<sub>i</sub>** with variance **σ²<sub>i</sub>**
+
+**Posterior Mean (μ<sub>posterior</sub>):**
+
+```
+         σ²ᵢ · μ_prior + σ²_prior · xᵢ
+μ_post = ─────────────────────────────
+              σ²ᵢ + σ²_prior
+```
+
+**Posterior Variance (σ²<sub>posterior</sub>):**
+
+```
+           σ²_prior · σ²ᵢ
+σ²_post = ──────────────────
+           σ²_prior + σ²ᵢ
+```
+
+**Key Properties:**
+
+1. **Precision Weighting**: Measurements with smaller σ (higher precision) have greater influence
+2. **Variance Reduction**: σ²<sub>post</sub> ≤ min(σ²<sub>prior</sub>, σ²<sub>i</sub>) — uncertainty always decreases
+3. **Optimal Fusion**: This is the maximum likelihood estimator for Gaussian errors
+
+#### Implementation in Code
+
+**Location:** `src/App.tsx`
+
+```typescript
+const averageWorkLocation = useMemo<Coordinates | null>(() => {
+  if (workLocations.length === 0) return null;
+  
+  // Bayesian weighted average based on GPS accuracy
+  // More accurate readings (lower accuracy values) get higher weights
+  const locationsWithWeights = workLocations.map(loc => ({
+    ...loc,
+    weight: 1 / (loc.accuracy * loc.accuracy)  // w_i = 1/σ²ᵢ (inverse variance)
+  }));
+  
+  const totalWeight = locationsWithWeights.reduce((sum, loc) => sum + loc.weight, 0);
+  
+  // Calculate weighted averages for latitude and longitude
+  const weightedLat = locationsWithWeights.reduce(
+    (sum, loc) => sum + (loc.latitude * loc.weight), 0
+  ) / totalWeight;
+  
+  const weightedLon = locationsWithWeights.reduce(
+    (sum, loc) => sum + (loc.longitude * loc.weight), 0
+  ) / totalWeight;
+  
+  // Calculate effective accuracy of the weighted average
+  // σ²_effective = 1 / Σ(1/σ²ᵢ) — variance of the posterior
+  const effectiveAccuracy = Math.sqrt(1 / totalWeight);
+  
+  return { 
+    latitude: weightedLat, 
+    longitude: weightedLon,
+    accuracy: effectiveAccuracy
+  };
+}, [workLocations]);
+```
+
+**Simplification: Batch Processing**
+
+Instead of sequential Bayesian updates (prior → measurement 1 → posterior 1 → measurement 2 → ...), we use the equivalent **batch formula** that processes all measurements at once:
+
+**Weighted Mean:**
+```
+       Σᵢ (wᵢ · xᵢ)       Σᵢ (xᵢ / σ²ᵢ)
+μ̂ = ────────────── = ──────────────
+         Σᵢ wᵢ           Σᵢ (1 / σ²ᵢ)
+```
+
+**Effective Variance:**
+```
+            1
+σ²_eff = ────────────
+         Σᵢ (1 / σ²ᵢ)
+```
+
+Where:
+- **wᵢ = 1/σ²ᵢ** — weight (inverse variance, also called precision)
+- **xᵢ** — measured coordinate (lat or lon)
+- **σᵢ** — GPS-reported accuracy for measurement *i*
+
+#### Why Inverse Square Weighting?
+
+The weight **w<sub>i</sub> = 1/σ²<sub>i</sub>** (inverse variance) is derived from:
+
+1. **Maximum Likelihood Estimation**: For Gaussian errors, MLE gives inverse-variance weighting
+2. **Fisher Information**: The information content of a measurement is proportional to **1/σ²**
+3. **Optimal Fusion**: Minimizes the mean squared error of the combined estimate
+
+**Example:**
+
+| Recording | Accuracy (σ) | Weight (1/σ²) | Relative Influence |
+|-----------|--------------|---------------|-------------------|
+| Indoor    | 50m          | 0.0004        | 1.8%              |
+| Outdoor   | 10m          | 0.01          | 45.5%             |
+| High-precision | 5m      | 0.04          | 52.7%             |
+
+The high-precision measurement dominates the result (52.7%), while the poor indoor reading contributes minimally (1.8%).
+
+#### Effective Accuracy Interpretation
+
+The **effective accuracy** (σ<sub>eff</sub>) represents the uncertainty of the combined estimate:
+
+```
+σ_eff = √(1 / Σᵢ(1/σ²ᵢ))
+```
+
+**Properties:**
+- Decreases with more measurements (more data → better estimate)
+- Decreases faster when adding high-precision measurements
+- Bounded: **σ<sub>eff</sub> ≤ min(σ<sub>1</sub>, σ<sub>2</sub>, ..., σ<sub>n</sub>)**
+
+**Example Progression:**
+
+| Measurements | Best σ | Worst σ | σ<sub>eff</sub> | Improvement |
+|--------------|--------|---------|-----------------|-------------|
+| 1            | 10m    | 10m     | 10.0m           | Baseline    |
+| 2            | 10m    | 50m     | 9.8m            | 2% better   |
+| 5 (all 10m)  | 10m    | 10m     | 4.5m            | 55% better  |
+| 10 (all 10m) | 10m    | 10m     | 3.2m            | 68% better  |
+
+#### Data Capture
+
+**Location:** `src/App.tsx` - `addWorkLocation()`
+
+```typescript
+const addWorkLocation = (location: Coordinates) => {
+  const timestamp = new Date().toISOString();
+  const accuracy = location.accuracy || 50; // Default to 50m if not provided
+  
+  const workLocation: WorkLocation = {
+    latitude: location.latitude,
+    longitude: location.longitude,
+    accuracy,
+    timestamp
+  };
+  
+  setWorkLocations(prev => [...prev, workLocation]);
+};
+```
+
+**Location:** `src/components/SettingsView.tsx` - `handleRecordLocation()`
+
+```typescript
+navigator.geolocation.getCurrentPosition(
+  (position) => {
+    const { latitude, longitude, accuracy } = position.coords;
+    
+    const locationWithAccuracy = { 
+      latitude, 
+      longitude, 
+      accuracy: accuracy || 50  // Fallback if accuracy unavailable
+    };
+    
+    onAddLocation(locationWithAccuracy);
+  },
+  (error) => { /* handle error */ },
+  { 
+    enableHighAccuracy: true,  // Request highest precision
+    timeout: 20000,
+    maximumAge: 0              // Force fresh reading
+  }
+);
+```
+
+#### UI Display
+
+**Effective Accuracy Indicator:**
+
+The Settings view displays:
+- Bayesian weighted average coordinates
+- Effective accuracy with color-coded badge:
+  - 🟢 Green (≤10m): Excellent precision
+  - 🟡 Yellow (≤25m): Good precision
+  - 🟠 Orange (≤50m): Fair precision
+  - 🔴 Red (>50m): Poor precision
+
+**Individual Contribution Display:**
+
+Users can expand a details section showing:
+- Each recording's timestamp
+- GPS accuracy (σ<sub>i</sub>)
+- Contribution percentage: **100% × (w<sub>i</sub> / Σw<sub>j</sub>)**
+
+**Example Display:**
+
+```
+Bayesian Weighted Average Work Location:
+  37.422000° N, 122.084000° W (±4.2m)
+  
+  ✓ Effective accuracy: ±4.2m (Excellent)
+    from 8 weighted measurements
+    
+  📍 Individual recordings:
+    2025-10-15: ±50m → 2.1% weight
+    2025-10-16: ±8m → 39.1% weight
+    2025-10-17: ±6m → 58.8% weight
+```
+
+#### Advantages Over Simple Averaging
+
+**Simple Average Problems:**
+- Treats all measurements equally
+- Noisy indoor GPS (±100m) has same weight as precise outdoor (±5m)
+- Result accuracy unclear
+- Not statistically optimal
+
+**Bayesian Weighted Average Benefits:**
+- ✅ Gives more weight to precise measurements
+- ✅ Automatically handles mixed-quality data
+- ✅ Provides uncertainty quantification (σ<sub>eff</sub>)
+- ✅ Statistically optimal (MLE for Gaussian errors)
+- ✅ Converges to true location with more high-quality data
+
+#### Mathematical Justification
+
+For those interested in the derivation:
+
+**Likelihood for single measurement:**
+```
+p(xᵢ | μ, σᵢ) = (1/√(2πσ²ᵢ)) · exp(-(xᵢ - μ)² / (2σ²ᵢ))
+```
+
+**Joint likelihood (assuming independence):**
+```
+p(x₁, ..., xₙ | μ) = ∏ᵢ p(xᵢ | μ, σᵢ)
+```
+
+**Log-likelihood:**
+```
+log L(μ) = -½ Σᵢ [(xᵢ - μ)² / σ²ᵢ] + const
+```
+
+**Maximum likelihood estimate (∂log L/∂μ = 0):**
+```
+μ̂ = Σᵢ(xᵢ/σ²ᵢ) / Σᵢ(1/σ²ᵢ)  ← Our weighted average formula
+```
+
+This proves our implementation is the maximum likelihood estimator under the Gaussian error assumption.
+
+---
 
 ### `exportService.ts` - Data Export
 
