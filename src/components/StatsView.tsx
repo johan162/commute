@@ -412,7 +412,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
         </div>
       </Card>
 
-      <Card title="Commute Duration Distribution">
+      <Card title="Commute Duration Histogram">
          <div className="h-64 md:h-80">
            <HistogramChart records={records} binSizeMinutes={binSize} />
          </div>
