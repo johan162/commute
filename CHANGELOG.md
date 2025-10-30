@@ -1,3 +1,11 @@
+## [0.16.3] - 2025-10-30
+
+Release type: patch
+
+### 🚀 Improvements
+- [upd] Make the heatmap scroll horizonatally and have unlimited window width
+
+
 ## [0.16.2] - 2025-10-30
 
 Release type: patch
