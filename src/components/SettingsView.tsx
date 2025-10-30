@@ -183,7 +183,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
         
         const accuracyText = accuracy ? `±${Math.round(accuracy)}m accuracy` : '±50m accuracy (estimated)';
         const weightText = workLocationCount > 0 ? 
-          ` New measurement weighted by accuracy in Bayesian average.` : 
+          `` : 
           ` This is your first work location recording.`;
         
         setMessage(
@@ -335,7 +335,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
             Record your work location to enable automatic arrival detection. 
           </p>
           <p className="text-xs text-gray-500">
-            The application will use a Bayesian weighted average to take each new recorded location into account based on its accuracy (in meters).
+            The application will use a Bayesian weighted average to take each new recorded location into account based on its accuracy.
           </p>
           <p className="text-gray-300 font-semibold">
             Current Recordings: <span className="text-cyan-400">{workLocationCount}</span>
