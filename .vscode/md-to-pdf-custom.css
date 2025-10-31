@@ -1,0 +1,46 @@
+/* reduce base font size and tighten line-height */
+body {
+  font-size: 12px !important;
+  line-height: 1.35 !important;
+  margin: 10mm;
+  /* optional */
+}
+
+/* Fixed-width (monospace) font at 10pt for code blocks and inline code */
+code,
+pre,
+tt,
+kbd,
+samp,
+code[class="language-"],
+pre[class*="language-"] {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Courier New', monospace;
+  font-size: 9pt !important;
+  line-height: 1.2 !important;
+}
+
+/* Make sure pre blocks use the same size and wrap appropriately */
+pre {
+  white-space: pre-wrap;
+  /* wrap long lines */
+  word-break: break-word;
+  padding: 0.5rem;
+  border-radius: 6px;
+}
+
+h1 {
+  font-size: 20px !important;
+}
+
+h2 {
+  font-size: 16px !important;
+}
+
+@media print {
+  .page-break { 
+    display: block;
+    page-break-after: always;   /* legacy */
+    break-after: page;          /* modern spec */
+  }
+}
+

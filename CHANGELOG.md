@@ -1,3 +1,15 @@
+## [0.16.6] - 2025-10-31
+
+Release type: patch
+
+### 📖 Documentation
+- [upd] Some rewording and typos fixed un User Guide
+- [upd] Improved PDF generation of User Guide with custom CSSS
+
+### 🛠 Internal
+- [upd] Aded two more data generators, one for bimodal distribution and one for trending data set.
+
+
 ## [0.16.5] - 2025-10-31
 
 Release type: patch

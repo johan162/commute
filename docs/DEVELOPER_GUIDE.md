@@ -63,8 +63,14 @@ Data Storage (localStorage)
 
 ## Project Structure
 
+[!NOTE]
+> Test files in `hook` and `services` directory omitted in this structure
+
 ```
 commute/
+├── docs/
+│   ├── DEVELOPER_README.md   # This file
+│   └── USER_GUIDE.md         # How to use the application
 ├── public/
 │   ├── icon.svg              # App icon for PWA
 │   └── manifest.json         # PWA manifest
@@ -75,6 +81,7 @@ commute/
 ├── src/
 │   ├── components/           # React UI components
 │   │   ├── Button.tsx        # Reusable button component
+│   │   ├── CalendarHeatmap.tsx       # Heatmap for weeks and weekdays
 │   │   ├── Card.tsx          # Container card component
 │   │   ├── Header.tsx        # Navigation header
 │   │   ├── HistogramChart.tsx        # Duration histogram
@@ -90,6 +97,8 @@ commute/
 │   │   ├── exportService.ts          # CSV/PDF export
 │   │   ├── locationService.ts        # GPS distance calculation
 │   │   └── statsService.ts           # Statistical calculations
+│   ├── test/                 # Business logic services
+│   │   ├── setup.ts          # Mock for local storage
 │   ├── App.tsx               # Root component with routing
 │   ├── index.tsx             # App entry point
 │   ├── index.css             # Global styles
@@ -97,14 +106,14 @@ commute/
 │   └── vite-env.d.ts         # Vite type definitions
 ├── index.html                # HTML entry point
 ├── package.json              # Dependencies and scripts
+├── package-lock.json         # Locked versions to be used
 ├── tsconfig.json             # TypeScript configuration
 ├── vite.config.ts            # Vite build configuration
 ├── tailwind.config.js        # TailwindCSS configuration
 ├── postcss.config.js         # PostCSS configuration
 ├── CHANGELOG.md              # Release history
 ├── LICENSE                   # MIT license
-├── README.md                 # User documentation
-└── DEVELOPER_README.md       # This file
+└── README.md                 # A short overview of purpose of repo
 ```
 
 ---
@@ -679,6 +688,9 @@ For each coordinate dimension (latitude and longitude are treated independently)
 2. **Variance Reduction**: σ²<sub>post</sub> ≤ min(σ²<sub>prior</sub>, σ²<sub>i</sub>) — uncertainty always decreases
 3. **Optimal Fusion**: This is the maximum likelihood estimator for Gaussian errors
 
+[!NOTE]
+> As we assume Gaussian noise this leads to exactly the same update equations that a *Kalman filter* would have given. A *Kalman filter* is really only a simplified Bayesian update under the assumptions of linerarity and Gaussian noise. However, I prefer to reason in a Bayesian framework as that is more generic (and I find it more straightforward).
+
 #### Implementation in Code
 
 **Location:** `src/App.tsx`
@@ -1098,13 +1110,13 @@ dist/
 
 | Script | Purpose | Usage |
 |--------|---------|-------|
-| `mkbld.sh` | Build and deploy to gh-pages | `./scripts/mkbld.sh` |
-| `mkrelease.sh` | Create version release | `./scripts/mkrelease.sh <version>` |
-| `mkghrelease.sh` | Create GitHub release | `./scripts/mkghrelease.sh` |
+| `mkbld.sh` | Build, verify and optionally deploy (and push) to gh-pages | `./scripts/mkbld.sh` |
+| `mkrelease.sh` | Tag a release and publish it on gh-pages branch | `./scripts/mkrelease.sh <version>` |
+| `mkghrelease.sh` | Create GitHub release based on last tag| `./scripts/mkghrelease.sh` |
 
-### 1. Build and Deploy (`mkbld.sh`)
+### 1. Build and Optionally Deploy to local branch of gh-pages (`mkbld.sh`)
 
-**Purpose**: Build app and deploy to gh-pages branch
+**Purpose**: Build and run test and coverage checks
 
 **Process:**
 1. Validates git repository
@@ -1120,8 +1132,9 @@ dist/
 
 **Usage:**
 ```bash
-./scripts/mkbld.sh
-git push origin gh-pages  # Manual push to remote
+./scripts/mkbld.sh # Just build and run tests
+./scripts/mkbld.sh --deploy # Merge to gh-pages branch
+./scripts/mkbld.sh --deploy --push # Merge to gh-pages branch and push gh-pages to origin
 ```
 
 **Error Checking:**
@@ -1133,7 +1146,8 @@ git push origin gh-pages  # Manual push to remote
 
 ### 2. Version Release (`mkrelease.sh`)
 
-**Purpose**: Automated semantic versioning and release preparation
+**Purpose**: Automated semantic versioning and release preparation. 
+Creates a release tag on main branch and pushes the latest release onto gh-pages branch and makes it available from the projects github.io page
 
 **Arguments:**
 - `<version>`: Semantic version (e.g., 0.2.0)
@@ -1142,22 +1156,26 @@ git push origin gh-pages  # Manual push to remote
 **Quality Gates:**
 1. Git repository validation
 2. Clean working directory check
-3. Branch verification (must be on `develop`)
-4. Version format validation (semver)
-5. TypeScript compilation check
-6. Build verification
+3. Checks that all tests passes and that coverage is > 75%
+4. Branch verification (must be on `develop`)
+5. Version format validation (semver)
+6. TypeScript compilation check
+7. Build verification
+8. Stores artifacts in `artifacts/` directory
 
 **Process:**
-1. Validates prerequisites
+1. Validates prerequisites (such as clean directory and that the tag does not previously exist)
 2. Updates version in:
    - `package.json`
    - `metadata.json`
    - `App.tsx`
+   - `README.md`
 3. Updates `CHANGELOG.md`
 4. Commits changes
-5. Merges to `main` branch
+5. Squash merge `devlop` to `main` branch
 6. Creates git tag
 7. Returns to `develop` branch
+8. Merges back `main` to `develop` to avoid future merge conflicts as we did a squash merge to `main`
 
 **Usage:**
 ```bash
@@ -1175,7 +1193,7 @@ git push origin gh-pages  # Manual push to remote
 - Must be on `develop` branch
 - Working directory must be clean
 - Creates annotated git tag
-- Updates CHANGELOG automatically
+- Adds a template entry in the CHANGELOG automatically which is expected to be filled in by the developer making the release 
 
 ### 3. GitHub Release (`mkghrelease.sh`)
 
@@ -1189,11 +1207,11 @@ git push origin gh-pages  # Manual push to remote
 
 **Process:**
 1. Detects latest tag
-2. Extracts release notes from CHANGELOG
+2. Extracts latest release notes from CHANGELOG from the same version as the latest tag
 3. Builds distribution assets
 4. Creates GitHub release
 5. Uploads dist.zip as asset
-6. Marks as pre-release if version contains `-`
+6. Marks as pre-release if version contains `-RC<nn>`
 
 **Usage:**
 ```bash
@@ -1216,26 +1234,21 @@ git push origin gh-pages  # Manual push to remote
 ```bash
 # 1. Develop and test features on develop branch
 git checkout develop
-# ... make changes ...
+
+# ... make changes , usually on a feature branch ...
+# ...
+# ... squash merge the feature back to develope after testing
+# ... commit ehanges
 git commit -m "feat: Add new feature"
 
-# 2. Create release (updates version, merges to main, creates tag)
+# 2. Make sure it builds with no errors and that all tests still pass
+./scripts/mkbld.sh
+
+# 3. Create release (updates version, merges to main, creates tag)
 ./scripts/mkrelease.sh 0.2.0 minor
 
-# 3. Build and deploy to gh-pages
-git checkout main
-./scripts/mkbld.sh
-git push origin gh-pages
-
-# 4. Push tags and main branch
-git push origin main
-git push origin --tags
-
-# 5. Create GitHub release
+# (Optional) 4. Create GitHub release
 ./scripts/mkghrelease.sh
-
-# 6. Return to develop
-git checkout develop
 ```
 
 ---
@@ -1375,7 +1388,13 @@ cd commute
 # Install dependencies
 npm install
 
-# Start development server
+# Verify that you can build
+npm run build
+
+# Verify that all tests passes and have a look at the coverage
+npm run test:coverage
+
+# Start development server and open the URL to view the app
 npm run dev
 ```
 
@@ -1422,10 +1441,10 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
       thresholds: {
-        statements: 70,
-        branches: 70,
-        functions: 70,
-        lines: 70
+        statements: 75,
+        branches: 75,
+        functions: 75,
+        lines: 75
       }
     }
   }
@@ -1708,7 +1727,7 @@ describe('MyComponent', () => {
 These thresholds are enforced by:
 1. `vitest.config.ts` (fails test run if below threshold)
 2. `scripts/mkrelease.sh` (blocks releases with low coverage)
-3. `scripts/mkbld.sh` (blocks builds with insufficient tests)
+3. `scripts/mkbld.sh` (fails builds with insufficient tests)
 
 **To check coverage:**
 ```bash
@@ -1751,22 +1770,6 @@ npx vitest run src/services/statsService.test.ts
 **Run tests matching pattern:**
 ```bash
 npx vitest run -t "should calculate percentiles"
-```
-
-### Continuous Integration
-
-Tests run automatically on:
-- Pre-release checks (`mkrelease.sh`)
-- Build verification (`mkbld.sh`)
-- Manual execution (`make test`)
-
-**Expected CI workflow:**
-```bash
-make install       # Install dependencies
-make typecheck     # TypeScript validation
-make test          # Run test suite
-make test-coverage # Verify coverage thresholds
-make build         # Build production assets
 ```
 
 ### Test Maintenance
@@ -1937,5 +1940,5 @@ When contributing to this project:
 ---
 
 **Last Updated**: October 2025  
-**Version**: 0.2.0  
+**Version**: 0.3.0  
 **Maintainer**: johan162

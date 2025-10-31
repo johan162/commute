@@ -1,0 +1,6 @@
+{
+  "markdown-pdf.styles": [
+    ".vscode/md-to-pdf-custom.css"
+  ],
+  "makefile.configureOnOpen": false
+}
