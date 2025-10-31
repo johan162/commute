@@ -50,7 +50,7 @@
 ### Core Features
 - **Timer Tracking**: Start/stop commute tracking with GPS integration for accurate distance and time.
 - **Geofencing**: Automatically stops tracking when you arrive at work (customizable radius).
-- **Bayesian work location updates**: Use Bayesian weighted updates of work location
+- **Bayesian work location updates**: Use Bayesian weighted updates of work location (**Note**: As we assume Gaussian noise this leads to exactly the same update equations that a *Kalman filter* would have given. A *Kalman filter* is really only a simplified Bayesian update under the assumptions of linerarity and Gaussian noise. However, I prefer to reason in a Bayesian framework as that is more generic and I find it more straightforward.)
 
 ### Analytics
 - **Basic Statistics**: Mean, median, best, and worst commute times with easy to read visualizations.
