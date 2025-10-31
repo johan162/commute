@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import type { Coordinates, WorkLocation } from '../types';
 import { Card } from './Card';
@@ -55,6 +54,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
   const [betaBeta, setBetaBeta] = useState(5);
   const [betaMin, setBetaMin] = useState(10);
   const [betaMax, setBetaMax] = useState(50);
+  const [bimodalMorningMean, setBimodalMorningMean] = useState(22);
+  const [bimodalMorningStdDev, setBimodalMorningStdDev] = useState(4);
+  const [bimodalEveningMean, setBimodalEveningMean] = useState(28);
+  const [bimodalEveningStdDev, setBimodalEveningStdDev] = useState(6);
 
   // Format coordinates in human-readable format
   const formatCoordinates = (coords: Coordinates): string => {
@@ -136,6 +139,18 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
       const betaVal = x / (x + y);
       return min + betaVal * (max - min);
     });
+  };
+
+  const generateBimodalNormal = (morningMean: number, morningStdDev: number, eveningMean: number, eveningStdDev: number, count: number): number[] => {
+    const durations: number[] = [];
+    const numPairs = Math.ceil(count / 2);
+    for (let i = 0; i < numPairs; i++) {
+      // Morning commute
+      durations.push(morningMean + morningStdDev * boxMullerTransform());
+      // Evening commute
+      durations.push(eveningMean + eveningStdDev * boxMullerTransform());
+    }
+    return durations.slice(0, count); // Ensure exact count
   };
 
   const createDebugRecords = (durations: number[]) => {
@@ -1001,6 +1016,58 @@ SOFTWARE.
                   disabled={debugLoading}
                 >
                   {debugLoading ? 'Loading...' : `Beta (α=${betaAlpha}, β=${betaBeta})`}
+                </Button>
+              </div>
+
+              {/* Bimodal Normal Distribution */}
+              <div className="bg-gray-800 p-4 rounded-lg space-y-3 lg:col-span-2">
+                <h4 className="text-sm font-semibold text-gray-300">Bimodal Normal Distribution (Morning vs. Evening)</h4>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
+                  <div>
+                    <label className="text-xs text-gray-500">Morning Mean</label>
+                    <input
+                      type="number"
+                      value={bimodalMorningMean}
+                      onChange={(e) => setBimodalMorningMean(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Morning StdDev</label>
+                    <input
+                      type="number"
+                      value={bimodalMorningStdDev}
+                      onChange={(e) => setBimodalMorningStdDev(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Evening Mean</label>
+                    <input
+                      type="number"
+                      value={bimodalEveningMean}
+                      onChange={(e) => setBimodalEveningMean(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Evening StdDev</label>
+                    <input
+                      type="number"
+                      value={bimodalEveningStdDev}
+                      onChange={(e) => setBimodalEveningStdDev(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => {
+                    const durations = generateBimodalNormal(bimodalMorningMean * 60, bimodalMorningStdDev * 60, bimodalEveningMean * 60, bimodalEveningStdDev * 60, debugRecordCount);
+                    loadDebugData(durations, `Bimodal Normal`);
+                  }}
+                  disabled={debugLoading}
+                >
+                  {debugLoading ? 'Loading...' : `Bimodal (M: μ=${bimodalMorningMean}, E: μ=${bimodalEveningMean})`}
                 </Button>
               </div>
             </div>
