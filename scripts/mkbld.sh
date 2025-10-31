@@ -114,7 +114,7 @@ if ! git rev-parse --git-dir >/dev/null 2>&1; then
 fi
 
 if ! git diff-index --quiet HEAD --; then
-    log_error "Working directory is not clean."
+    log_warn "Working directory is not clean."
     git status --short
     read -p "Continue anyway? (y/n) " -n 1 -r
     echo
@@ -124,20 +124,9 @@ if ! git diff-index --quiet HEAD --; then
     fi
 fi
 
-if [ -n "$(git status --porcelain)" ]; then
-    log_error "There are untracked or staged files."
-    git status --short
-    read -p "Continue anyway? (y/n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        log_error "Aborted by user"
-        exit 1
-    fi
-fi
-
-# Check if there are uncommitted changes
 if [ -n "$(git status --porcelain)" ]; then
     log_warn "You have uncommitted changes in your working directory."
+    git status --short
     read -p "Continue anyway? (y/n) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
@@ -145,6 +134,7 @@ if [ -n "$(git status --porcelain)" ]; then
         exit 1
     fi
 fi
+
 
 # Get current branch
 ORIGINAL_BRANCH=$(git branch --show-current)

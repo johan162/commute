@@ -58,6 +58,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
   const [bimodalMorningStdDev, setBimodalMorningStdDev] = useState(4);
   const [bimodalEveningMean, setBimodalEveningMean] = useState(28);
   const [bimodalEveningStdDev, setBimodalEveningStdDev] = useState(6);
+  const [trendMean, setTrendMean] = useState(25);
+  const [trendStdDev, setTrendStdDev] = useState(5);
+  const [trendPercentage, setTrendPercentage] = useState(20);
 
   // Format coordinates in human-readable format
   const formatCoordinates = (coords: Coordinates): string => {
@@ -151,6 +154,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
       durations.push(eveningMean + eveningStdDev * boxMullerTransform());
     }
     return durations.slice(0, count); // Ensure exact count
+  };
+
+  const generateTrendingNormal = (mean: number, stdDev: number, trendPercentage: number, count: number): number[] => {
+    const durations: number[] = [];
+    const totalChange = mean * (trendPercentage / 100);
+    const changePerRecord = count > 1 ? totalChange / (count - 1) : 0;
+
+    for (let i = 0; i < count; i++) {
+      const adjustedMean = mean + (i * changePerRecord);
+      const duration = adjustedMean + stdDev * boxMullerTransform();
+      durations.push(duration);
+    }
+    return durations;
   };
 
   const createDebugRecords = (durations: number[]) => {
@@ -1068,6 +1084,49 @@ SOFTWARE.
                   disabled={debugLoading}
                 >
                   {debugLoading ? 'Loading...' : `Bimodal (M: μ=${bimodalMorningMean}, E: μ=${bimodalEveningMean})`}
+                </Button>
+              </div>
+
+              {/* Trending Normal Distribution */}
+              <div className="bg-gray-800 p-4 rounded-lg space-y-3 lg:col-span-2">
+                <h4 className="text-sm font-semibold text-gray-300">Trending Normal Distribution</h4>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="text-xs text-gray-500">Base Mean (min)</label>
+                    <input
+                      type="number"
+                      value={trendMean}
+                      onChange={(e) => setTrendMean(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Std Dev (min)</label>
+                    <input
+                      type="number"
+                      value={trendStdDev}
+                      onChange={(e) => setTrendStdDev(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-gray-500">Trend (%)</label>
+                    <input
+                      type="number"
+                      value={trendPercentage}
+                      onChange={(e) => setTrendPercentage(Number(e.target.value))}
+                      className="w-full bg-gray-700 border border-gray-600 rounded p-1 text-sm"
+                    />
+                  </div>
+                </div>
+                <Button 
+                  onClick={() => {
+                    const durations = generateTrendingNormal(trendMean * 60, trendStdDev * 60, trendPercentage, debugRecordCount);
+                    loadDebugData(durations, `Trending Normal (${trendPercentage > 0 ? '+' : ''}${trendPercentage}%)`);
+                  }}
+                  disabled={debugLoading}
+                >
+                  {debugLoading ? 'Loading...' : `Trending Normal (${trendPercentage > 0 ? '+' : ''}${trendPercentage}%)`}
                 </Button>
               </div>
             </div>
