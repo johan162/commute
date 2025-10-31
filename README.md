@@ -1,16 +1,50 @@
 # Commute Time Tracker PWA
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-0.16.4-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-0.16.5-brightgreen.svg)
 ![React](https://img.shields.io/badge/react-18.2.0-blue.svg)
 ![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
 ![PWA](https://img.shields.io/badge/PWA-Ready-green.svg)
 ![Bundle Size](https://img.shields.io/bundlephobia/min/commute)
 
-A simple and efficient Progressive Web App (PWA) to track your commute time to work. It provides detailed statistics and visualizations to help you understand your travel patterns.
 
-<img src="docs/screenshots/01. MainScreen.png" width="30%">
+<table>
+<tr>
+<td width="40%" valign="top">
+<img src="docs/screenshots/01. MainScreen.png" width="100%">
+</td>
+<td valign="top">
 
+> **A simple and efficient Progressive Web App (PWA) to track your commute time to work. It provides detailed (basic-, advanced-, and very advanced) statistics and visualizations to help you understand your travel patterns.**
+
+## <TL;DR> Quick start
+
+> [!IMPORTANT]
+> *Note on privacy: Data is ONLY stored locally in the browser/App. No remote data is saved!*
+
+**Step 1:** Open the App URL on your device: https://johan162.github.io/commute
+
+**Step 2:** Install it as an off-line PWA App in the browser:
+
+
+### On Android:
+- Click the extended menu (three vertical dots)
+- Select "Add to home screen"
+- In the popup shown choose "Install as App"
+
+### On iOS:
+- Click the share-icon (top-right corner of browser)
+- Scroll down and select "Add to Home Screen"
+
+
+### Desktop Chrome
+- Clicke the extended menu (three vertical dots)
+- Select "Cast, save and share"
+- Click "Install page as app..."
+
+</td>
+</tr>
+</table>
 
 ## Features
 ### Core Features
@@ -18,58 +52,67 @@ A simple and efficient Progressive Web App (PWA) to track your commute time to w
 - **Geofencing**: Automatically stops tracking when you arrive at work (customizable radius).
 - **Bayesian work location updates**: Use Bayesian weighted updates of work location
 
-<img src="docs/screenshots/13. Settings-Autostop.png" width="30%">
-<img src="docs/screenshots/14. Setings-Work-Location.png" width="30%">
-
-### Advanced Analytics
-- **Basic Statistics**: Average, best, and worst commute times with easy to read visualizations.
-- **Advanced Statistics**: Trend analysis (Mann-Kendall test), pattern detection (Runs test), normality testing (Shapiro-Wilk), and Q-Q plots with R² metrics to uncover commute patterns.
-
-<img src="docs/screenshots/03. Stat-Histogram.png" width="30%">
-<img src="docs/screenshots/09. Mann-Kendall.png" width="30%">
-<img src="docs/screenshots/10. Runs.png" width="30%">
+### Analytics
+- **Basic Statistics**: Mean, median, best, and worst commute times with easy to read visualizations.
+- **Advanced Statistics**: Histogram, 90% confidence interval (Interpolated and Closest Rank), Heatmap
+- **Very Advanced Statistics**: Trend analysis (Mann-Kendall test), pattern detection (Runs test), normality testing (Shapiro-Wilk), and Q-Q plots with R² metrics to uncover commute patterns.
 
 ### Data & Export
 - **History View**: Browse complete commute logs to spot trends.
 - **PDF Reports**: Generate professional summaries for sharing or archiving.
 - **Data Export**: Download commute data as CSV for external analysis.
 
-<img src="docs/screenshots/11. Export.png" width="30%">
-
-
 ### App Experience
 - **Progressive Web App**: Installable on phones/tablets with offline support and a modern dark-themed UI.
-- **Privacy-First**: All data stored locally—no remote tracking or telemetry.
+- **Fake Nixie Tubes**: Have the timer look (almost) like everyones favorite Nixie Tube Digits!
+- **Privacy-First**: All data stored locally — no remote tracking or telemetry.
 
+## Selected screenshots
 
-## User Quick Start 
+<table>
+<tr>
+<td>
+<img src="docs/screenshots/13. Settings-Autostop.png" width="100%">
+</td>
+<td>
+<img src="docs/screenshots/14. Setings-Work-Location.png" width="100%">
+</td>
+<td>
+<img src="docs/screenshots/15. Settings-Misc.png" width="100%">
+</td>
+</tr>
+<tr>
+<td>
+<img src="docs/screenshots/03. Stat-Histogram.png" width="100%">
+</td>
+<td>
+<img src="docs/screenshots/09. Mann-Kendall.png" width="100%">
+</td>
+<td>
+<img src="docs/screenshots/10. Runs.png" width="100%">
+</td>
+</tr>
+<tr>
+<td>
+<img src="docs/screenshots/05. Heat-map.png" width="100%">
+</td>
+<td>
+<img src="docs/screenshots/08. Q-Q-plot.png" width="100%">
+</td>
+<td>
+<img src="docs/screenshots/11. Export.png" width="100%">
+</td>
+</tr>
+</table>
 
-**Note on privacy:** Again, data is **ONLY** stored locally in the browser/App. No remote data is saved! 
-
-* **Step 1:** Open the App URL on your device: [https://johan162.github.io/commute](https://johan162.github.io/commute)
-
-* **Step 2:** To install this as an offline App do the following depending on OS:
-
-### Android:
-- Click the extended menu (three vertical dots)
-- Select "Add to home screen"
-- In the popup shown choose "Install as App"
-
-### iOS:
-- Click the share-icon (top-right corner of browser)
-- Scroll down and select "Add to Home Screen"
-
-### Desktop Chrome
-- Clicke the extended menu (three vertical dots)
-- Select "Cast, save and share"
-- Click "Install page as app..."
 
 ## How to Use
 
-1. **Start Tracking**: Tap "Start Commute" when leaving home. The app uses GPS to track your route.
-2. **Automatic Stop**: Enable geofencing in Settings to auto-stop when arriving at work.
+1. **Start Tracking**: Tap "Start Commute" when leaving home. 
+2. **Automatic Stop**: Enable GPS geofencing in Settings to auto-stop when arriving at work so you never forget to stop the timer and have the timer run all day!
 3. **View Insights**: Check the Statistics tab for trends, or export data as CSV/PDF.
 4. **Customize**: Adjust settings like radius or weekend inclusion for personalized analytics.
+
 For detailed guidance, see the complete [User Guide](docs/USER_GUIDE.md).
 
 
@@ -89,13 +132,13 @@ may even prompt you to swipe down to refresh the app.
 
 ### Summary of OS differences
 
-| Feature | iOS (Home Screen PWA) | Android / Desktop Chrome |
-| :--- | :--- | :--- |
-| **Update Trigger** | Automatic, periodic (~24h cycle) | On navigation/startup |
-| **Manual Refresh** | Does **not** trigger an update check | **Does** trigger an update check |
-| **Activation** | Requires a full app restart (close & reopen) | On next navigation/refresh |
-| **User Notification** | None (it's silent) | Possible via in-app prompts |
-| **Update Speed** | Slow (can take over 24 hours to appear) | Fast (can be immediate) |
+| Feature               | iOS (Home Screen PWA)                        | Android / Desktop Chrome         |
+| :-------------------- | :------------------------------------------- | :------------------------------- |
+| **Update Trigger**    | Automatic, periodic (~24h cycle)             | On navigation/startup            |
+| **Manual Refresh**    | Does **not** trigger an update check         | **Does** trigger an update check |
+| **Activation**        | Requires a full app restart (close & reopen) | On next navigation/refresh       |
+| **User Notification** | None (it's silent)                           | Possible via in-app prompts      |
+| **Update Speed**      | Slow (can take over 24 hours to appear)      | Fast (can be immediate)          |
 
 
 
@@ -111,41 +154,40 @@ may even prompt you to swipe down to refresh the app.
 
 ### Clone the repo
 
-```sh
-> git clone https://github.com/johan162/commute.git
+```bash
+$ git clone https://github.com/johan162/commute.git
 ```
 
 ### Initialize dev environment
 
-```sh
-> cd commute
-> npm install
+```bash
+$ cd commute
+$ npm install
 ```
 
 ### Do a bare bones build to check everything
 
-```sh
-> npm run build
-> npm run test:coverage
+```bash
+$ npm run build
+$ npm run test:coverage
 ```
 
 ### Serve the app locally
 
-```sh
-> npm run dev
-
- VITE v7.1.12  ready in 155 ms
-
-  ➜  Local:   http://localhost:5173/commute/
-  ➜  Network: use --host to expose
-  ➜  press h + enter to show help
+```bash
+$ npm run dev
 ```
 
+By default this will set up a local server listening on `http://localhost:5173/commute/`
+
+
 ## Contributing
-We welcome contributions! See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for architecture details.
+
+Contributions are welcome! See [DEVELOPER_GUIDE.md](docs/DEVELOPER_GUIDE.md) for architecture details, coding style and guidelines.
 - Fork the repo and create a feature branch.
 - Run build with Quality-gates: `scripts/mkbld.sh` (or use the Makefile with `make build`)
 - Submit a pull request with a clear description.
+
 Report bugs via [GitHub Issues](https://github.com/johan162/commute/issues).
 
 

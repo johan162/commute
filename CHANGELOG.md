@@ -1,3 +1,11 @@
+## [0.16.5] - 2025-10-31
+
+Release type: patch
+
+### 📖 Documentation
+- [upd] Added screenshots to README.md
+
+
 ## [0.16.4] - 2025-10-31
 
 Release type: patch
