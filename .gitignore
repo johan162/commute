@@ -1,8 +1,8 @@
 node_modules/
 dist/
+docs/*.pdf
 .env
 .DS_Store
-.vscode/
 .idea/
 npm-debug.log
 yarn-error.log

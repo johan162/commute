@@ -2,7 +2,7 @@
 
 Welcome to **Commute Tracker**! This guide will help you get the most out of your commute tracking experience and understand all the powerful features at your fingertips.
 
-## 📱 What is Commute Tracker?
+## What is Commute Tracker?
 
 Commute Tracker is a smart, privacy-focused application that helps you:
 - **Track** your daily commute times with GPS precision
@@ -14,7 +14,7 @@ Best of all, it's a **Progressive Web App (PWA)**, which means it works offline,
 
 ---
 
-## 🗺️ Application Overview
+## Application Overview
 
 ```
 Commute Tracker
@@ -26,14 +26,17 @@ Commute Tracker
 │
 ├── 📊 Statistics View
 │   ├── Summary Statistics
-│   ├── Confidence Intervals
+│   ├── Total Commute Time Analysis
+│   ├── Commute Duration Histogram
+│   ├── Commute time by Day-of-Week
+│   ├── Commute time by Time-of-Day
+│   ├── Calendar Heatmap
+│   ├── Confidence Intervals (Interpolated)
+│   ├── Confidence Intervals (Nearest Rank)
 │   ├── Normality Test (Shapiro-Wilk)
 │   ├── Q-Q Plot (Visual Normality Assessment)
 │   ├── Trend Analysis (Mann-Kendall)
 │   ├── Pattern Analysis (Runs Test)
-│   ├── Commute Duration Histogram
-│   ├── Time Distribution Charts
-│   ├── Total Commute Time Analysis
 │   └── Export Functions (CSV/PDF)
 │
 ├── 📜 History View
@@ -45,14 +48,17 @@ Commute Tracker
     ├── AutoStop Feature
     ├── Work Location Management
     ├── Clear Work Location
+    ├── Timer look & feel (Nixie tubes)
     ├── Auto-Stop Radius Configuration
     ├── Data Management
     └── About
 ```
 
+<div class="page-break"></div>
+
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Installing the App
 
@@ -99,9 +105,11 @@ URL: [https://johan162.github.io/commute](https://johan162.github.io/commute)
 2. **Record Your Work Location** (optional): For automatic arrival detection. **Note:** There are options to enable automatic recording of position when timer is stopped.
 3. **Take Your First Commute**: Hit "Start Commute" and let the tracking begin!
 
+<div class="page-break"></div>
+
 ---
 
-## 🏠 Main View - Your Command Center
+## Main View - Your Command Center
 
 The Main View is your starting point for every commute.
 
@@ -130,11 +138,12 @@ The Main View is your starting point for every commute.
 - **Quick Stats**: Your average commute time is always visible
 - **Record Count**: See how many commutes you've tracked
 
-**💡 Pro Tip**: The app works in the background! You can switch to other apps, lock your phone, or even close the browser - the timer keeps running.
+> [!TIP]
+> **💡 Pro Tip**: The app works in the background! You can switch to other apps, lock your phone, or even close the browser - the timer keeps running.
 
 ---
 
-## 📊 Statistics View - Discover Your Patterns
+## Statistics View - Discover Your Patterns
 
 This is where the magic happens! The Statistics View transforms your raw commute data into actionable insights.
 
@@ -153,6 +162,8 @@ Your basic numbers at a glance:
 - **Median** is the middle value. It's more resistant to outliers (those days with terrible traffic).
 
 If your median is much lower than your average, you have some unusually slow commutes pulling up the average!
+
+<div class="page-break"></div>
 
 ### 90% Confidence Intervals
 
@@ -173,7 +184,7 @@ Two cards show you where 90% of your commutes fall:
 - **Realistic Expectations**: You'll arrive within this range 9 out of 10 times
 - **Buffer Time**: The difference between low and high tells you how unpredictable your commute is
 
-### 🔬 Normality Test (Shapiro-Wilk)
+### Normality Test (Shapiro-Wilk)
 
 *Requires 20+ commutes*
 
@@ -202,13 +213,13 @@ Imagine most commutes cluster around your average (say, 25 minutes), with fewer 
 - You might have multiple "typical" commute times
 - Look for patterns in your history to understand why
 
-**🎯 Real-World Example:**
+**Real-World Example:**
 Sarah's commute shows "Not Normal" because she has two distinct patterns: 
 - Fast commutes (20-22 min) when she leaves before 7 AM
 - Slow commutes (35-40 min) when she leaves after 7:15 AM
 Her solution? Always leave before 7 AM!
 
-### � Q-Q Plot (Quantile-Quantile Plot)
+### Q-Q Plot (Quantile-Quantile Plot)
 
 *Requires 10+ commutes*
 
@@ -269,7 +280,9 @@ Data has "lighter tails" - fewer extreme values, more clustered around the middl
 ```
 Data may have outliers or multiple distinct groups (like Sarah's example with early vs. late departures).
 
-### 📊 R² (Goodness-of-Fit) Statistic
+<div class="page-break"></div>
+
+### R² (Goodness-of-Fit) Statistic
 
 Below the Q-Q plot, you'll see an **R² value** - a number between 0 and 1 that quantifies how well your data fits a normal distribution.
 
@@ -291,7 +304,7 @@ Below the Q-Q plot, you'll see an **R² value** - a number between 0 and 1 that 
 
 **What Does R² Actually Measure?**
 
-R² calculates the "distance" between your data points and the theoretical line:
+R² calculates the "distance" between your data points and the theoretical line, in other words it calculates the Mean-Square Error between the theorethical line and the data points.
 - **R² = 1.0**: Perfect fit - all points exactly on the line
 - **R² = 0.95**: 95% of variation explained by normal distribution
 - **R² = 0.70**: Only 70% of variation explained - significant deviations
@@ -314,8 +327,8 @@ They complement each other:
 - ✅ R² quantifies the fit (0-1 scale)
 - ✅ Helps identify patterns (S-curve, clusters, outliers)
 
-**🎯 Real-World Example:**
-Mark's data shows:
+**Real-World Example:**
+Johan's data shows:
 - Shapiro-Wilk: p = 0.03 (Not Normal)
 - Q-Q Plot: Points curve away at both ends (S-shape)
 - R² = 0.82 (Moderate fit)
@@ -343,7 +356,7 @@ This is normal! Different tests use different methods:
 
 **Rule of thumb**: If both show reasonable agreement (both say "pretty normal" or both say "not very normal"), trust them. If they wildly disagree, you probably need more data.
 
-### �📈 Trend Analysis (Mann-Kendall Test)
+### Trend Analysis (Mann-Kendall Test)
 
 *Requires 10+ commutes*
 
@@ -381,8 +394,7 @@ Detects if your commute times are getting systematically longer, shorter, or sta
 - Consistent traffic patterns
 - **Action**: Your current routine is working well
 
-**🎯 Real-World Example:**
-Mike notices his commute trending upward (📈) over 3 months. He investigates and finds a new shopping center opened along his route. He switches to a parallel road and his times stabilize, then trend downward!
+<div class="page-break"></div>
 
 ### 🌊 Pattern Analysis (Runs Test)
 
@@ -417,10 +429,10 @@ Detects if your commute times are truly random or show patterns of clustering or
 - Behavioral factors
 - **Strategy**: Track what makes "fast days" fast and replicate it
 
-**🎯 Real-World Example:**
-Jessica's data shows clustering (📦). She realizes her commute is fast Monday-Wednesday (leaves at 6:45 AM for gym) but slow Thursday-Friday (leaves at 7:30 AM). Now she knows: leave before 7 AM for a fast commute, or expect 10 extra minutes if leaving later.
+**Real-World Example:**
+Johans's data shows clustering (📦).He realizes his commute is fast Monday-Wednesday (leaves at 6:45 AM for gym) but slow Thursday-Friday (leaves at 7:30 AM). Now he knows: leave before 7 AM for a fast commute, or expect 10 extra minutes if leaving later!
 
-### 📊 Commute Duration Histogram
+### Commute Duration Histogram
 
 A visual chart showing how your commute times are distributed.
 
@@ -435,9 +447,12 @@ A visual chart showing how your commute times are distributed.
 - **Long Tail**: Bars stretching far right = occasional really slow commutes
 - **Bin Size Slider**: Adjust to see more/less detail (1, 2, 5, or 10-minute groupings)
 
-**💡 Insight**: If you see two distinct peaks, dig into your history to understand what causes each pattern!
+> [!TIP]
+> **💡 Insight**: If you see two distinct peaks, dig into your history to understand what causes each pattern!
 
-### 🕐 Time of Day Breakdown
+<div class="page-break"></div>
+
+### Time of Day Breakdown
 
 A circular chart showing when your commutes happen.
 
@@ -446,7 +461,7 @@ A circular chart showing when your commutes happen.
 - Identify your typical departure time
 - Spot irregular patterns (maybe you should leave earlier?)
 
-### ⏱️ Total Commute Time Analysis
+### Total Commute Time Analysis
 
 Calculate how much time you've spent commuting over different periods.
 
@@ -461,9 +476,10 @@ Calculate how much time you've spent commuting over different periods.
 - **Justification**: Data to support working from home or relocating
 - **Goal Setting**: Track if route changes save cumulative time
 
-**🎯 Fun Fact**: If you commute 30 minutes each way, 5 days a week, that's over 250 hours per year - more than 10 full days!
+> [!NOTE]
+> ** Fun Fact**: If you commute 30 minutes each way, 5 days a week, that's over 250 hours per year - more than 10 full days!
 
-### 📤 Export Your Data
+### Export Your Data
 
 Share, backup, or analyze your data elsewhere:
 
@@ -478,9 +494,11 @@ Share, backup, or analyze your data elsewhere:
 - Great for sharing with coworkers or family
 - Perfect for "Show and Tell" at work!
 
+<div class="page-break"></div>
+
 ---
 
-## 📜 History View - Your Commute Timeline
+## History View - Your Commute Timeline
 
 Browse every commute you've ever recorded.
 
@@ -502,11 +520,14 @@ A chronological list (newest first) of all your commutes:
 - Confirm deletion
 - Statistics automatically update
 
-**🛡️ Data Integrity**: Deleting records immediately updates all statistics and charts.
+**Data Integrity**: Deleting records immediately updates all statistics and charts.
+
+
+<div class="page-break"></div>
 
 ---
 
-## ⚙️ Settings View - Customize Your Experience
+## Settings View - Customize Your Experience
 
 ### AutoStop Feature 🎯
 
@@ -537,10 +558,10 @@ When your phone's GPS detects you've crossed the boundary, it triggers an action
 
 **Why Use AutoStop?**
 
-✅ **Safety**: No need to touch your phone while parking or walking
-✅ **Convenience**: Fully hands-free operation
-✅ **Accuracy**: Stops at the exact moment of arrival
-✅ **Consistency**: Never forget to stop the timer
+- ✅ **Safety**: No need to touch your phone while parking or walking
+- ✅ **Convenience**: Fully hands-free operation
+- ✅ **Accuracy**: Stops at the exact moment of arrival
+- ✅ **Consistency**: Never forget to stop the timer
 
 ### Work Location Setup
 
@@ -557,6 +578,10 @@ When your phone's GPS detects you've crossed the boundary, it triggers an action
 2. Every time you stop the timer manually, your current location is recorded
 3. Perfect for learning your work location over time
 
+> [!WARNING]
+> Remember to keep the auto-stop turned off while you are automatically or manuaklly recording your GPS locations as otherwise 
+> it will automatically turned off when you hit the GeoFence radius!
+
 **Multiple Recordings (Recommended):**
 - Record your work location multiple times (5–10 times is ideal)
 - The app uses a Bayesian, accuracy‑weighted average of all recordings
@@ -565,7 +590,7 @@ When your phone's GPS detects you've crossed the boundary, it triggers an action
 - More recordings = higher confidence and better precision
 
 **Why Multiple Recordings?**
-GPS isn't perfect — it can be off by 5–20 meters (sometimes more indoors). By recording multiple times from different spots (your parking space, the entrance, near windows), the app combines them using their reported accuracies. This Bayesian update makes the best possible use of the information you provide: precise measurements influence the result more than rough ones, giving you a truer center point.
+GPS isn't perfect — it can be off by 10–50 meters (sometimes more indoors). By recording multiple times from different spots (your parking space, the entrance, near windows), the app combines them using their reported accuracies. This Bayesian update makes the best possible use of the information you provide: precise measurements influence the result more than rough ones, giving you a truer center point.
 
 #### How accuracy is used
 - Every recording comes with an estimated GPS accuracy (e.g., ±8 m)
@@ -592,15 +617,17 @@ Need to remove your saved work location? Use the **"Clear Work Location"** butto
 - Your commute history is NOT affected (stays intact)
 - You can immediately record a new work location
 
-**🔒 Safety Feature:** The button requires confirmation - you won't accidentally delete your location.
+> [!NOTE]
+> **🔒 Safety Feature:** The button requires confirmation - you won't accidentally delete your location.
 
-**💡 Pro Tip:** If AutoStop isn't working well, try clearing and re-recording your work location with 5-10 new recordings. GPS accuracy varies by weather, time of day, and device, so fresh recordings can improve performance.
+> [!TIP]
+> **Pro Tip:** If AutoStop isn't working well, try clearing and re-recording your work location with 5-10 new recordings. GPS accuracy varies by weather, time of day, and device, so fresh recordings can improve performance.
 
 ### Auto-Stop Radius Configuration
 
 **The Radius Slider (10m - 250m):**
 
-Choose how close you need to be before the timer stops:
+Choose how close you need to be before the timer automatically stops:
 
 **Small Radius (10-50m):**
 - ✅ Very precise - stops only when you're really there
@@ -641,6 +668,8 @@ Choose how close you need to be before the timer stops:
 
 Information about the app, technologies used, license, and credits.
 
+<div class="page-break"></div>
+
 ---
 
 ## 💡 Tips & Tricks
@@ -679,9 +708,11 @@ Information about the app, technologies used, license, and credits.
 - GPS data is only used for timer functions
 - Work location coordinates stay local
 
+<div class="page-break"></div>
+
 ---
 
-## 🎓 Learning More - The Fun of Data
+## Learning More - The Fun of Data
 
 ### Why Statistics are Cool (and Useful!)
 
@@ -720,9 +751,11 @@ Want to learn more about the statistics?
 
 The same tools used in this app are used by scientists, engineers, and data analysts worldwide. You're now using professional-grade statistical methods!
 
+<div class="page-break"></div>
+
 ---
 
-## ❓ Troubleshooting
+## Troubleshooting
 
 ### Timer Won't Start
 - Check location permission is granted
@@ -749,9 +782,11 @@ The same tools used in this app are used by scientists, engineers, and data anal
 - Tall buildings and tunnels block GPS
 - Wait in an open area for better accuracy
 
+<div class="page-break"></div>
+
 ---
 
-## 🚀 What's Next?
+## What's Next?
 
 As you collect more data, the statistics become more powerful and insightful. Keep tracking, and you'll discover:
 
@@ -762,10 +797,13 @@ As you collect more data, the statistics become more powerful and insightful. Ke
 
 Most importantly, you'll have **data-driven insights** to make better decisions about your daily routine.
 
-Happy commuting! 🚗📊✨
+Happy commuting! 
 
 ---
 
-*Questions? Suggestions? Found this guide helpful? Share your commute insights with friends and colleagues!*
+*Questions? Suggestions? Found this guide helpful? Don't be shy to contact me or file a bug or feature suggestion on GitHub!*
+
+> [!NOTE]
+> Current planned new features can be found in the [TODO.md](../TODO.md) file!
 
 © 2025 Johan Persson | MIT License
