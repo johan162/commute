@@ -1,5 +1,3 @@
-
-
 import React, { useState, useMemo } from 'react';
 import { Header } from './components/Header';
 import { MainView } from './components/MainView';
@@ -20,7 +18,7 @@ const App: React.FC = () => {
   const [includeWeekends, setIncludeWeekends] = useLocalStorage<boolean>('includeWeekends', false);
   const [useNixieDisplay, setUseNixieDisplay] = useLocalStorage<boolean>('useNixieDisplay', false);
   const [showAdvancedStatistics, setShowAdvancedStatistics] = useLocalStorage<boolean>('showAdvancedStatistics', true);
-  const version = '0.17.2';
+  const version = '0.18.0';
 
   const averageWorkLocation = useMemo<Coordinates | null>(() => {
     if (workLocations.length === 0) return null;
@@ -131,6 +129,7 @@ const App: React.FC = () => {
           includeWeekends={includeWeekends}
           onIncludeWeekendsChange={setIncludeWeekends}
           onLoadDebugData={setCommuteRecords}
+          onImportCSV={setCommuteRecords}
           useNixieDisplay={useNixieDisplay}
           onUseNixieDisplayChange={setUseNixieDisplay}
           showAdvancedStatistics={showAdvancedStatistics}

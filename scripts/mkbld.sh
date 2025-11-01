@@ -26,6 +26,10 @@ log_info() {
     echo -e "${GREEN}    [INFO]${NC} $1"
 }
 
+log_success() {
+    echo -e "${GREEN}✅ [SUCCESS!] == $1 ==${NC}"
+}
+
 log_warn() {
     echo -e "${YELLOW}⚠️ [WARN]${NC} $1"
 }
@@ -131,42 +135,32 @@ log_info "Current branch: $ORIGINAL_BRANCH"
 # Check if gh-pages branch exists
 if ! git show-ref --verify --quiet refs/heads/gh-pages; then
     log_error "gh-pages branch does not exist"
-    echo "Create it first with: git checkout --orphan gh-pages"
-    exit 1
+    read -p "Fetch from origin and continue? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        log_error "Aborted by user"
+        exit 1
+    fi
+    if git fetch origin gh-pages; then
+        log_info "Fetched gh-pages branch from origin"
+    else
+        log_error "Failed to fetch gh-pages branch from origin"
+        exit 1
+    fi
+    if git checkout -b gh-pages origin/gh-pages; then
+        log_info "Checked out new branch 'gh-pages' from origin"
+    else
+        log_error "Failed to create 'gh-pages' branch"
+        exit 1
+    fi
+    git branch -vv
+    # Switch back to original branch
+    git checkout "$ORIGINAL_BRANCH"
 fi
 
 # =====================================
 # Step 2: Build Project, check types, run tests
 # =====================================
-
-# --------------------------------------
-# Step 2.1: Build Project
-# --------------------------------------
-log_step 2 "Building project..."
-
-# Clean previous build
-log_info "Cleaning previous build..."
-rm -rf dist/
-
-# Build the project
-log_info "Building project..."
-if ! npm run build >/dev/null 2>&1; then
-    log_error "Build failed. Run 'npm run build' manually to see errors."
-    exit 1
-fi
-
-# Check if dist directory exists and has content
-if [ ! -d "dist" ]; then
-    log_error "dist directory not found"
-    exit 1
-fi
-
-if [ -z "$(ls -A dist)" ]; then
-    log_error "dist directory is empty"
-    exit 1
-fi
-
-log_info "Build successful!"
 
 # --------------------------------------
 # Step 2.1: Type Check
@@ -215,22 +209,22 @@ log_info "  Lines:      ${LINE_COV}%"
 # Check if any metric is below threshold
 COVERAGE_FAILED=0
 
-if (( $(echo "$STMT_COV < $COVERAGE_THRESHOLD" | bc -l) )); then
+if (($(echo "$STMT_COV < $COVERAGE_THRESHOLD" | bc -l))); then
     log_error "Statement coverage (${STMT_COV}%) is below threshold (${COVERAGE_THRESHOLD}%)"
     COVERAGE_FAILED=1
 fi
 
-if (( $(echo "$BRANCH_COV < $COVERAGE_THRESHOLD" | bc -l) )); then
+if (($(echo "$BRANCH_COV < $COVERAGE_THRESHOLD" | bc -l))); then
     log_error "Branch coverage (${BRANCH_COV}%) is below threshold (${COVERAGE_THRESHOLD}%)"
     COVERAGE_FAILED=1
 fi
 
-if (( $(echo "$FUNC_COV < $COVERAGE_THRESHOLD" | bc -l) )); then
+if (($(echo "$FUNC_COV < $COVERAGE_THRESHOLD" | bc -l))); then
     log_error "Function coverage (${FUNC_COV}%) is below threshold (${COVERAGE_THRESHOLD}%)"
     COVERAGE_FAILED=1
 fi
 
-if (( $(echo "$LINE_COV < $COVERAGE_THRESHOLD" | bc -l) )); then
+if (($(echo "$LINE_COV < $COVERAGE_THRESHOLD" | bc -l))); then
     log_error "Line coverage (${LINE_COV}%) is below threshold (${COVERAGE_THRESHOLD}%)"
     COVERAGE_FAILED=1
 fi
@@ -241,8 +235,36 @@ if [ $COVERAGE_FAILED -eq 1 ]; then
     exit 1
 fi
 
-log_info "✓ Test coverage meets minimum threshold (${COVERAGE_THRESHOLD}%)"   
+log_info "✓ Test coverage meets minimum threshold (${COVERAGE_THRESHOLD}%)"
 
+# --------------------------------------
+# Step 2.3: Build Project
+# --------------------------------------
+log_step 2.3 "Building project..."
+
+# Clean previous build
+log_info "Cleaning previous build..."
+rm -rf dist/
+
+# Build the project
+log_info "Building project..."
+if ! npm run build >/dev/null 2>&1; then
+    log_error "Build failed. Run 'npm run build' manually to see errors."
+    exit 1
+fi
+
+# Check if dist directory exists and has content
+if [ ! -d "dist" ]; then
+    log_error "dist directory not found"
+    exit 1
+fi
+
+if [ -z "$(ls -A dist)" ]; then
+    log_error "dist directory is empty"
+    exit 1
+fi
+
+log_info "Build successful!"
 
 # =====================================
 # Step 3: Deploy to gh-pages
@@ -253,7 +275,7 @@ if [ "${DEPLOY_AFTER_BUILD}" != true ]; then
     log_info "Skipping deployment to gh-pages branch (not requested)"
 else
     log_info "Deploying to gh-pages branch..."
-    
+
     # Switch to gh-pages branch
     log_info "Switching to gh-pages branch..."
     if ! git checkout gh-pages; then
@@ -316,6 +338,6 @@ if [ "$(git branch --show-current)" != "$ORIGINAL_BRANCH" ]; then
     git checkout "$ORIGINAL_BRANCH"
 fi
 
-log_info "Done! Build and deploy completed successfully."
+log_success "Build completed successfully."
 
 # End of script

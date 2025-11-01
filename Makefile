@@ -212,6 +212,5 @@ watch: ## Watch for changes and run tests + typecheck
 # =====================================
 
 # Ensure proper build order
-$(BUILD_STAMP): $(TYPECHECK_STAMP) $(TEST_STAMP)
+$(TYPECHECK_STAMP): $(INSTALL_STAMP) 
 $(TEST_STAMP): $(INSTALL_STAMP)
-$(TYPECHECK_STAMP): $(INSTALL_STAMP)

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import type { Coordinates, WorkLocation } from '../types';
+import type { Coordinates, WorkLocation, CommuteRecord } from '../types';
 import { Card } from './Card';
 import { Button } from './Button';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -24,12 +24,16 @@ interface SettingsViewProps {
   onUseNixieDisplayChange: (enabled: boolean) => void;
   showAdvancedStatistics: boolean;
   onShowAdvancedStatisticsChange: (enabled: boolean) => void;
+  onImportCSV: (records: CommuteRecord[]) => void;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onClearWorkLocations, workLocationCount, averageWorkLocation, workLocations, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange, onLoadDebugData, useNixieDisplay, onUseNixieDisplayChange, showAdvancedStatistics, onShowAdvancedStatisticsChange }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onClearWorkLocations, workLocationCount, averageWorkLocation, workLocations, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange, onLoadDebugData, useNixieDisplay, onUseNixieDisplayChange, showAdvancedStatistics, onShowAdvancedStatisticsChange, onImportCSV }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [showAboutDetails, setShowAboutDetails] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importMessage, setImportMessage] = useState('');
+  const [importLoading, setImportLoading] = useState(false);
   
   // Debug mode state - persist debug visibility across tab switches
   const [debugVisible, setDebugVisible] = useLocalStorage('debugCardVisible', false);
@@ -71,6 +75,76 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
       onAutoStopEnabledChange(false);
     }
   }, [canUseAutoStop, autoStopEnabled, onAutoStopEnabledChange]);
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files.length > 0) {
+      setImportFile(event.target.files[0]);
+      setImportMessage('');
+    }
+  };
+
+  const handleImport = () => {
+    if (!importFile) {
+      setImportMessage('Please select a file to import.');
+      return;
+    }
+
+    if (!window.confirm('Are you sure you want to import this CSV file? All existing commute records will be replaced.')) {
+      return;
+    }
+
+    setImportLoading(true);
+    setImportMessage('Importing...');
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const csv = event.target?.result as string;
+        const lines = csv.split(/\r\n|\n/);
+        const headers = lines[0].split(',').map(h => h.trim());
+        
+        // Verify headers
+        const expectedHeaders = ['ID', 'Date', 'Time', 'Duration (s)'];
+        if (JSON.stringify(headers) !== JSON.stringify(expectedHeaders)) {
+            throw new Error(`Invalid CSV headers. Expected: ${expectedHeaders.join(',')}`);
+        }
+
+        const records: CommuteRecord[] = [];
+        for (let i = 1; i < lines.length; i++) {
+          if (!lines[i]) continue;
+          const values = lines[i].split(',');
+          const [idStr, dateStr, timeStr, durationStr] = values;
+
+          // This is fragile due to toLocaleDateString in export.
+          // It assumes the date format can be parsed by new Date().
+          const date = new Date(`${dateStr} ${timeStr}`);
+          if (isNaN(date.getTime())) {
+            console.warn(`Skipping invalid date: ${dateStr} ${timeStr}`);
+            continue;
+          }
+
+          records.push({
+            id: parseInt(idStr, 10) || date.getTime(),
+            date: date.toISOString(),
+            duration: parseFloat(durationStr),
+          });
+        }
+        
+        onImportCSV(records);
+        setImportLoading(false);
+        setImportMessage(`✅ Successfully imported ${records.length} records.`);
+        setImportFile(null);
+      } catch (error: any) {
+        setImportLoading(false);
+        setImportMessage(`❌ Error importing file: ${error.message}`);
+      }
+    };
+    reader.onerror = () => {
+      setImportLoading(false);
+      setImportMessage('❌ Error reading file.');
+    };
+    reader.readAsText(importFile);
+  };
 
   // Format coordinates in human-readable format
   const formatCoordinates = (coords: Coordinates): string => {
@@ -615,59 +689,63 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex-1 mr-4">
-              <span className="text-gray-300 font-semibold">Include Weekends in Day-of-Week Chart</span>
-              <p className="text-xs text-gray-500 mt-1">Show Saturday and Sunday in weekly pattern analysis</p>
-            </div>
-            <div className="relative inline-block w-12 h-6 flex-shrink-0">
-              <input
-                type="checkbox"
-                checked={includeWeekends}
-                onChange={(e) => handleWeekendToggle(e.target.checked)}
-                className="sr-only"
-                id="includeWeekendsToggle"
-              />
-              <label
-                htmlFor="includeWeekendsToggle"
-                className={`block w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 ${
-                  includeWeekends ? 'bg-cyan-500' : 'bg-gray-600'
-                }`}
-              >
-                <span
-                  className={`block w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-1 ${
-                    includeWeekends ? 'translate-x-7' : 'translate-x-1'
-                  }`}
+          <div className="mt-4 pt-4 border-t border-gray-700">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 mr-4">
+                <span className="text-gray-300 font-semibold">Include Weekends in Day-of-Week Chart</span>
+                <p className="text-xs text-gray-500 mt-1">Show Saturday and Sunday in weekly pattern analysis</p>
+              </div>
+              <div className="relative inline-block w-12 h-6 flex-shrink-0">
+                <input
+                  type="checkbox"
+                  checked={includeWeekends}
+                  onChange={(e) => handleWeekendToggle(e.target.checked)}
+                  className="sr-only"
+                  id="includeWeekendsToggle"
                 />
-              </label>
+                <label
+                  htmlFor="includeWeekendsToggle"
+                  className={`block w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 ${
+                    includeWeekends ? 'bg-cyan-500' : 'bg-gray-600'
+                  }`}
+                >
+                  <span
+                    className={`block w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-1 ${
+                      includeWeekends ? 'translate-x-7' : 'translate-x-1'
+                    }`}
+                  />
+                </label>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex-1 mr-4">
-              <span className="text-gray-300 font-semibold">Nixie Tube Timer Display</span>
-              <p className="text-xs text-gray-500 mt-1">Show timer with retro nixie tube style digits</p>
-            </div>
-            <div className="relative inline-block w-12 h-6 flex-shrink-0">
-              <input
-                type="checkbox"
-                checked={useNixieDisplay}
-                onChange={(e) => onUseNixieDisplayChange(e.target.checked)}
-                className="sr-only"
-                id="useNixieDisplayToggle"
-              />
-              <label
-                htmlFor="useNixieDisplayToggle"
-                className={`block w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 ${
-                  useNixieDisplay ? 'bg-orange-500' : 'bg-gray-600'
-                }`}
-              >
-                <span
-                  className={`block w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-1 ${
-                    useNixieDisplay ? 'translate-x-7' : 'translate-x-1'
-                  }`}
+          <div className="mt-4 pt-4 border-t border-gray-700">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 mr-4">
+                <span className="text-gray-300 font-semibold">Nixie Tube Timer Display</span>
+                <p className="text-xs text-gray-500 mt-1">Show timer with retro nixie tube style digits</p>
+              </div>
+              <div className="relative inline-block w-12 h-6 flex-shrink-0">
+                <input
+                  type="checkbox"
+                  checked={useNixieDisplay}
+                  onChange={(e) => onUseNixieDisplayChange(e.target.checked)}
+                  className="sr-only"
+                  id="useNixieDisplayToggle"
                 />
-              </label>
+                <label
+                  htmlFor="useNixieDisplayToggle"
+                  className={`block w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 ${
+                    useNixieDisplay ? 'bg-orange-500' : 'bg-gray-600'
+                  }`}
+                >
+                  <span
+                    className={`block w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-1 ${
+                      useNixieDisplay ? 'translate-x-7' : 'translate-x-1'
+                    }`}
+                  />
+                </label>
+              </div>
             </div>
           </div>
         </div>
@@ -675,14 +753,46 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
       
       <Card title="Data Management">
         <div className="space-y-4">
-            <p className="text-gray-400">
-                Permanently delete all your commute records and saved work locations. 
-                <br />
-                This action cannot be undone!
-            </p>
-            <Button onClick={onClearAllData} variant="danger">
-                Clear All Data
+          <div className="flex-1 mr-4">
+          <span className="text-gray-300 font-semibold">Import Data</span>
+          <p className="text-xs text-gray-500 mt-1">
+            Import commute records from a CSV file. The file must have the headers: <code>ID,Date,Time,Duration (s)</code>.
+          </p>
+          </div>
+          <p className="text-xs text-yellow-400">
+            ⚠️ This will replace all existing commute records.
+          </p>
+          <div className="flex items-center space-x-4">
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleFileChange}
+              className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-cyan-500 file:text-white hover:file:bg-cyan-600"
+            />
+            <Button onClick={handleImport} disabled={!importFile || importLoading}>
+              {importLoading ? 'Importing...' : 'Import'}
             </Button>
+          </div>
+          {importMessage && (
+            <p className={`text-sm mt-2 ${importMessage.includes('✅') ? 'text-green-400' : 'text-red-400'}`}>
+              {importMessage}
+            </p>
+          )}
+        </div>
+
+        <div className="mt-4 pt-4 border-t border-gray-700">
+          <div className="space-y-4">
+            <div className="flex-1 mr-4">
+            <span className="text-gray-300 font-semibold">Clear All Data</span>
+              <p className="text-xs text-gray-500 mt-1">
+                  Permanently delete all your commute records and saved work locations. 
+              </p>
+              </div>
+              <p className="text-xs text-yellow-400">⚠️ This action cannot be undone!</p>
+              <Button onClick={onClearAllData} variant="danger">
+                  Clear All Data
+              </Button>
+          </div>
         </div>
       </Card>
 
