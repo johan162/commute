@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Coordinates, WorkLocation } from '../types';
 import { Card } from './Card';
 import { Button } from './Button';
@@ -63,6 +63,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
   const [trendMean, setTrendMean] = useState(25);
   const [trendStdDev, setTrendStdDev] = useState(5);
   const [trendPercentage, setTrendPercentage] = useState(20);
+
+  const canUseAutoStop = workLocationCount > 0;
+
+  useEffect(() => {
+    if (!canUseAutoStop && autoStopEnabled) {
+      onAutoStopEnabledChange(false);
+    }
+  }, [canUseAutoStop, autoStopEnabled, onAutoStopEnabledChange]);
 
   // Format coordinates in human-readable format
   const formatCoordinates = (coords: Coordinates): string => {
@@ -486,15 +494,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
               <input
                 type="checkbox"
                 checked={autoStopEnabled}
-                onChange={(e) => onAutoStopEnabledChange(e.target.checked)}
+                onChange={(e) => {
+                  if (!canUseAutoStop && e.target.checked) return;
+                  onAutoStopEnabledChange(e.target.checked);
+                }}
+                disabled={!canUseAutoStop}
                 className="sr-only"
                 id="autoStopToggle"
               />
               <label
                 htmlFor="autoStopToggle"
-                className={`block w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 ${
+                className={`block w-12 h-6 rounded-full transition-colors duration-200 ${
                   autoStopEnabled ? 'bg-cyan-500' : 'bg-gray-600'
-                }`}
+                } ${canUseAutoStop ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
               >
                 <span
                   className={`block w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-1 ${
@@ -507,6 +519,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
           <p className="text-xs text-gray-500">
             When enabled the timer will automatically stop when entering the Geo-Fence of your work location.
           </p>
+          {!canUseAutoStop && (
+            <p className="text-xs text-yellow-400">Add at least one work location to enable AutoStop.</p>
+          )}
 
           <div className="mt-4 pt-4 border-t border-gray-700">
             <div className="flex items-center justify-between">
