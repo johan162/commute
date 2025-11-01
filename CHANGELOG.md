@@ -1,3 +1,17 @@
+## [0.17.0] - 2025-11-01
+
+Release type: minor
+
+### 📋 Summary 
+- Make statistics tab more user friendly
+
+### ✨ Additions
+- [feat] Add toggle in setting to hide/view advanced statistical analysis
+
+### 🐛 Bug Fixes
+- [bug] The generation of lognormal test data is no longer broken
+
+
 ## [0.16.6] - 2025-10-31
 
 Release type: patch

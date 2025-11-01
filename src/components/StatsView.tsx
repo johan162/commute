@@ -20,6 +20,7 @@ interface StatsViewProps {
     stdDev: number;
   } | null;
   includeWeekends: boolean;
+  showAdvancedStatistics: boolean;
 }
 
 const formatDuration = (seconds: number): string => {
@@ -29,7 +30,7 @@ const formatDuration = (seconds: number): string => {
   return `${m}m ${s}s`;
 };
 
-export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWeekends }) => {
+export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWeekends, showAdvancedStatistics }) => {
   const [binSize, setBinSize] = useState(5); // bin size in minutes
   const [weekdayMetric, setWeekdayMetric] = useState<'mean' | 'median'>('median');
   const [timeBinSize, setTimeBinSize] = useState(60); // time of day bin size in minutes
@@ -219,12 +220,14 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
 
   // Calculate Shapiro-Wilk test for normality
   const normalityTest = useMemo(() => {
+    if (!showAdvancedStatistics) return null;
     if (records.length < 20) return null;
     return shapiroWilkTest(durations);
-  }, [durations]);
+  }, [durations, showAdvancedStatistics]);
 
   // Generate Q-Q plot data
   const qqPlotData = useMemo(() => {
+    if (!showAdvancedStatistics) return null;
     if (records.length < 10) return null;
     const qqData = generateQQPlotData(durations);
     
@@ -255,27 +258,30 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
       domain: niceDomain,
       ticks: niceTicks
     };
-  }, [records]);
+  }, [records, showAdvancedStatistics]);
 
   // Calculate R² for Q-Q plot
   const qqRSquared = useMemo(() => {
+    if (!showAdvancedStatistics) return null;
     if (!qqPlotData) return null;
     const rSquared = calculateQQPlotRSquared(qqPlotData.rawData);
     const interpretation = getQQPlotRSquaredInterpretation(rSquared);
     return { rSquared, interpretation };
-  }, [qqPlotData]);
+  }, [qqPlotData, showAdvancedStatistics]);
 
   // Calculate Mann-Kendall trend test
   const trendTest = useMemo(() => {
+    if (!showAdvancedStatistics) return null;
     if (records.length < 10) return null;
     return mannKendallTest(durations);
-  }, [durations]);
+  }, [durations, showAdvancedStatistics]);
 
   // Calculate Runs test for randomness
   const randomnessTest = useMemo(() => {
+    if (!showAdvancedStatistics) return null;
     if (records.length < 10) return null;
     return runsTest(durations);
-  }, [durations]);
+  }, [durations, showAdvancedStatistics]);
 
   // Calculate weekday statistics
   const weekdayData = useMemo(() => {
@@ -639,9 +645,10 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
         </div>
       </Card>
 
-      <Card title="Normality Test (Shapiro-Wilk)">
-        <div className="text-center">
-          {normalityTest ? (
+      {showAdvancedStatistics && (
+        <Card title="Normality Test (Shapiro-Wilk)">
+          <div className="text-center">
+            {normalityTest ? (
             <>
               <p className="text-sm text-gray-400 mb-4">
                 Tests whether commute times follow a normal (bell curve) distribution
@@ -689,23 +696,25 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                 </p>
               </div>
             </>
-          ) : (
-            <div className="py-8">
-              <p className="text-gray-400 text-lg">Needs 20 or more records for normality test</p>
-              <p className="text-xs text-gray-500 mt-2">
-                Currently {records.length} of 20 required
-              </p>
-              <p className="text-xs text-gray-500 mt-4">
-                The Shapiro-Wilk test is most reliable with at least 20 samples
-              </p>
-            </div>
-          )}
-        </div>
-      </Card>
+            ) : (
+              <div className="py-8">
+                <p className="text-gray-400 text-lg">Needs 20 or more records for normality test</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Currently {records.length} of 20 required
+                </p>
+                <p className="text-xs text-gray-500 mt-4">
+                  The Shapiro-Wilk test is most reliable with at least 20 samples
+                </p>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
 
-      <Card title="Q-Q Plot (Quantile-Quantile)">
-        <div className="text-center">
-          {qqPlotData ? (
+      {showAdvancedStatistics && (
+        <Card title="Q-Q Plot (Quantile-Quantile)">
+          <div className="text-center">
+            {qqPlotData ? (
             <>
               <p className="text-sm text-gray-400 mb-4">
                 Visual assessment of normality - points should follow the diagonal line
@@ -829,22 +838,24 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                 </p>
               </div>
             </>
-          ) : (
-            <div className="py-8">
-              <p className="text-gray-400 text-lg">Needs 10 or more records for Q-Q plot</p>
-              <p className="text-xs text-gray-500 mt-2">
-                Currently {records.length} of 10 required
-              </p>
-              <p className="text-xs text-gray-500 mt-4">
-                Q-Q plots are most informative with at least 10 data points
-              </p>
-            </div>
-          )}
-        </div>
-      </Card>
-      <Card title="Trend Analysis (Mann-Kendall Test)">
-        <div className="text-center">
-          {trendTest ? (
+            ) : (
+              <div className="py-8">
+                <p className="text-gray-400 text-lg">Needs 10 or more records for Q-Q plot</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Currently {records.length} of 10 required
+                </p>
+                <p className="text-xs text-gray-500 mt-4">
+                  Q-Q plots are most informative with at least 10 data points
+                </p>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
+      {showAdvancedStatistics && (
+        <Card title="Trend Analysis (Mann-Kendall Test)">
+          <div className="text-center">
+            {trendTest ? (
             <>
               <p className="text-sm text-gray-400 mb-4">
                 Analyzes whether your commute times are getting longer, shorter, or staying stable over time
@@ -941,23 +952,25 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                 </p>
               </div>
             </>
-          ) : (
-            <div className="py-8">
-              <p className="text-gray-400 text-lg">Needs 10 or more records for trend analysis</p>
-              <p className="text-xs text-gray-500 mt-2">
-                Currently {records.length} of 10 required
-              </p>
-              <p className="text-xs text-gray-500 mt-4">
-                The Mann-Kendall test detects monotonic trends in time series data
-              </p>
-            </div>
-          )}
-        </div>
-      </Card>
+            ) : (
+              <div className="py-8">
+                <p className="text-gray-400 text-lg">Needs 10 or more records for trend analysis</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Currently {records.length} of 10 required
+                </p>
+                <p className="text-xs text-gray-500 mt-4">
+                  The Mann-Kendall test detects monotonic trends in time series data
+                </p>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
 
-      <Card title="Pattern Analysis (Runs Test)">
-        <div className="text-center">
-          {randomnessTest ? (
+      {showAdvancedStatistics && (
+        <Card title="Pattern Analysis (Runs Test)">
+          <div className="text-center">
+            {randomnessTest ? (
             <>
               <p className="text-sm text-gray-400 mb-4">
                 Detects whether your commute times follow a random pattern or show clustering/oscillation
@@ -1036,19 +1049,20 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                 </p>
               </div>
             </>
-          ) : (
-            <div className="py-8">
-              <p className="text-gray-400 text-lg">Needs 10 or more records for pattern analysis</p>
-              <p className="text-xs text-gray-500 mt-2">
-                Currently {records.length} of 10 required
-              </p>
-              <p className="text-xs text-gray-500 mt-4">
-                The Runs Test detects non-random patterns in sequential data
-              </p>
-            </div>
-          )}
-        </div>
-      </Card>
+            ) : (
+              <div className="py-8">
+                <p className="text-gray-400 text-lg">Needs 10 or more records for pattern analysis</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Currently {records.length} of 10 required
+                </p>
+                <p className="text-xs text-gray-500 mt-4">
+                  The Runs Test detects non-random patterns in sequential data
+                </p>
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
 
       <Card title="Export Data">
         <div className="flex flex-col sm:flex-row gap-4 items-center">
