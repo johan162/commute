@@ -19,6 +19,7 @@ const App: React.FC = () => {
   const [autoRecordWorkLocation, setAutoRecordWorkLocation] = useLocalStorage<boolean>('autoRecordWorkLocation', false);
   const [includeWeekends, setIncludeWeekends] = useLocalStorage<boolean>('includeWeekends', false);
   const [useNixieDisplay, setUseNixieDisplay] = useLocalStorage<boolean>('useNixieDisplay', false);
+  const [showAdvancedStatistics, setShowAdvancedStatistics] = useLocalStorage<boolean>('showAdvancedStatistics', true);
   const version = '0.16.6';
 
   const averageWorkLocation = useMemo<Coordinates | null>(() => {
@@ -110,7 +111,7 @@ const App: React.FC = () => {
   const renderView = () => {
     switch (view) {
       case 'stats':
-        return <StatsView records={commuteRecords} stats={stats} includeWeekends={includeWeekends} />;
+        return <StatsView records={commuteRecords} stats={stats} includeWeekends={includeWeekends} showAdvancedStatistics={showAdvancedStatistics} />;
       case 'history':
         return <HistoryView records={commuteRecords} median={stats?.median} onDeleteRecords={deleteCommuteRecords} />;
       case 'settings':
@@ -132,6 +133,8 @@ const App: React.FC = () => {
           onLoadDebugData={setCommuteRecords}
           useNixieDisplay={useNixieDisplay}
           onUseNixieDisplayChange={setUseNixieDisplay}
+          showAdvancedStatistics={showAdvancedStatistics}
+          onShowAdvancedStatisticsChange={setShowAdvancedStatistics}
         />;
       case 'main':
       default:

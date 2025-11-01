@@ -21,6 +21,7 @@
 
 # Completed features/fixes
 
+- [feat] Add toggle in setting to hide/view advanced statistical analysis
 - [chore] Add test framework and test enough to reach > 75% test coverage
 - [feat] Add sorting of data in history view
 - [feat] Add sorting to the history view 

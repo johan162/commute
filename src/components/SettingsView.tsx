@@ -22,9 +22,11 @@ interface SettingsViewProps {
   onLoadDebugData: (records: any[]) => void;
   useNixieDisplay: boolean;
   onUseNixieDisplayChange: (enabled: boolean) => void;
+  showAdvancedStatistics: boolean;
+  onShowAdvancedStatisticsChange: (enabled: boolean) => void;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onClearWorkLocations, workLocationCount, averageWorkLocation, workLocations, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange, onLoadDebugData, useNixieDisplay, onUseNixieDisplayChange }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onClearWorkLocations, workLocationCount, averageWorkLocation, workLocations, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange, onLoadDebugData, useNixieDisplay, onUseNixieDisplayChange, showAdvancedStatistics, onShowAdvancedStatisticsChange }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [showAboutDetails, setShowAboutDetails] = useState(false);
@@ -568,6 +570,34 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
 
       <Card title="Statistics Display">
         <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex-1 mr-4">
+              <span className="text-gray-300 font-semibold">Show Advanced Statistics</span>
+              <p className="text-xs text-gray-500 mt-1">Display normality tests and trend analysis</p>
+            </div>
+            <div className="relative inline-block w-12 h-6 flex-shrink-0">
+              <input
+                type="checkbox"
+                checked={showAdvancedStatistics}
+                onChange={(e) => onShowAdvancedStatisticsChange(e.target.checked)}
+                className="sr-only"
+                id="showAdvancedStatisticsToggle"
+              />
+              <label
+                htmlFor="showAdvancedStatisticsToggle"
+                className={`block w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 ${
+                  showAdvancedStatistics ? 'bg-cyan-500' : 'bg-gray-600'
+                }`}
+              >
+                <span
+                  className={`block w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-1 ${
+                    showAdvancedStatistics ? 'translate-x-7' : 'translate-x-1'
+                  }`}
+                />
+              </label>
+            </div>
+          </div>
+
           <div className="flex items-center justify-between">
             <div className="flex-1 mr-4">
               <span className="text-gray-300 font-semibold">Include Weekends in Day-of-Week Chart</span>
