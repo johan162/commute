@@ -1,5 +1,3 @@
-
-
 import React, { useState, useMemo } from 'react';
 import { Header } from './components/Header';
 import { MainView } from './components/MainView';
@@ -131,6 +129,7 @@ const App: React.FC = () => {
           includeWeekends={includeWeekends}
           onIncludeWeekendsChange={setIncludeWeekends}
           onLoadDebugData={setCommuteRecords}
+          onImportCSV={setCommuteRecords}
           useNixieDisplay={useNixieDisplay}
           onUseNixieDisplayChange={setUseNixieDisplay}
           showAdvancedStatistics={showAdvancedStatistics}
