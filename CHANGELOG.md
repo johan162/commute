@@ -1,3 +1,14 @@
+## [0.17.2] - 2025-11-01
+
+Release type: patch
+
+### 📋 Summary 
+- Usability improvements
+
+### 🚀 Improvements
+- [upd] Require one or more recorded work locations to be able to enable AutoStop
+
+
 ## [0.17.1] - 2025-11-01
 
 Release type: patch
