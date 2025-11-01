@@ -1,3 +1,17 @@
+## [0.18.0] - 2025-11-01
+
+Release type: minor
+
+### 📋 Summary 
+- Improved data management
+
+### ✨ Additions
+-[feat] Added data import from CSV in settings tab
+
+### 🛠 Internal
+- [upd] Tweaks in Makefile and build scripts to do typechecking and run tests before doing the heavy production build of App-chunks. `make` is now the preferred build method.
+
+
 ## [0.17.2] - 2025-11-01
 
 Release type: patch
