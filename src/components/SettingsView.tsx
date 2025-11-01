@@ -124,12 +124,27 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
   };
 
   const generateLogNormal = (minVal: number, maxVal: number, count: number): number[] => {
-    const logMin = Math.log(minVal + 1);
-    const logMax = Math.log(maxVal + 1);
+    // Interpret min/max as roughly the 5th/95th percentiles to solve for μ and σ
+    const zLow = -1.6448536269514729;  // Φ⁻¹(0.05)
+    const zHigh = 1.6448536269514729; // Φ⁻¹(0.95)
+
+    const effectiveMin = Math.max(minVal, 1e-6);
+    const effectiveMax = Math.max(maxVal, effectiveMin + 1e-6);
+
+    const logMin = Math.log(effectiveMin);
+    const logMax = Math.log(effectiveMax);
+
+    const sigma = (logMax - logMin) / (zHigh - zLow);
+    if (!isFinite(sigma) || sigma <= 0) {
+      return Array.from({ length: count }, () => minVal);
+    }
+
+    const mu = logMin - sigma * zLow;
+
     return Array.from({ length: count }, () => {
       const normal = boxMullerTransform();
-      const logNormal = Math.exp(logMin + (logMax - logMin) * 0.5 + normal * 0.5);
-      return Math.min(Math.max(logNormal - 1, minVal), maxVal);
+      const sample = Math.exp(mu + sigma * normal);
+      return Math.min(Math.max(sample, minVal), maxVal);
     });
   };
 
