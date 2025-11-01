@@ -346,7 +346,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
           {/* Per Day */}
           <div className="bg-gray-800 p-4 rounded-lg">
             <p className="text-sm text-gray-400 mb-2">Per Day</p>
-            <p className="text-2xl font-bold text-cyan-400 mb-2">{formatTotalDuration(dayTotal)}</p>
+        
             <select
               value={selectedDay}
               onChange={(e) => setSelectedDay(e.target.value)}
@@ -358,12 +358,13 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                 </option>
               ))}
             </select>
+            <p className="text-2xl font-bold text-cyan-400 mb-2">{formatTotalDuration(dayTotal)}</p>
           </div>
 
           {/* Per Week */}
           <div className="bg-gray-800 p-4 rounded-lg">
             <p className="text-sm text-gray-400 mb-2">Per Week</p>
-            <p className="text-2xl font-bold text-cyan-400 mb-2">{formatTotalDuration(weekTotal)}</p>
+
             <select
               value={selectedWeek}
               onChange={(e) => setSelectedWeek(e.target.value)}
@@ -375,12 +376,13 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                 </option>
               ))}
             </select>
+            <p className="text-2xl font-bold text-cyan-400 mb-2">{formatTotalDuration(weekTotal)}</p>
           </div>
 
           {/* Per Month */}
           <div className="bg-gray-800 p-4 rounded-lg">
             <p className="text-sm text-gray-400 mb-2">Per Month</p>
-            <p className="text-2xl font-bold text-cyan-400 mb-2">{formatTotalDuration(monthTotal)}</p>
+            
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value)}
@@ -392,13 +394,14 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                 </option>
               ))}
             </select>
+            <p className="text-2xl font-bold text-cyan-400 mb-2">{formatTotalDuration(monthTotal)}</p>
           </div>
 
           {/* Per Year . If the total is above 100h then use formatTotalDurationDays */}
           <div className="bg-gray-800 p-4 rounded-lg">
             <p className="text-sm text-gray-400 mb-2">Per Year</p>
             {/* If total is above 100h, use formatTotalDurationDays */}
-            <p className="text-2xl font-bold text-cyan-400 mb-2">{yearTotal > 360000 ? formatTotalDurationDays(yearTotal) : formatTotalDuration(yearTotal)}</p>
+
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(e.target.value)}
@@ -410,6 +413,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                 </option>
               ))}
             </select>
+            <p className="text-2xl font-bold text-cyan-400 mb-2">{yearTotal > 360000 ? formatTotalDurationDays(yearTotal) : formatTotalDuration(yearTotal)}</p>
           </div>
 
           {/* Total */}
@@ -579,7 +583,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
         </div>
       </Card>      
       
-      <Card title="90% Commute Times (Interpolated CI)">
+      <Card title="90% Conf. Intervall (Interpolated)">
         <div className="text-center">
           {confidenceInterval ? (
             <>
@@ -612,7 +616,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
         </div>
       </Card>
 
-      <Card title="90% Commute Times (Nearest Rank CI)">
+      <Card title="90% Conf. Intervall (Nearest Rank)">
         <div className="text-center">
           {confidenceIntervalRank ? (
             <>

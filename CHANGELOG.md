@@ -1,3 +1,12 @@
+## [0.17.1] - 2025-11-01
+
+Release type: patch
+
+### 🚀 Improvements
+- [upd] Improve guide texts in stat view
+- [upd] Reorder the setting page to make setting work location at top
+
+
 ## [0.17.0] - 2025-11-01
 
 Release type: minor
