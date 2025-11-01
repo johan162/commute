@@ -351,97 +351,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
 
   return (
     <div className="space-y-6">
-      <Card title="AutoStop Feature">
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-gray-300 font-semibold">Enable AutoStop</span>
-            <div className="relative inline-block w-12 h-6 flex-shrink-0">
-              <input
-                type="checkbox"
-                checked={autoStopEnabled}
-                onChange={(e) => onAutoStopEnabledChange(e.target.checked)}
-                className="sr-only"
-                id="autoStopToggle"
-              />
-              <label
-                htmlFor="autoStopToggle"
-                className={`block w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 ${
-                  autoStopEnabled ? 'bg-cyan-500' : 'bg-gray-600'
-                }`}
-              >
-                <span
-                  className={`block w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-1 ${
-                    autoStopEnabled ? 'translate-x-7' : 'translate-x-1'
-                  }`}
-                />
-              </label>
-            </div>
-          </div>
-          <p className="text-xs text-gray-500">
-            When enabled the timer will automatically stop when entering the Geo-Fence of your work location.
-          </p>
-
-          <div className="mt-4 pt-4 border-t border-gray-700">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-300 font-semibold">Auto-record Work Location</span>
-              <div className="relative inline-block w-12 h-6 flex-shrink-0">
-                <input
-                  type="checkbox"
-                  checked={autoRecordWorkLocation}
-                  onChange={(e) => onAutoRecordWorkLocationChange(e.target.checked)}
-                  className="sr-only"
-                  id="autoRecordWorkLocationToggle"
-                />
-                <label
-                  htmlFor="autoRecordWorkLocationToggle"
-                  className={`block w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 ${
-                    autoRecordWorkLocation ? 'bg-cyan-500' : 'bg-gray-600'
-                  }`}
-                >
-                  <span
-                    className={`block w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-1 ${
-                      autoRecordWorkLocation ? 'translate-x-7' : 'translate-x-1'
-                    }`}
-                  />
-                </label>
-              </div>
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Automatically record your GPS location as a work each time you stop the timer.
-            </p>
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-gray-700">
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <label htmlFor="autoStopRadius" className="text-gray-300 font-semibold">
-                  AutoStop GeoFence
-                </label>
-                <span className="text-cyan-400 font-bold">{autoStopRadius}m</span>
-              </div>
-              <input
-                id="autoStopRadius"
-                type="range"
-                min="10"
-                max="250"
-                step="10"
-                value={autoStopRadius}
-                onChange={(e) => onAutoStopRadiusChange(Number(e.target.value))}
-                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-              />
-              <div className="flex justify-between text-xs text-gray-500">
-                <span>10m</span>
-                <span>250m</span>
-              </div>
-              <p className="text-xs text-gray-500">
-                Smaller radius = more precise arrival detection but may require you to be very close.
-                <br />
-                Larger radius = more forgiving but may stop the timer before you actually arrive.
-              </p>
-            </div>
-          </div>
-        </div>
-      </Card>
 
       <Card title="Work Location">
         <div className="space-y-4">
@@ -565,6 +474,99 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
           )}
           
           {message && <p className="text-sm text-gray-400 mt-2">{message}</p>}
+        </div>
+      </Card>
+
+      
+      <Card title="AutoStop Feature">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-gray-300 font-semibold">Enable AutoStop</span>
+            <div className="relative inline-block w-12 h-6 flex-shrink-0">
+              <input
+                type="checkbox"
+                checked={autoStopEnabled}
+                onChange={(e) => onAutoStopEnabledChange(e.target.checked)}
+                className="sr-only"
+                id="autoStopToggle"
+              />
+              <label
+                htmlFor="autoStopToggle"
+                className={`block w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 ${
+                  autoStopEnabled ? 'bg-cyan-500' : 'bg-gray-600'
+                }`}
+              >
+                <span
+                  className={`block w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-1 ${
+                    autoStopEnabled ? 'translate-x-7' : 'translate-x-1'
+                  }`}
+                />
+              </label>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500">
+            When enabled the timer will automatically stop when entering the Geo-Fence of your work location.
+          </p>
+
+          <div className="mt-4 pt-4 border-t border-gray-700">
+            <div className="flex items-center justify-between">
+              <span className="text-gray-300 font-semibold">Auto-record Work Location</span>
+              <div className="relative inline-block w-12 h-6 flex-shrink-0">
+                <input
+                  type="checkbox"
+                  checked={autoRecordWorkLocation}
+                  onChange={(e) => onAutoRecordWorkLocationChange(e.target.checked)}
+                  className="sr-only"
+                  id="autoRecordWorkLocationToggle"
+                />
+                <label
+                  htmlFor="autoRecordWorkLocationToggle"
+                  className={`block w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 ${
+                    autoRecordWorkLocation ? 'bg-cyan-500' : 'bg-gray-600'
+                  }`}
+                >
+                  <span
+                    className={`block w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-1 ${
+                      autoRecordWorkLocation ? 'translate-x-7' : 'translate-x-1'
+                    }`}
+                  />
+                </label>
+              </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-2">
+              Automatically record your GPS location as a work each time you stop the timer.
+            </p>
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-gray-700">
+            <div className="space-y-3">
+              <div className="flex justify-between items-center">
+                <label htmlFor="autoStopRadius" className="text-gray-300 font-semibold">
+                  AutoStop GeoFence
+                </label>
+                <span className="text-cyan-400 font-bold">{autoStopRadius}m</span>
+              </div>
+              <input
+                id="autoStopRadius"
+                type="range"
+                min="10"
+                max="250"
+                step="10"
+                value={autoStopRadius}
+                onChange={(e) => onAutoStopRadiusChange(Number(e.target.value))}
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
+              />
+              <div className="flex justify-between text-xs text-gray-500">
+                <span>10m</span>
+                <span>250m</span>
+              </div>
+              <p className="text-xs text-gray-500">
+                Smaller radius = more precise arrival detection but may require you to be very close.
+                <br />
+                Larger radius = more forgiving but may stop the timer before you actually arrive.
+              </p>
+            </div>
+          </div>
         </div>
       </Card>
 

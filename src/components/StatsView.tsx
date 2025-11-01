@@ -579,7 +579,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
         </div>
       </Card>      
       
-      <Card title="90% Commute Times (Interpolated CI)">
+      <Card title="90% Conf. Intervall (Interpolated)">
         <div className="text-center">
           {confidenceInterval ? (
             <>
@@ -612,7 +612,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
         </div>
       </Card>
 
-      <Card title="90% Commute Times (Nearest Rank CI)">
+      <Card title="90% Conf. Intervall (Nearest Rank)">
         <div className="text-center">
           {confidenceIntervalRank ? (
             <>
