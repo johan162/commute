@@ -625,12 +625,12 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                       <p className="font-semibold text-gray-300">Morning</p>
                       <p className="text-xs text-gray-500">00:00-11:59</p>
                     </div>
-                    <div className="bg-gray-800 p-4 rounded-lg w-32">
+                    <div className="bg-gray-800 p-4 rounded-lg w-40">
                       <p className="text-sm text-gray-400">Low</p>
                       <p className="text-2xl font-bold text-green-400">{formatDuration(morningConfidenceInterval.low)}</p>
                     </div>
                     <div className="text-gray-500 text-xl">-</div>
-                    <div className="bg-gray-800 p-4 rounded-lg w-32">
+                    <div className="bg-gray-800 p-4 rounded-lg w-40">
                       <p className="text-sm text-gray-400">High</p>
                       <p className="text-2xl font-bold text-red-400">{formatDuration(morningConfidenceInterval.high)}</p>
                     </div>
@@ -644,12 +644,12 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                       <p className="font-semibold text-gray-300">Evening</p>
                       <p className="text-xs text-gray-500">12:00-23:59</p>
                     </div>
-                    <div className="bg-gray-800 p-4 rounded-lg w-32">
+                    <div className="bg-gray-800 p-4 rounded-lg w-40">
                       <p className="text-sm text-gray-400">Low</p>
                       <p className="text-2xl font-bold text-green-400">{formatDuration(eveningConfidenceInterval.low)}</p>
                     </div>
                     <div className="text-gray-500 text-xl">-</div>
-                    <div className="bg-gray-800 p-4 rounded-lg w-32">
+                    <div className="bg-gray-800 p-4 rounded-lg w-40">
                       <p className="text-sm text-gray-400">High</p>
                       <p className="text-2xl font-bold text-red-400">{formatDuration(eveningConfidenceInterval.high)}</p>
                     </div>
@@ -684,12 +684,12 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                       <p className="font-semibold text-gray-300">Morning</p>
                       <p className="text-xs text-gray-500">00:00-11:59</p>
                     </div>
-                    <div className="bg-gray-800 p-4 rounded-lg w-32">
+                    <div className="bg-gray-800 p-4 rounded-lg w-40">
                       <p className="text-sm text-gray-400">Low</p>
                       <p className="text-2xl font-bold text-green-400">{formatDuration(morningConfidenceIntervalRank.low)}</p>
                     </div>
                     <div className="text-gray-500 text-xl">-</div>
-                    <div className="bg-gray-800 p-4 rounded-lg w-32">
+                    <div className="bg-gray-800 p-4 rounded-lg w-40">
                       <p className="text-sm text-gray-400">High</p>
                       <p className="text-2xl font-bold text-red-400">{formatDuration(morningConfidenceIntervalRank.high)}</p>
                     </div>
@@ -703,12 +703,12 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
                       <p className="font-semibold text-gray-300">Evening</p>
                       <p className="text-xs text-gray-500">12:00-23:59</p>
                     </div>
-                    <div className="bg-gray-800 p-4 rounded-lg w-32">
+                    <div className="bg-gray-800 p-4 rounded-lg w-40">
                       <p className="text-sm text-gray-400">Low</p>
                       <p className="text-2xl font-bold text-green-400">{formatDuration(eveningConfidenceIntervalRank.low)}</p>
                     </div>
                     <div className="text-gray-500 text-xl">-</div>
-                    <div className="bg-gray-800 p-4 rounded-lg w-32">
+                    <div className="bg-gray-800 p-4 rounded-lg w-40">
                       <p className="text-sm text-gray-400">High</p>
                       <p className="text-2xl font-bold text-red-400">{formatDuration(eveningConfidenceIntervalRank.high)}</p>
                     </div>
