@@ -1,3 +1,14 @@
+## [0.19.0] - 2025-11-02
+
+Release type: minor
+
+### 📋 Summary 
+- More nuanced statistic presentation
+
+### 🚀 Improvements
+- [upd] Split 90% CI into morning and evening
+
+
 ## [0.18.0] - 2025-11-01
 
 Release type: minor
