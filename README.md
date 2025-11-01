@@ -15,7 +15,7 @@
 </td>
 <td valign="top">
 
-> **A simple and efficient Progressive Web App (PWA) to track your commute time to work. It provides detailed (basic-, advanced-, and very advanced) statistics and visualizations to help you understand your travel patterns.**
+> **A Progressive Web App (PWA) to track your commute time to work. It provides detailed (basic-, advanced-, and very advanced) statistics and visualizations to help you understand your travel patterns.**
 
 ## <TL;DR> Quick start
 
