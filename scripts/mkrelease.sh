@@ -208,9 +208,38 @@ fi
 log_info "✓ On develop branch"
 
 # ===============================================================
-# Step 2: Check that the version does not already exist as a tag
+# Step 2: Check that gh-pages branch exists
 # ===============================================================
-log_step 2 "Checking if tag already exists..."
+log_step 2 "Checking gh-pages branch..."
+if ! git show-ref --verify --quiet refs/heads/gh-pages; then
+    log_error "gh-pages branch does not exist"
+    read -p "Fetch from origin and continue? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        log_error "Aborted by user"
+        exit 1
+    fi
+    if git fetch origin gh-pages; then
+        log_info "Fetched gh-pages branch from origin"
+    else
+        log_error "Failed to fetch gh-pages branch from origin"
+        exit 1
+    fi
+    if git checkout -b gh-pages origin/gh-pages; then
+        log_info "Checked out new branch 'gh-pages' from origin"
+    else
+        log_error "Failed to create 'gh-pages' branch"
+        exit 1
+    fi
+    git branch -vv
+    # Switch back to develop branch
+    git checkout "$CURRENT_BRANCH"
+fi
+
+# ===============================================================
+# Step 3: Check that the version does not already exist as a tag
+# ===============================================================
+log_step 3 "Checking if tag already exists..."
 
 if git rev-parse "v$VERSION" >/dev/null 2>&1; then
     log_error "Tag v$VERSION already exists"
@@ -219,9 +248,9 @@ fi
 log_info "✓ Tag v$VERSION does not exist"
 
 # ===============================================================
-# Step 3: Check that the branch is clean and no commits are waiting
+# Step 4: Check that the branch is clean and no commits are waiting
 # ===============================================================
-log_step 3 "Checking git status..."
+log_step 4 "Checking git status..."
 
 if ! git diff-index --quiet HEAD --; then
     log_error "Working directory is not clean. Please commit or stash your changes."
@@ -237,9 +266,9 @@ fi
 log_info "✓ Working directory is clean"
 
 # ===============================================================
-# Step 4: Check that a build can be made without errors
+# Step 5: Check that a build can be made without errors
 # ===============================================================
-log_step 4 "Testing build..."
+log_step 5 "Testing build..."
 
 if ! npm run build >>"$RELEASE_LOGFILE" 2>&1; then
     log_error "Build failed. Please fix build errors before creating a release."
@@ -255,9 +284,9 @@ fi
 log_info "✓ TypeScript type check passed"
 
 # ===============================================================
-# Step 5: Check test coverage meets minimum threshold
+# Step 6: Check test coverage meets minimum threshold
 # ===============================================================
-log_step 5 "Checking test coverage..."
+log_step 6 "Checking test coverage..."
 
 COVERAGE_THRESHOLD=75
 log_info "Required coverage threshold: ${COVERAGE_THRESHOLD}%"
@@ -320,15 +349,15 @@ fi
 log_info "✓ Test coverage meets minimum threshold (${COVERAGE_THRESHOLD}%)"
 
 # ===============================================================
-# Step 6: Update the version number string in 
+# Step 7: Update the version number string in 
 # src/App.tsx, README.md, package.json, package-lock.json
 # ===============================================================
-log_step 6 "Updating version in files..."
+log_step 7 "Updating version in files..."
 
 # --------------------------------------------------------------
-# Step 6.1: Update version number in badge in App.tsx
+# Step 7.1: Update version number in badge in App.tsx
 # --------------------------------------------------------------
-log_step 6.1 "Updating version badge in App.tsx..."
+log_step 7.1 "Updating version badge in App.tsx..."
 
 if [ ! -f "src/App.tsx" ]; then
     log_error "src/App.tsx not found"
@@ -357,9 +386,9 @@ if ! grep -q "const version = '$VERSION';" src/App.tsx; then
 fi
 
 # --------------------------------------------------------------
-# Step 6.2: Update version number in badge in README.md
+# Step 7.2: Update version number in badge in README.md
 # --------------------------------------------------------------
-log_step 6.2 "Updating version badge in README.md..."
+log_step 7.2 "Updating version badge in README.md..."
 
 if [ ! -f "README.md" ]; then
     log_error "README.md not found"
@@ -384,9 +413,9 @@ fi
 rm -f README.md.bak
 
 # --------------------------------------------------------------
-# Step 6.3: Update version in package.json
+# Step 7.3: Update version in package.json
 # --------------------------------------------------------------
-log_step 6.3 "Updating version in package.json..."
+log_step 7.3 "Updating version in package.json..."
 if [ ! -f "package.json" ]; then
     log_error "package.json not found"
     exit 1
@@ -400,9 +429,9 @@ else
 fi
 
 # ===============================================================
-# Step 7: Updated CHANGELOG.md
+# Step 8: Updated CHANGELOG.md
 # ==============================================================
-log_step 7 "Updating CHANGELOG.md..."
+log_step 8 "Updating CHANGELOG.md..."
 
 echo "  ✓ Preparing changelog..."
 CHANGELOG_DATE=$(date +%Y-%m-%d)
@@ -464,9 +493,9 @@ while true; do
 done
 
 # ===============================================================
-# Step 8: Stage and commit the updated src/App.tsx and CHANGELOG.md files
+# Step 9: Stage and commit the updated src/App.tsx and CHANGELOG.md files
 # ===============================================================
-log_step 8 "Committing version update, README.md and CHANGELOG.md..."
+log_step 9 "Committing version update, README.md and CHANGELOG.md..."
 
 if git add src/App.tsx CHANGELOG.md README.md package.json package-lock.json >>"$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Staged src/App.tsx, CHANGELOG.md, README.md, package.json and package-lock.json"
@@ -483,9 +512,9 @@ else
 fi
 
 # ===============================================================
-# Step 9: Switch to main branch and merge develop and tag main
+# Step 10: Switch to main branch and merge develop and tag main
 # ===============================================================
-log_step 9 "Switching to main branch..."
+log_step 10 "Switching to main branch..."
 
 if ! git checkout main >>"$RELEASE_LOGFILE" 2>&1; then
     log_error "Failed to checkout main branch. Directory dirty?"
@@ -538,9 +567,9 @@ else
 fi
 
 # ===============================================================
-# Step 10: Build and deploy to gh-pages using existing script
+# Step 11: Build and deploy to gh-pages using existing script
 # ===============================================================
-log_step 10 "Building and deploying to gh-pages..."
+log_step 11 "Building and deploying to gh-pages..."
 
 if [ ! -f "scripts/mkbld.sh" ]; then
     log_error "scripts/mkbld.sh not found"
@@ -562,9 +591,9 @@ else
 fi
 
 # ===============================================================
-# Step 11: Switch back to develop branch and merge back main
+# Step 12: Switch back to develop branch and merge back main
 # ===============================================================
-log_step 11 "Switching back to develop branch..."
+log_step 12 "Switching back to develop branch..."
 
 if git checkout develop >>"$RELEASE_LOGFILE" 2>&1; then
     log_info "✓ Switched back to develop branch"
@@ -589,9 +618,9 @@ else
 fi
 
 # ==============================================================
-# Step 12: Create build artifacts by compressing dist/ directory
+# Step 13: Create build artifacts by compressing dist/ directory
 # ==============================================================
-log_step 12 "Creating build artifacts..."
+log_step 13 "Creating build artifacts..."
 
 if [ ! -d "dist" ]; then
     log_error "dist directory not found"
@@ -630,7 +659,7 @@ else
 fi
 
 # ===============================================================
-# Step 13: Print summary and next steps
+# Step 14: Print summary and next steps
 # ===============================================================
 
 echo ""

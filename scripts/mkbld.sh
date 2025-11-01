@@ -26,6 +26,10 @@ log_info() {
     echo -e "${GREEN}    [INFO]${NC} $1"
 }
 
+log_success() {
+    echo -e "${GREEN}✅ [SUCCESS!] == $1 ==${NC}"
+}
+
 log_warn() {
     echo -e "${YELLOW}⚠️ [WARN]${NC} $1"
 }
@@ -131,8 +135,27 @@ log_info "Current branch: $ORIGINAL_BRANCH"
 # Check if gh-pages branch exists
 if ! git show-ref --verify --quiet refs/heads/gh-pages; then
     log_error "gh-pages branch does not exist"
-    echo "Create it first with: git checkout --orphan gh-pages"
-    exit 1
+    read -p "Fetch from origin and continue? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        log_error "Aborted by user"
+        exit 1
+    fi
+    if git fetch origin gh-pages; then
+        log_info "Fetched gh-pages branch from origin"
+    else
+        log_error "Failed to fetch gh-pages branch from origin"
+        exit 1
+    fi
+    if git checkout -b gh-pages origin/gh-pages; then
+        log_info "Checked out new branch 'gh-pages' from origin"
+    else
+        log_error "Failed to create 'gh-pages' branch"
+        exit 1
+    fi
+    git branch -vv
+    # Switch back to original branch
+    git checkout "$ORIGINAL_BRANCH"
 fi
 
 # =====================================
@@ -316,6 +339,6 @@ if [ "$(git branch --show-current)" != "$ORIGINAL_BRANCH" ]; then
     git checkout "$ORIGINAL_BRANCH"
 fi
 
-log_info "Done! Build and deploy completed successfully."
+log_success "Build completed successfully."
 
 # End of script
