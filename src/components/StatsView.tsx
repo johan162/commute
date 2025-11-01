@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import type { CommuteRecord } from '../types';
 import { Card } from './Card';
@@ -206,17 +205,46 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
     return records.map(record => record.duration);
   }, [records]);
 
+  const { morningRecords, eveningRecords } = useMemo(() => {
+    const morning: CommuteRecord[] = [];
+    const evening: CommuteRecord[] = [];
+
+    records.forEach(record => {
+        const hour = new Date(record.date).getHours();
+        if (hour < 12) {
+            morning.push(record);
+        } else {
+            evening.push(record);
+        }
+    });
+
+    return { morningRecords: morning, eveningRecords: evening };
+  }, [records]);
+
+  const morningDurations = useMemo(() => morningRecords.map(r => r.duration), [morningRecords]);
+  const eveningDurations = useMemo(() => eveningRecords.map(r => r.duration), [eveningRecords]);
+
   // Calculate confidence interval using interpolation
-  const confidenceInterval = useMemo(() => {
-    if (records.length < 5) return null;
-    return getConfidenceInterval(durations, 90);
-  }, [durations]);
+  const morningConfidenceInterval = useMemo(() => {
+    if (morningDurations.length < 5) return null;
+    return getConfidenceInterval(morningDurations, 90);
+  }, [morningDurations]);
+
+  const eveningConfidenceInterval = useMemo(() => {
+      if (eveningDurations.length < 5) return null;
+      return getConfidenceInterval(eveningDurations, 90);
+  }, [eveningDurations]);
 
   // Calculate confidence interval using Nearest Rank method
-  const confidenceIntervalRank = useMemo(() => {
-    if (records.length < 5) return null;
-    return getConfidenceIntervalRank(durations, 90);
-  }, [durations]);
+  const morningConfidenceIntervalRank = useMemo(() => {
+    if (morningDurations.length < 5) return null;
+    return getConfidenceIntervalRank(morningDurations, 90);
+  }, [morningDurations]);
+
+  const eveningConfidenceIntervalRank = useMemo(() => {
+      if (eveningDurations.length < 5) return null;
+      return getConfidenceIntervalRank(eveningDurations, 90);
+  }, [eveningDurations]);
 
   // Calculate Shapiro-Wilk test for normality
   const normalityTest = useMemo(() => {
@@ -585,25 +613,51 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
       
       <Card title="90% Conf. Intervall (Interpolated)">
         <div className="text-center">
-          {confidenceInterval ? (
+          {(morningConfidenceInterval || eveningConfidenceInterval) ? (
             <>
               <p className="text-sm text-gray-400 mb-4">
                 90% of commutes fall within this range. Uses interpolated values, might not exist as data points (but is statistically more accurate).
               </p>
-              <div className="flex justify-center items-center space-x-4">
-                <div className="bg-gray-800 p-4 rounded-lg">
-                  <p className="text-sm text-gray-400">Low</p>
-                  <p className="text-2xl font-bold text-green-400">{formatDuration(confidenceInterval.low)}</p>
-                </div>
-                <div className="text-gray-500 text-xl">-</div>
-                <div className="bg-gray-800 p-4 rounded-lg">
-                  <p className="text-sm text-gray-400">High</p>
-                  <p className="text-2xl font-bold text-red-400">{formatDuration(confidenceInterval.high)}</p>
-                </div>
+              <div className="space-y-4">
+                {morningConfidenceInterval ? (
+                  <div className="flex justify-center items-center space-x-4">
+                    <div className="w-24 text-left">
+                      <p className="font-semibold text-gray-300">Morning</p>
+                      <p className="text-xs text-gray-500">00:00-11:59</p>
+                    </div>
+                    <div className="bg-gray-800 p-4 rounded-lg w-32">
+                      <p className="text-sm text-gray-400">Low</p>
+                      <p className="text-2xl font-bold text-green-400">{formatDuration(morningConfidenceInterval.low)}</p>
+                    </div>
+                    <div className="text-gray-500 text-xl">-</div>
+                    <div className="bg-gray-800 p-4 rounded-lg w-32">
+                      <p className="text-sm text-gray-400">High</p>
+                      <p className="text-2xl font-bold text-red-400">{formatDuration(morningConfidenceInterval.high)}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Not enough morning data for 90% CI ({morningDurations.length}/5 records)</p>
+                )}
+                {eveningConfidenceInterval ? (
+                  <div className="flex justify-center items-center space-x-4">
+                    <div className="w-24 text-left">
+                      <p className="font-semibold text-gray-300">Evening</p>
+                      <p className="text-xs text-gray-500">12:00-23:59</p>
+                    </div>
+                    <div className="bg-gray-800 p-4 rounded-lg w-32">
+                      <p className="text-sm text-gray-400">Low</p>
+                      <p className="text-2xl font-bold text-green-400">{formatDuration(eveningConfidenceInterval.low)}</p>
+                    </div>
+                    <div className="text-gray-500 text-xl">-</div>
+                    <div className="bg-gray-800 p-4 rounded-lg w-32">
+                      <p className="text-sm text-gray-400">High</p>
+                      <p className="text-2xl font-bold text-red-400">{formatDuration(eveningConfidenceInterval.high)}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Not enough evening data for 90% CI ({eveningDurations.length}/5 records)</p>
+                )}
               </div>
-              <p className="text-xs text-gray-500 mt-4">
-                Based on {records.length} recorded commutes
-              </p>
             </>
           ) : (
             <div className="py-8">
@@ -618,25 +672,51 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
 
       <Card title="90% Conf. Intervall (Nearest Rank)">
         <div className="text-center">
-          {confidenceIntervalRank ? (
+          {(morningConfidenceIntervalRank || eveningConfidenceIntervalRank) ? (
             <>
               <p className="text-sm text-gray-400 mb-4">
                 90% of commutes fall within this time range, the closest actual recorded times are shown (less statistically accurate).
               </p>
-              <div className="flex justify-center items-center space-x-4">
-                <div className="bg-gray-800 p-4 rounded-lg">
-                  <p className="text-sm text-gray-400">Low</p>
-                  <p className="text-2xl font-bold text-green-400">{formatDuration(confidenceIntervalRank.low)}</p>
-                </div>
-                <div className="text-gray-500 text-xl">-</div>
-                <div className="bg-gray-800 p-4 rounded-lg">
-                  <p className="text-sm text-gray-400">High</p>
-                  <p className="text-2xl font-bold text-red-400">{formatDuration(confidenceIntervalRank.high)}</p>
-                </div>
+              <div className="space-y-4">
+                {morningConfidenceIntervalRank ? (
+                  <div className="flex justify-center items-center space-x-4">
+                    <div className="w-24 text-left">
+                      <p className="font-semibold text-gray-300">Morning</p>
+                      <p className="text-xs text-gray-500">00:00-11:59</p>
+                    </div>
+                    <div className="bg-gray-800 p-4 rounded-lg w-32">
+                      <p className="text-sm text-gray-400">Low</p>
+                      <p className="text-2xl font-bold text-green-400">{formatDuration(morningConfidenceIntervalRank.low)}</p>
+                    </div>
+                    <div className="text-gray-500 text-xl">-</div>
+                    <div className="bg-gray-800 p-4 rounded-lg w-32">
+                      <p className="text-sm text-gray-400">High</p>
+                      <p className="text-2xl font-bold text-red-400">{formatDuration(morningConfidenceIntervalRank.high)}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Not enough morning data for 90% CI ({morningDurations.length}/5 records)</p>
+                )}
+                {eveningConfidenceIntervalRank ? (
+                  <div className="flex justify-center items-center space-x-4">
+                    <div className="w-24 text-left">
+                      <p className="font-semibold text-gray-300">Evening</p>
+                      <p className="text-xs text-gray-500">12:00-23:59</p>
+                    </div>
+                    <div className="bg-gray-800 p-4 rounded-lg w-32">
+                      <p className="text-sm text-gray-400">Low</p>
+                      <p className="text-2xl font-bold text-green-400">{formatDuration(eveningConfidenceIntervalRank.low)}</p>
+                    </div>
+                    <div className="text-gray-500 text-xl">-</div>
+                    <div className="bg-gray-800 p-4 rounded-lg w-32">
+                      <p className="text-sm text-gray-400">High</p>
+                      <p className="text-2xl font-bold text-red-400">{formatDuration(eveningConfidenceIntervalRank.high)}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Not enough evening data for 90% CI ({eveningDurations.length}/5 records)</p>
+                )}
               </div>
-              <p className="text-xs text-gray-500 mt-4">
-                Based on {records.length} recorded commutes
-              </p>
             </>
           ) : (
             <div className="py-8">
