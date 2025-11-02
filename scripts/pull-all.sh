@@ -94,13 +94,13 @@ for branch in "${local_branches[@]}"; do
     if [ "$branch" == "*" ]; then
         branch="$ORIGINAL_BRANCH"
     fi
-    if git checkout "$branch"; then
+    if git checkout "$branch" >/dev/null 2>&1; then
         log_info "Checked out branch: $branch"
     else
         log_error "Failed to checkout branch: $branch"
         exit 1
     fi
-    if git pull; then
+    if git pull >/dev/null 2>&1; then
         log_info "Updated branch: $branch"
     else
         log_error "Failed to update branch: $branch"
@@ -110,7 +110,7 @@ done
 
 # Return to original branch
 if [ -n "$ORIGINAL_BRANCH" ]; then
-    if git checkout "$ORIGINAL_BRANCH"; then
+    if git checkout "$ORIGINAL_BRANCH" >/dev/null 2>&1; then
         log_info "Returned to original branch: $ORIGINAL_BRANCH"
     else
         log_error "Failed to return to original branch: $ORIGINAL_BRANCH"
