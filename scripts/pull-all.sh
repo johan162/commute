@@ -94,9 +94,18 @@ for branch in "${local_branches[@]}"; do
     if [ "$branch" == "*" ]; then
         branch="$ORIGINAL_BRANCH"
     fi
-    log_info "Updating branch: $branch"
-    git checkout "$branch"
-    git pull
+    if git checkout "$branch"; then
+        log_info "Checked out branch: $branch"
+    else
+        log_error "Failed to checkout branch: $branch"
+        exit 1
+    fi
+    if git pull; then
+        log_info "Updated branch: $branch"
+    else
+        log_error "Failed to update branch: $branch"
+        exit 1
+    fi
 done
 
 # Return to original branch
