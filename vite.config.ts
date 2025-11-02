@@ -18,6 +18,7 @@ export default defineConfig({
         description: 'An application to track your commute time to work.',
         theme_color: '#2DD4BF',
         background_color: '#111827',
+        display: 'fullscreen',
         icons: [
           {
             src: 'icon.svg',
