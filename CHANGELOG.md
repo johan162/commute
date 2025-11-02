@@ -1,3 +1,14 @@
+## [0.19.3] - 2025-11-02
+
+Release type: patch
+
+### 📋 Summary 
+- Improved user experience
+
+### 🚀 Improvements
+- [upd] Make the application be fullscreen and cover top phone status bar
+
+
 ## [0.19.2] - 2025-11-02
 
 Release type: patch
