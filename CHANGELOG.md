@@ -1,3 +1,14 @@
+## [0.19.2] - 2025-11-02
+
+Release type: patch
+
+### 📋 Summary 
+- Critical stupid bug-fix
+
+### 🐛 Bug Fixes
+- [bug] Path for `getDistance()` function was wrong so AutoStop didn't work!
+
+
 ## [0.19.1] - 2025-11-02
 
 Release type: patch
