@@ -2,13 +2,20 @@
 
 # Script to fetch all remote branches and update local branches that have upstream counterparts
 
-set -e # Exit on any error
+set -euo pipefail # Exit on any error
 
 # =====================================
-# CONFIGURATION
+# HELPER FUNCTIONS
 # =====================================
 
-# Function to print colored output
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# Functions to print colored output
 log_info() {
     echo -e "${GREEN}    [INFO]${NC} $1"
 }
@@ -52,7 +59,7 @@ if ! git diff-index --quiet HEAD -- || [[ -n $(git status --porcelain) ]]; then
 fi
 
 # ----------------------------------
-# Step 2: Fetch remote branches
+# Step 2: Fetch all remote branches
 # ----------------------------------
 
 log_step 2 "Fetching all remote branches..."
@@ -65,24 +72,22 @@ else
 fi
 
 # ----------------------------------
-# Step 3: Update local branches
+# Step 3: Update corresponding local branches
 # ----------------------------------
 
 log_step 3 "Updating local branches with upstream counterparts..."
 
 # Disable filename expansion (globbing)
-# This is important as the current branch will be '*'
+# This is important as the current branch will be '*' !
 set -f
 
-# Get list of local branches that have upstream remotes
+# Get list of local branches that have upstream remotes as a bash array
 local_branches=($(git branch -vv | grep -E '\[origin/' | awk '{print $1}'))
 
 if [ -z "$local_branches" ]; then
     log_warn "No local branches with upstream remotes found. Exiting."
     exit 0
 fi
-
-current_branch=$(git branch --show-current)
 
 for branch in "${local_branches[@]}"; do
     # If the branch is '*' then replace it with the name of the ORIGINAL_BRANCH
