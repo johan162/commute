@@ -61,15 +61,6 @@ EXAMPLES:
     # Show help
     $0 --help
 
-    # Preview a minor release (recommended first step)
-    $0 v2.1.0 minor
-
-    # Execute a minor release
-    $0 v2.1.0 minor
-
-    # Create a major release
-    $0 v3.0.0-rc1 major
-
 REQUIREMENTS:
     • Must be run from project root directory
     • Must be on 'develop' branch with clean working directory
