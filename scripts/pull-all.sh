@@ -2,7 +2,7 @@
 
 # Script to fetch all remote branches and update local branches that have upstream counterparts
 
-set -e  # Exit on any error
+set -e # Exit on any error
 
 # =====================================
 # CONFIGURATION
@@ -27,7 +27,7 @@ log_step() {
 
 log_success() {
     echo -e "${GREEN}✅ [SUCCESS!] $1${NC}"
-}   
+}
 
 # ----------------------------------
 # Step 1: Pre-requisites
@@ -35,7 +35,7 @@ log_success() {
 
 # Check if we're in a git repository
 log_step 1 "Checking if in a git repository"
-if ! git rev-parse --git-dir > /dev/null 2>&1; then
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
     log_error "Not in a git repository"
     exit 1
 fi
@@ -70,8 +70,12 @@ fi
 
 log_step 3 "Updating local branches with upstream counterparts..."
 
+# Disable filename expansion (globbing)
+# This is important as the current branch will be '*'
+set -f
+
 # Get list of local branches that have upstream remotes
-local_branches=$(git branch -vv | grep -E '\[origin/' | awk '{print $1}')
+local_branches=($(git branch -vv | grep -E '\[origin/' | awk '{print $1}'))
 
 if [ -z "$local_branches" ]; then
     log_warn "No local branches with upstream remotes found. Exiting."
@@ -80,20 +84,24 @@ fi
 
 current_branch=$(git branch --show-current)
 
-for branch in $local_branches; do
+for branch in "${local_branches[@]}"; do
+    # If the branch is '*' then replace it with the name of the ORIGINAL_BRANCH
+    if [ "$branch" == "*" ]; then
+        branch="$ORIGINAL_BRANCH"
+    fi
     log_info "Updating branch: $branch"
-#    git checkout "$branch"
-#    git pull
+    git checkout "$branch"
+    git pull
 done
 
 # Return to original branch
 if [ -n "$ORIGINAL_BRANCH" ]; then
-   if git checkout "$ORIGINAL_BRANCH"; then
-       log_info "Returned to original branch: $ORIGINAL_BRANCH"
-   else
-       log_error "Failed to return to original branch: $ORIGINAL_BRANCH"
-       exit 1
-   fi
+    if git checkout "$ORIGINAL_BRANCH"; then
+        log_info "Returned to original branch: $ORIGINAL_BRANCH"
+    else
+        log_error "Failed to return to original branch: $ORIGINAL_BRANCH"
+        exit 1
+    fi
 fi
 
 # ----------------------------------
