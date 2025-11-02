@@ -1,3 +1,14 @@
+## [0.19.1] - 2025-11-02
+
+Release type: patch
+
+### 📋 Summary 
+- Added utility git script
+
+### 🛠 Internal
+- [feat] Added `pull-all.sh` script to update all branches with corresponding origin
+  
+
 ## [0.19.0] - 2025-11-02
 
 Release type: minor
