@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Coordinates } from '../src/types';
-import { getDistance } from '../services/locationService';
+import { getDistance } from '../src/services/locationService';
 
 interface UseCommuteTimerProps {
   workLocation: Coordinates | null;
