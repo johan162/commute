@@ -8,11 +8,6 @@ set -e  # Exit on any error
 # CONFIGURATION
 # =====================================
 
-declare GITHUB_USER="johan162"
-declare SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-declare PROGRAMNAME="commute"
-declare PROGRAMNAME_PRETTY="Commute Tracker"
-
 # Function to print colored output
 log_info() {
     echo -e "${GREEN}    [INFO]${NC} $1"
@@ -44,6 +39,10 @@ if ! git rev-parse --git-dir > /dev/null 2>&1; then
     log_error "Not in a git repository"
     exit 1
 fi
+
+# Get current branch
+ORIGINAL_BRANCH=$(git branch --show-current)
+log_info "Current branch: $ORIGINAL_BRANCH"
 
 # Check that the directory is clean (no uncommitted changes)
 if ! git diff-index --quiet HEAD -- || [[ -n $(git status --porcelain) ]]; then
@@ -83,13 +82,18 @@ current_branch=$(git branch --show-current)
 
 for branch in $local_branches; do
     log_info "Updating branch: $branch"
-    git checkout "$branch"
-    git pull
+#    git checkout "$branch"
+#    git pull
 done
 
 # Return to original branch
-if [ -n "$current_branch" ]; then
-    git checkout "$current_branch"
+if [ -n "$ORIGINAL_BRANCH" ]; then
+   if git checkout "$ORIGINAL_BRANCH"; then
+       log_info "Returned to original branch: $ORIGINAL_BRANCH"
+   else
+       log_error "Failed to return to original branch: $ORIGINAL_BRANCH"
+       exit 1
+   fi
 fi
 
 # ----------------------------------
