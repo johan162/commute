@@ -28,6 +28,10 @@
 
 
 ### On Android:
+
+> [!NOTE]
+> On recent version of Android+Chrome you will get a question when opening the URL if you want to install as an application.
+
 - Click the extended menu (three vertical dots)
 - Select "Add to home screen"
 - In the popup shown choose "Install as App"
