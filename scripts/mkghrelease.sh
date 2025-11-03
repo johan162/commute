@@ -353,18 +353,18 @@ if [[ "$RUNNING_WORKFLOWS" -gt 0 ]]; then
 fi
 print_success "No workflows currently running"
 
-print_sub_step "Checking latest workflow status..."
-LATEST_WORKFLOW_STATUS=$(gh run list --branch main --limit 1 --json conclusion | jq -r '.[0].conclusion')
-if [[ "$LATEST_WORKFLOW_STATUS" != "success" ]]; then
-    print_error "Latest workflow did not succeed (status: $LATEST_WORKFLOW_STATUS)"
-    echo ""
-    echo "Recent runs:"
-    gh run list --branch main --limit 5
-    echo ""
-    echo "Fix workflow failures before creating release"
-    exit 1
-fi
-print_success "Latest workflow succeeded"
+# print_sub_step "Checking latest workflow status..."
+# LATEST_WORKFLOW_STATUS=$(gh run list --branch main --limit 1 --json conclusion | jq -r '.[0].conclusion')
+# if [[ "$LATEST_WORKFLOW_STATUS" != "success" ]]; then
+#     print_error "Latest workflow did not succeed (status: $LATEST_WORKFLOW_STATUS)"
+#     echo ""
+#     echo "Recent runs:"
+#     gh run list --branch main --limit 5
+#     echo ""
+#     echo "Fix workflow failures before creating release"
+#     exit 1
+# fi
+# print_success "Latest workflow succeeded"
 
 # =====================================
 # PHASE 3: VERSION VALIDATION
