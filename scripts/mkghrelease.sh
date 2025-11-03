@@ -448,18 +448,19 @@ VERSION_NUMBER=${LATEST_TAG#v}
 # Strip the '-' from the version for pre-releases
 FILE_VERSION_NUMBER=${VERSION_NUMBER//-rc/rc}
 ARTIFACT_NAME="${PROGRAMNAME}-${FILE_VERSION_NUMBER}-dist.zip"
+ARTIFACT_DIR="artifacts"
 
 print_sub_step "Locating artifacts with version $FILE_VERSION_NUMBER..."
 
-if [[ ! -f "${ARTIFACT_NAME}" ]]; then
+if [[ ! -f "${ARTIFACT_DIR}/${ARTIFACT_NAME}" ]]; then
     print_error "Source distribution not found for version $VERSION_NUMBER"
-    echo "Expected: ${ARTIFACT_NAME} in root"
+    echo "Expected: ${ARTIFACT_NAME} in ${ARTIFACT_DIR}"
     exit 1
 fi
 
 # 4.4: Validate artifact sizes
 print_sub_step "Validating artifact sizes..."
-ARTIFACT_SIZE=$(stat -f%z "${ARTIFACT_NAME}" 2>/dev/null || stat -c%s "${ARTIFACT_NAME}" 2>/dev/null)
+ARTIFACT_SIZE=$(stat -f%z "${ARTIFACT_DIR}/${ARTIFACT_NAME}" 2>/dev/null || stat -c%s "${ARTIFACT_DIR}/${ARTIFACT_NAME}" 2>/dev/null)
 if [[ "$ARTIFACT_SIZE" -lt 8192 ]]; then
     print_error "Distribution artifact suspiciously small: $ARTIFACT_SIZE bytes"
     exit 1
@@ -553,7 +554,7 @@ print_step_colored ""
 GH_RELEASE_CMD="gh release create \"$LATEST_TAG\" \
     --title \"${PROGRAMNAME_PRETTY} $LATEST_TAG\" \
     --notes-file \"$RELEASE_NOTES_FILE\" \
-    \"${ARTIFACT_NAME}\""
+    \"$ARTIFACT_DIR/${ARTIFACT_NAME}\""
 
 if [[ "$IS_PRE_RELEASE" == "true" ]]; then
     GH_RELEASE_CMD="$GH_RELEASE_CMD --prerelease"
