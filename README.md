@@ -1,7 +1,7 @@
 # Commute Time Tracker PWA
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-0.19.3-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-0.19.4-brightgreen.svg)
 ![React](https://img.shields.io/badge/react-18.2.0-blue.svg)
 ![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
 ![PWA](https://img.shields.io/badge/PWA-Ready-green.svg)
@@ -28,6 +28,10 @@
 
 
 ### On Android:
+
+> [!NOTE]
+> On recent version of Android+Chrome you will get a question when opening the URL if you want to install as an application.
+
 - Click the extended menu (three vertical dots)
 - Select "Add to home screen"
 - In the popup shown choose "Install as App"

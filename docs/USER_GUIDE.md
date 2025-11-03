@@ -85,6 +85,10 @@ URL: [https://johan162.github.io/commute](https://johan162.github.io/commute)
 5. The app icon appears on your home screen!
 
 **On Android (Chrome):**
+
+> [!NOTE]
+> On recent version of Android+Chrome you will get a question when opening the URL if you want to install as an application.
+
 1. Open the app URL in Chrome
 2. Click the extended menu (three vertical dots)
 3. Select **"Add to home screen"**

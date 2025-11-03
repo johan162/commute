@@ -355,7 +355,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
   }, [records, includeWeekends, weekdayMetric]);
 
   // Create a string "Statistics Summary" with added number of records
-  const statsSummary = `Statistics Summary - ${records.length} records`;
+  const statsSummary = `Summary Statistics`;
 
   return (
     <div className="space-y-6">
@@ -366,10 +366,11 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
           <StatItem label="Max Time" value={formatDuration(stats.max)} />
           <StatItem label="Average" value={formatDuration(stats.mean)} />
           <StatItem label="Median" value={formatDuration(stats.median)} />
+          <StatItem label="Std Dev." value={formatDuration(stats.stdDev)} />
         </div>
       </Card>
 
-      <Card title="Total Commute Time">
+      <Card title="Total Time Wasted in Commute">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {/* Per Day */}
           <div className="bg-gray-800 p-4 rounded-lg">
@@ -453,7 +454,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
         </div>
       </Card>
 
-      <Card title="Commute Time Histogram">
+      <Card title="Histogram">
          <div className="h-64 md:h-80">
            <HistogramChart records={records} binSizeMinutes={binSize} />
          </div>
@@ -473,7 +474,7 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
         </div>
       </Card>
 
-      <Card title="Commute Time by Day of Week">
+      <Card title="Duration by Day of Week">
         <div className="text-center">
           {records.length >= 5 ? (
             <>
@@ -544,13 +545,13 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
         </div>
       </Card>
 
-      <Card title="Caommute time by Time of Day">
+      <Card title="Duration by Time of Day">
           <div className="h-64 md:h-80">
             <TimeBreakdownView records={records} binSizeMinutes={timeBinSize} metric={timeOfDayMetric} />
           </div>
           <div className="flex items-center justify-center mt-4 space-x-4">
             <div className="flex items-center space-x-2">
-              <label htmlFor="timeBinSize" className="text-sm text-gray-400">Bin Size (minutes):</label>
+              <label htmlFor="timeBinSize" className="text-sm text-gray-400">Bin Size (min):</label>
               <select
                   id="timeBinSize"
                   value={timeBinSize}

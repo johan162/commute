@@ -122,6 +122,14 @@ fi
 # Step 4: Final message
 # ----------------------------------
 
-log_success "All branches (${local_branches}) updated successfully."
+log_success "The following branches was updated successfully:"
+for branch in "${local_branches[@]}"; do
+    # If the branch is '*' then replace it with the name of the ORIGINAL_BRANCH
+    if [ "$branch" == "*" ]; then
+        branch="$ORIGINAL_BRANCH"
+    fi
+    echo -e "   - ${GREEN}$branch${NC}"
+done
+
 
 # End of script

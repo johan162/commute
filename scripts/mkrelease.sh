@@ -4,7 +4,7 @@
 # Usage: ./scripts/mkrelease.sh <version>
 # Example: ./scripts/mkrelease.sh 0.2.0
 
-set -eu # Exit on error, undefined variables
+set -euo pipefail # Exit on error, undefined variables
 
 # =====================================
 # CONFIGURATION

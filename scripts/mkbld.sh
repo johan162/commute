@@ -3,7 +3,7 @@
 # Build and Deploy Script for PWA to gh-pages branch
 # This script builds the app and deploys it to the gh-pages branch
 
-set -eu # Exit on error, undefined variables
+set -euo pipefail # Exit on error, undefined variables
 
 # Colors for output
 RED='\033[0;31m'
