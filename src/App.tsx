@@ -19,7 +19,7 @@ const App: React.FC = () => {
   const [useNixieDisplay, setUseNixieDisplay] = useLocalStorage<boolean>('useNixieDisplay', false);
   const [showAdvancedStatistics, setShowAdvancedStatistics] = useLocalStorage<boolean>('showAdvancedStatistics', false);
   const [showCalendarHeatmap, setShowCalendarHeatmap] = useLocalStorage<boolean>('showCalendarHeatmap', false);
-  const version = '0.19.4';
+  const version = '1.0.0';
 
   const averageWorkLocation = useMemo<Coordinates | null>(() => {
     if (workLocations.length === 0) return null;
