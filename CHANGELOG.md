@@ -1,3 +1,14 @@
+## [0.19.4] - 2025-11-03
+
+Release type: patch
+
+### 📋 Summary 
+- Improive stats page
+
+### ✨ Additions
+- [feat] Add display of sample standard deviation in summary statistics
+
+
 ## [0.19.3] - 2025-11-02
 
 Release type: patch
