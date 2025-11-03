@@ -20,6 +20,7 @@ interface StatsViewProps {
   } | null;
   includeWeekends: boolean;
   showAdvancedStatistics: boolean;
+  showCalendarHeatmap: boolean;
 }
 
 const formatDuration = (seconds: number): string => {
@@ -29,7 +30,7 @@ const formatDuration = (seconds: number): string => {
   return `${m}m ${s}s`;
 };
 
-export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWeekends, showAdvancedStatistics }) => {
+export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWeekends, showAdvancedStatistics, showCalendarHeatmap }) => {
   const [binSize, setBinSize] = useState(5); // bin size in minutes
   const [weekdayMetric, setWeekdayMetric] = useState<'mean' | 'median'>('median');
   const [timeBinSize, setTimeBinSize] = useState(60); // time of day bin size in minutes
@@ -658,37 +659,39 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
           </div>
       </Card>
 
-      <Card title="Calendar Heatmap">
-        <div className="text-center">
-          {records.length >= 7 ? (
-            <>
-              <p className="text-sm text-gray-400 mb-4">
-                {calendarMetric === 'median' ? 'Median' : 'Average'} commute time for each day
-              </p>
-              <CalendarHeatmap records={records} metric={calendarMetric} />
-              <div className="flex items-center justify-center mt-4 space-x-2">
-                <label htmlFor="calendarMetric" className="text-sm text-gray-400">Show:</label>
-                <select
-                  id="calendarMetric"
-                  value={calendarMetric}
-                  onChange={(e) => setCalendarMetric(e.target.value as 'mean' | 'median')}
-                  className="bg-gray-700 border border-gray-600 rounded-md p-1 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                >
-                  <option value="median">Median</option>
-                  <option value="mean">Average</option>
-                </select>
+      {showCalendarHeatmap && (
+        <Card title="Calendar Heatmap">
+          <div className="text-center">
+            {records.length >= 7 ? (
+              <>
+                <p className="text-sm text-gray-400 mb-4">
+                  {calendarMetric === 'median' ? 'Median' : 'Average'} commute time for each day
+                </p>
+                <CalendarHeatmap records={records} metric={calendarMetric} />
+                <div className="flex items-center justify-center mt-4 space-x-2">
+                  <label htmlFor="calendarMetric" className="text-sm text-gray-400">Show:</label>
+                  <select
+                    id="calendarMetric"
+                    value={calendarMetric}
+                    onChange={(e) => setCalendarMetric(e.target.value as 'mean' | 'median')}
+                    className="bg-gray-700 border border-gray-600 rounded-md p-1 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  >
+                    <option value="median">Median</option>
+                    <option value="mean">Average</option>
+                  </select>
+                </div>
+              </>
+            ) : (
+              <div className="py-8">
+                <p className="text-gray-400 text-lg">Needs 7 or more records for calendar heatmap</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Currently {records.length} of 7 required
+                </p>
               </div>
-            </>
-          ) : (
-            <div className="py-8">
-              <p className="text-gray-400 text-lg">Needs 7 or more records for calendar heatmap</p>
-              <p className="text-xs text-gray-500 mt-2">
-                Currently {records.length} of 7 required
-              </p>
-            </div>
-          )}
-        </div>
-      </Card>      
+            )}
+          </div>
+        </Card>
+      )}
 
       {showAdvancedStatistics && (
         <Card title="Normality Test (Shapiro-Wilk)">
