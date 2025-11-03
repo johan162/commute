@@ -17,8 +17,8 @@ const App: React.FC = () => {
   const [autoRecordWorkLocation, setAutoRecordWorkLocation] = useLocalStorage<boolean>('autoRecordWorkLocation', false);
   const [includeWeekends, setIncludeWeekends] = useLocalStorage<boolean>('includeWeekends', false);
   const [useNixieDisplay, setUseNixieDisplay] = useLocalStorage<boolean>('useNixieDisplay', false);
-  const [showAdvancedStatistics, setShowAdvancedStatistics] = useLocalStorage<boolean>('showAdvancedStatistics', true);
-  const [showCalendarHeatmap, setShowCalendarHeatmap] = useLocalStorage<boolean>('showCalendarHeatmap', true);
+  const [showAdvancedStatistics, setShowAdvancedStatistics] = useLocalStorage<boolean>('showAdvancedStatistics', false);
+  const [showCalendarHeatmap, setShowCalendarHeatmap] = useLocalStorage<boolean>('showCalendarHeatmap', false);
   const version = '0.19.4';
 
   const averageWorkLocation = useMemo<Coordinates | null>(() => {
