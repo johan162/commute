@@ -20,6 +20,7 @@ interface StatsViewProps {
   } | null;
   includeWeekends: boolean;
   showAdvancedStatistics: boolean;
+  showCalendarHeatmap: boolean;
 }
 
 const formatDuration = (seconds: number): string => {
@@ -29,12 +30,13 @@ const formatDuration = (seconds: number): string => {
   return `${m}m ${s}s`;
 };
 
-export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWeekends, showAdvancedStatistics }) => {
+export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWeekends, showAdvancedStatistics, showCalendarHeatmap }) => {
   const [binSize, setBinSize] = useState(5); // bin size in minutes
   const [weekdayMetric, setWeekdayMetric] = useState<'mean' | 'median'>('median');
   const [timeBinSize, setTimeBinSize] = useState(60); // time of day bin size in minutes
   const [timeOfDayMetric, setTimeOfDayMetric] = useState<'mean' | 'median'>('mean');
   const [calendarMetric, setCalendarMetric] = useState<'mean' | 'median'>('mean');
+  const [ciMethod, setCiMethod] = useState<'interpolated' | 'nearestRank'>('interpolated');
   
   // State for time period selections
   const [selectedDay, setSelectedDay] = useState<string>('');
@@ -245,6 +247,10 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
       if (eveningDurations.length < 5) return null;
       return getConfidenceIntervalRank(eveningDurations, 90);
   }, [eveningDurations]);
+
+  // Select which CI to display based on method
+  const morningCI = ciMethod === 'interpolated' ? morningConfidenceInterval : morningConfidenceIntervalRank;
+  const eveningCI = ciMethod === 'interpolated' ? eveningConfidenceInterval : eveningConfidenceIntervalRank;
 
   // Calculate Shapiro-Wilk test for normality
   const normalityTest = useMemo(() => {
@@ -474,6 +480,79 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
         </div>
       </Card>
 
+      <Card title="90% Confidence Interval">
+        <div className="text-center">
+          {(morningCI || eveningCI) ? (
+            <>
+              <p className="text-sm text-gray-400 mb-4">
+                {ciMethod === 'interpolated' 
+                  ? '90% of commutes fall within this range. Uses interpolated values, might not exist as data points (but is statistically more accurate).'
+                  : '90% of commutes fall within this time range, the closest actual recorded times are shown (less statistically accurate).'}
+              </p>
+              <div className="space-y-4">
+                {morningCI ? (
+                  <div className="flex justify-center items-center space-x-4">
+                    <div className="w-24 text-left">
+                      <p className="font-semibold text-gray-300">Morning</p>
+                      <p className="text-xs text-gray-500">00:00-11:59</p>
+                    </div>
+                    <div className="bg-gray-800 p-4 rounded-lg w-40">
+                      <p className="text-sm text-gray-400">Low</p>
+                      <p className="text-2xl font-bold text-green-400">{formatDuration(morningCI.low)}</p>
+                    </div>
+                    <div className="text-gray-500 text-xl">-</div>
+                    <div className="bg-gray-800 p-4 rounded-lg w-40">
+                      <p className="text-sm text-gray-400">High</p>
+                      <p className="text-2xl font-bold text-red-400">{formatDuration(morningCI.high)}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Not enough morning data for 90% CI ({morningDurations.length}/5 records)</p>
+                )}
+                {eveningCI ? (
+                  <div className="flex justify-center items-center space-x-4">
+                    <div className="w-24 text-left">
+                      <p className="font-semibold text-gray-300">Evening</p>
+                      <p className="text-xs text-gray-500">12:00-23:59</p>
+                    </div>
+                    <div className="bg-gray-800 p-4 rounded-lg w-40">
+                      <p className="text-sm text-gray-400">Low</p>
+                      <p className="text-2xl font-bold text-green-400">{formatDuration(eveningCI.low)}</p>
+                    </div>
+                    <div className="text-gray-500 text-xl">-</div>
+                    <div className="bg-gray-800 p-4 rounded-lg w-40">
+                      <p className="text-sm text-gray-400">High</p>
+                      <p className="text-2xl font-bold text-red-400">{formatDuration(eveningCI.high)}</p>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">Not enough evening data for 90% CI ({eveningDurations.length}/5 records)</p>
+                )}
+              </div>
+              <div className="flex items-center justify-center mt-4 space-x-2">
+                <label htmlFor="ciMethod" className="text-sm text-gray-400">Calculation Method:</label>
+                <select
+                  id="ciMethod"
+                  value={ciMethod}
+                  onChange={(e) => setCiMethod(e.target.value as 'interpolated' | 'nearestRank')}
+                  className="bg-gray-700 border border-gray-600 rounded-md p-1 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                >
+                  <option value="interpolated">Interpolated</option>
+                  <option value="nearestRank">Nearest Rank</option>
+                </select>
+              </div>
+            </>
+          ) : (
+            <div className="py-8">
+              <p className="text-gray-400 text-lg">Needs 5 or more records to show 90% CI</p>
+              <p className="text-xs text-gray-500 mt-2">
+                Currently {records.length} of 5 required
+              </p>
+            </div>
+          )}
+        </div>
+      </Card>
+
       <Card title="Duration by Day of Week">
         <div className="text-center">
           {records.length >= 5 ? (
@@ -580,155 +659,39 @@ export const StatsView: React.FC<StatsViewProps> = ({ records, stats, includeWee
           </div>
       </Card>
 
-      <Card title="Calendar Heatmap">
-        <div className="text-center">
-          {records.length >= 7 ? (
-            <>
-              <p className="text-sm text-gray-400 mb-4">
-                {calendarMetric === 'median' ? 'Median' : 'Average'} commute time for each day
-              </p>
-              <CalendarHeatmap records={records} metric={calendarMetric} />
-              <div className="flex items-center justify-center mt-4 space-x-2">
-                <label htmlFor="calendarMetric" className="text-sm text-gray-400">Show:</label>
-                <select
-                  id="calendarMetric"
-                  value={calendarMetric}
-                  onChange={(e) => setCalendarMetric(e.target.value as 'mean' | 'median')}
-                  className="bg-gray-700 border border-gray-600 rounded-md p-1 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
-                >
-                  <option value="median">Median</option>
-                  <option value="mean">Average</option>
-                </select>
+      {showCalendarHeatmap && (
+        <Card title="Calendar Heatmap">
+          <div className="text-center">
+            {records.length >= 7 ? (
+              <>
+                <p className="text-sm text-gray-400 mb-4">
+                  {calendarMetric === 'median' ? 'Median' : 'Average'} commute time for each day
+                </p>
+                <CalendarHeatmap records={records} metric={calendarMetric} />
+                <div className="flex items-center justify-center mt-4 space-x-2">
+                  <label htmlFor="calendarMetric" className="text-sm text-gray-400">Show:</label>
+                  <select
+                    id="calendarMetric"
+                    value={calendarMetric}
+                    onChange={(e) => setCalendarMetric(e.target.value as 'mean' | 'median')}
+                    className="bg-gray-700 border border-gray-600 rounded-md p-1 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  >
+                    <option value="median">Median</option>
+                    <option value="mean">Average</option>
+                  </select>
+                </div>
+              </>
+            ) : (
+              <div className="py-8">
+                <p className="text-gray-400 text-lg">Needs 7 or more records for calendar heatmap</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Currently {records.length} of 7 required
+                </p>
               </div>
-            </>
-          ) : (
-            <div className="py-8">
-              <p className="text-gray-400 text-lg">Needs 7 or more records for calendar heatmap</p>
-              <p className="text-xs text-gray-500 mt-2">
-                Currently {records.length} of 7 required
-              </p>
-            </div>
-          )}
-        </div>
-      </Card>      
-      
-      <Card title="90% Conf. Intervall (Interpolated)">
-        <div className="text-center">
-          {(morningConfidenceInterval || eveningConfidenceInterval) ? (
-            <>
-              <p className="text-sm text-gray-400 mb-4">
-                90% of commutes fall within this range. Uses interpolated values, might not exist as data points (but is statistically more accurate).
-              </p>
-              <div className="space-y-4">
-                {morningConfidenceInterval ? (
-                  <div className="flex justify-center items-center space-x-4">
-                    <div className="w-24 text-left">
-                      <p className="font-semibold text-gray-300">Morning</p>
-                      <p className="text-xs text-gray-500">00:00-11:59</p>
-                    </div>
-                    <div className="bg-gray-800 p-4 rounded-lg w-40">
-                      <p className="text-sm text-gray-400">Low</p>
-                      <p className="text-2xl font-bold text-green-400">{formatDuration(morningConfidenceInterval.low)}</p>
-                    </div>
-                    <div className="text-gray-500 text-xl">-</div>
-                    <div className="bg-gray-800 p-4 rounded-lg w-40">
-                      <p className="text-sm text-gray-400">High</p>
-                      <p className="text-2xl font-bold text-red-400">{formatDuration(morningConfidenceInterval.high)}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">Not enough morning data for 90% CI ({morningDurations.length}/5 records)</p>
-                )}
-                {eveningConfidenceInterval ? (
-                  <div className="flex justify-center items-center space-x-4">
-                    <div className="w-24 text-left">
-                      <p className="font-semibold text-gray-300">Evening</p>
-                      <p className="text-xs text-gray-500">12:00-23:59</p>
-                    </div>
-                    <div className="bg-gray-800 p-4 rounded-lg w-40">
-                      <p className="text-sm text-gray-400">Low</p>
-                      <p className="text-2xl font-bold text-green-400">{formatDuration(eveningConfidenceInterval.low)}</p>
-                    </div>
-                    <div className="text-gray-500 text-xl">-</div>
-                    <div className="bg-gray-800 p-4 rounded-lg w-40">
-                      <p className="text-sm text-gray-400">High</p>
-                      <p className="text-2xl font-bold text-red-400">{formatDuration(eveningConfidenceInterval.high)}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">Not enough evening data for 90% CI ({eveningDurations.length}/5 records)</p>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="py-8">
-              <p className="text-gray-400 text-lg">Needs 5 or more records to show 90% CI</p>
-              <p className="text-xs text-gray-500 mt-2">
-                Currently {records.length} of 5 required
-              </p>
-            </div>
-          )}
-        </div>
-      </Card>
-
-      <Card title="90% Conf. Intervall (Nearest Rank)">
-        <div className="text-center">
-          {(morningConfidenceIntervalRank || eveningConfidenceIntervalRank) ? (
-            <>
-              <p className="text-sm text-gray-400 mb-4">
-                90% of commutes fall within this time range, the closest actual recorded times are shown (less statistically accurate).
-              </p>
-              <div className="space-y-4">
-                {morningConfidenceIntervalRank ? (
-                  <div className="flex justify-center items-center space-x-4">
-                    <div className="w-24 text-left">
-                      <p className="font-semibold text-gray-300">Morning</p>
-                      <p className="text-xs text-gray-500">00:00-11:59</p>
-                    </div>
-                    <div className="bg-gray-800 p-4 rounded-lg w-40">
-                      <p className="text-sm text-gray-400">Low</p>
-                      <p className="text-2xl font-bold text-green-400">{formatDuration(morningConfidenceIntervalRank.low)}</p>
-                    </div>
-                    <div className="text-gray-500 text-xl">-</div>
-                    <div className="bg-gray-800 p-4 rounded-lg w-40">
-                      <p className="text-sm text-gray-400">High</p>
-                      <p className="text-2xl font-bold text-red-400">{formatDuration(morningConfidenceIntervalRank.high)}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">Not enough morning data for 90% CI ({morningDurations.length}/5 records)</p>
-                )}
-                {eveningConfidenceIntervalRank ? (
-                  <div className="flex justify-center items-center space-x-4">
-                    <div className="w-24 text-left">
-                      <p className="font-semibold text-gray-300">Evening</p>
-                      <p className="text-xs text-gray-500">12:00-23:59</p>
-                    </div>
-                    <div className="bg-gray-800 p-4 rounded-lg w-40">
-                      <p className="text-sm text-gray-400">Low</p>
-                      <p className="text-2xl font-bold text-green-400">{formatDuration(eveningConfidenceIntervalRank.low)}</p>
-                    </div>
-                    <div className="text-gray-500 text-xl">-</div>
-                    <div className="bg-gray-800 p-4 rounded-lg w-40">
-                      <p className="text-sm text-gray-400">High</p>
-                      <p className="text-2xl font-bold text-red-400">{formatDuration(eveningConfidenceIntervalRank.high)}</p>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500">Not enough evening data for 90% CI ({eveningDurations.length}/5 records)</p>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="py-8">
-              <p className="text-gray-400 text-lg">Needs 5 or more records to show 90% CI</p>
-              <p className="text-xs text-gray-500 mt-2">
-                Currently {records.length} of 5 required
-              </p>
-            </div>
-          )}
-        </div>
-      </Card>
+            )}
+          </div>
+        </Card>
+      )}
 
       {showAdvancedStatistics && (
         <Card title="Normality Test (Shapiro-Wilk)">
