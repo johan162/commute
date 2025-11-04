@@ -1,6 +1,10 @@
 node_modules/
 dist/
 docs/*.pdf
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/*.toc
 .env
 .DS_Store
 .idea/
