@@ -105,6 +105,7 @@ commute/
 │   ├── types.ts              # TypeScript type definitions
 │   └── vite-env.d.ts         # Vite type definitions
 ├── index.html                # HTML entry point
+├── Makefile                  # Makefile to perform all chores necessary to build,test and deploy
 ├── package.json              # Dependencies and scripts
 ├── package-lock.json         # Locked versions to be used
 ├── tsconfig.json             # TypeScript configuration
@@ -1249,6 +1250,702 @@ git commit -m "feat: Add new feature"
 
 # (Optional) 4. Create GitHub release
 ./scripts/mkghrelease.sh
+```
+
+---
+
+## Makefile
+
+The project uses a comprehensive Makefile to automate common development tasks. The Makefile implements proper dependency tracking using timestamp files, ensuring that each step (install, typecheck, test, build) only runs when necessary.
+
+### Overview
+
+**Key Features:**
+- Dependency tracking with timestamp files
+- Color-coded output for better readability
+- Parallel execution where safe
+- Proper build order enforcement
+- Comprehensive help system
+
+**Architecture:**
+```
+install → typecheck → test → build
+  ↓         ↓          ↓       ↓
+.stamp    .stamp     .stamp  .stamp
+```
+
+Each stage creates a timestamp file (`.install-stamp`, `.typecheck-stamp`, etc.) that tracks when it last ran successfully. Subsequent stages only re-run if their dependencies have changed.
+
+### Quick Reference
+
+Get a list of all available targets:
+
+```bash
+make help
+```
+
+**Output:**
+```
+Commute Tracker - Makefile targets
+
+  all                Install, typecheck, test, and build
+  build              Build project (runs tests, typecheck, and build)
+  build-only         Build without running tests or typecheck
+  clean              Remove build artifacts and timestamps
+  clean-all          Remove all generated files including node_modules
+  deploy             Build and deploy to gh-pages branch
+  deploy-push        Build, deploy, and push to gh-pages branch
+  dev                Start development server
+  format             Format code (if configured)
+  help               Show this help message
+  install            Install npm dependencies
+  lint               Run linter (if configured)
+  preview            Preview production build locally
+  rebuild            Clean and rebuild everything
+  release            Create a release (usage: make release VERSION=1.0.0 TYPE=minor)
+  status             Show status of build artifacts
+  test               Run tests once and exit
+  test-coverage      Run tests with coverage report
+  test-ui            Run tests with UI
+  test-watch         Run tests in watch mode
+  typecheck          Run TypeScript type checking
+  watch              Watch for changes and run tests + typecheck
+```
+
+### Common Targets
+
+#### `make install`
+
+Installs npm dependencies and creates `.install-stamp`.
+
+```bash
+make install
+```
+
+**What it does:**
+- Runs `npm install`
+- Creates `node_modules/.install-stamp` timestamp
+- Only re-installs if `package.json` or `package-lock.json` changed
+
+**When to use:**
+- After cloning the repository
+- After pulling changes that modify dependencies
+- After manually editing `package.json`
+
+---
+
+#### `make dev`
+
+Starts the Vite development server.
+
+```bash
+make dev
+```
+
+**What it does:**
+- Ensures dependencies are installed
+- Runs `npm run dev`
+- Starts server at `http://localhost:5173`
+- Enables hot module replacement (HMR)
+
+**Usage:**
+- Primary command for daily development
+- Leave running in a terminal while coding
+- Changes automatically reflected in browser
+
+**Exit:** Press `Ctrl+C` to stop
+
+---
+
+#### `make build`
+
+Complete production build with all quality checks.
+
+```bash
+make build
+```
+
+**What it does:**
+1. Ensures dependencies installed
+2. Runs TypeScript type checking
+3. Runs full test suite
+4. Executes `scripts/mkbld.sh` for production build
+5. Creates `.build-stamp` timestamp
+
+**Output:**
+- Production-ready files in `dist/`
+- Minified JavaScript and CSS
+- Generated service worker
+- Optimized assets
+
+**When to use:**
+- Before deploying to production
+- Before creating a release
+- To verify no build errors
+
+**Build time:** ~30-60 seconds (includes tests + typecheck)
+
+---
+
+#### `make build-only`
+
+Fast build without tests or type checking.
+
+```bash
+make build-only
+```
+
+**What it does:**
+- Skips type checking
+- Skips test execution
+- Runs `npm run build` directly
+
+**When to use:**
+- Quick iteration on build configuration
+- Testing build output without running full pipeline
+- **Not recommended for production builds** (use `make build` instead)
+
+---
+
+#### `make test`
+
+Run the full test suite once and exit.
+
+```bash
+make test
+```
+
+**What it does:**
+1. Ensures dependencies installed
+2. Runs `npm run test` (Vitest)
+3. Executes all test files (`*.test.ts`, `*.test.tsx`)
+4. Creates `.test-stamp` on success
+
+**Output:**
+```
+✓ src/services/statsService.test.ts (41 tests)
+✓ src/services/locationService.test.ts (9 tests)
+✓ src/hooks/useLocalStorage.test.ts (13 tests)
+
+Test Files  3 passed (3)
+     Tests  63 passed (63)
+```
+
+**Exit codes:**
+- `0` = All tests passed
+- `1` = One or more tests failed
+
+**When to use:**
+- Before committing code
+- In CI/CD pipelines
+- To verify changes haven't broken existing functionality
+
+---
+
+#### `make test-watch`
+
+Run tests in watch mode (auto-rerun on file changes).
+
+```bash
+make test-watch
+```
+
+**What it does:**
+- Runs `npm run test:watch`
+- Watches for file changes
+- Automatically re-runs affected tests
+- Provides interactive CLI menu
+
+**Interactive options:**
+- Press `a` to re-run all tests
+- Press `f` to re-run only failed tests
+- Press `q` to quit
+
+**When to use:**
+- During active development
+- When writing new tests
+- For test-driven development (TDD)
+
+**Exit:** Press `q` or `Ctrl+C`
+
+---
+
+#### `make test-coverage`
+
+Run tests with coverage report.
+
+```bash
+make test-coverage
+```
+
+**What it does:**
+- Runs full test suite
+- Generates coverage report (v8 provider)
+- Outputs text summary to terminal
+- Creates HTML report in `coverage/`
+
+**Output:**
+```
+---------------------|---------|----------|---------|---------|
+File                 | % Stmts | % Branch | % Funcs | % Lines |
+---------------------|---------|----------|---------|---------|
+All files            |   93.72 |    84.05 |     100 |   93.72 |
+ hooks               |   91.66 |       75 |     100 |   91.66 |
+ services            |   93.81 |    84.51 |     100 |   93.81 |
+---------------------|---------|----------|---------|---------|
+```
+
+**Coverage thresholds (enforced):**
+- Statements: ≥75%
+- Branches: ≥75%
+- Functions: ≥75%
+- Lines: ≥75%
+
+**View HTML report:**
+```bash
+open coverage/index.html
+```
+
+**When to use:**
+- Before releases (required by `mkrelease.sh`)
+- When adding new features
+- To identify untested code paths
+
+---
+
+#### `make test-ui`
+
+Opens interactive test UI in browser.
+
+```bash
+make test-ui
+```
+
+**What it does:**
+- Starts Vitest UI server
+- Opens browser at `http://localhost:51204/__vitest__/`
+- Provides graphical test explorer
+
+**Features:**
+- Visual test hierarchy
+- Real-time test results
+- Code coverage visualization
+- Test filtering and search
+- Console output per test
+
+**When to use:**
+- Debugging failing tests
+- Exploring test structure
+- Visualizing coverage gaps
+
+**Exit:** Press `Ctrl+C` in terminal
+
+---
+
+#### `make typecheck`
+
+Run TypeScript type checking without building.
+
+```bash
+make typecheck
+```
+
+**What it does:**
+- Runs `npx tsc --noEmit --strict`
+- Validates type correctness
+- Creates `.typecheck-stamp` on success
+- Does **not** generate output files
+
+**Example errors:**
+```
+src/App.tsx:45:12 - error TS2322: Type 'string' is not assignable to type 'number'.
+```
+
+**When to use:**
+- Before committing
+- To catch type errors early
+- Faster than full build (no bundling)
+
+---
+
+#### `make clean`
+
+Remove build artifacts and timestamp files.
+
+```bash
+make clean
+```
+
+**What it does:**
+- Deletes `dist/` directory
+- Removes all `.stamp` files
+- Forces next `make build` to run from scratch
+- Preserves `node_modules/` (use `make clean-all` to remove)
+
+**When to use:**
+- After git branch switches
+- To force clean rebuild
+- When build artifacts seem stale
+
+---
+
+#### `make clean-all`
+
+Deep clean including `node_modules`.
+
+```bash
+make clean-all
+```
+
+**What it does:**
+- Everything from `make clean`
+- Deletes `node_modules/`
+- Removes `node_modules/.install-stamp`
+- Requires `make install` before next build
+
+**When to use:**
+- After major dependency updates
+- Resolving dependency conflicts
+- Troubleshooting weird npm issues
+- **Warning:** Requires ~2-3 minutes to reinstall dependencies
+
+---
+
+#### `make deploy`
+
+Build and deploy to local `gh-pages` branch.
+
+```bash
+make deploy
+```
+
+**What it does:**
+1. Runs complete build (tests + typecheck)
+2. Executes `scripts/mkbld.sh --deploy`
+3. Switches to `gh-pages` branch
+4. Copies `dist/*` to branch root
+5. Commits changes
+6. Returns to original branch
+
+**Note:** Does **not** push to GitHub (use `make deploy-push` for that)
+
+**When to use:**
+- Testing deployment locally
+- Previewing before pushing live
+
+---
+
+#### `make deploy-push`
+
+Build, deploy, and push to GitHub Pages.
+
+```bash
+make deploy-push
+```
+
+**What it does:**
+- Everything from `make deploy`
+- Pushes `gh-pages` branch to `origin`
+- Makes site live at `https://johan162.github.io/commute`
+
+**When to use:**
+- Publishing production updates
+- After merging features to `main`
+
+**Requires:**
+- Clean working directory
+- Push access to repository
+
+---
+
+#### `make release`
+
+Create a versioned release (tags, version bumps, changelog). Under the hood this will call `mkrelease.sh` script together with additional preparations to make sure everything is built and tested.
+
+```bash
+make release VERSION=1.0.0 TYPE=minor
+```
+
+**Parameters:**
+- `VERSION` (required): Semantic version (e.g., `1.0.0`)
+- `TYPE` (optional): `major`, `minor`, or `patch` (default: `minor`)
+
+**What it does:**
+1. Validates prerequisites (clean repo, on `develop` branch)
+2. Runs tests and checks coverage ≥75%
+3. Updates version in `package.json`, `metadata.json`, `App.tsx`, `README.md`
+4. Updates `CHANGELOG.md` with template entry
+5. Commits version bump
+6. Squash merges `develop` → `main`
+7. Creates git tag `v{VERSION}`
+8. Merges `main` → `develop` (avoids future conflicts)
+9. Pushes tags and branches
+
+**Examples:**
+```bash
+# Minor version (0.1.0 → 0.2.0)
+make release VERSION=0.2.0 TYPE=minor
+
+# Major version (0.2.0 → 1.0.0)
+make release VERSION=1.0.0 TYPE=major
+
+# Patch version (1.0.0 → 1.0.1)
+make release VERSION=1.0.1 TYPE=patch
+```
+
+**When to use:**
+- Ready to publish new version
+- After completing feature set
+- Before creating GitHub release
+
+**Prerequisites:**
+- Must be on `develop` branch
+- Working directory must be clean
+- All tests must pass
+- Coverage must be ≥75%
+
+---
+
+#### `make all`
+
+Complete build pipeline from scratch.
+
+```bash
+make all
+```
+
+**What it does:**
+1. `make install` - Install dependencies
+2. `make typecheck` - Type checking
+3. `make test` - Run tests
+4. `make build` - Production build
+
+**Equivalent to:**
+```bash
+make install && make typecheck && make test && make build
+```
+
+**When to use:**
+- Fresh clone setup
+- CI/CD pipelines
+- Comprehensive verification
+
+**Build time:** ~2-3 minutes (includes npm install)
+
+---
+
+#### `make status`
+
+Show current build status.
+
+```bash
+make status
+```
+
+**Output:**
+```
+Build Status:
+  Dependencies:  ✓
+  Type check:    ✓
+  Tests:         ✓
+  Build:         ✗
+```
+
+**Indicators:**
+- ✓ (green) = Stage completed successfully
+- ✗ (yellow) = Stage needs to run
+
+**When to use:**
+- Quick sanity check
+- Before committing
+- Debugging Makefile issues
+
+---
+
+#### `make rebuild`
+
+Clean and rebuild everything from scratch.
+
+```bash
+make rebuild
+```
+
+**What it does:**
+```bash
+make clean && make all
+```
+
+**When to use:**
+- Stale build artifacts
+- Unexplained errors
+- After major refactoring
+
+---
+
+#### `make lint` / `make format`
+
+Code quality tools (if configured).
+
+```bash
+make lint    # Run ESLint (if configured)
+make format  # Run Prettier (if configured)
+```
+
+**Note:** Currently shows warning if scripts not configured in `package.json`.
+
+---
+
+### Advanced Usage
+
+#### Parallel Execution
+
+The Makefile supports parallel builds for independent targets:
+
+```bash
+# Run tests and typecheck in parallel
+make -j2 test typecheck
+```
+
+**Warning:** Do **not** parallelize targets with dependencies:
+```bash
+# BAD: Can cause race conditions
+make -j2 build dev
+
+# GOOD: Dependencies handled automatically
+make build
+```
+
+#### Dependency Chain
+
+Understanding the build pipeline:
+
+```
+package.json (changes)
+    ↓
+make install
+    ↓
+node_modules/.install-stamp
+    ↓
+    ├──> make typecheck → .typecheck-stamp
+    └──> make test → .test-stamp
+              ↓
+         make build → .build-stamp
+              ↓
+         make deploy
+```
+
+#### Force Rebuild
+
+Skip timestamp checks and force rebuild:
+
+```bash
+# Force test re-run even if nothing changed
+rm .test-stamp && make test
+
+# Force complete rebuild
+make rebuild
+```
+
+#### Dry Run
+
+See what commands would run without executing:
+
+```bash
+make -n build
+```
+
+**Output:**
+```
+echo "Installing dependencies..."
+npm install
+touch node_modules/.install-stamp
+echo "Running TypeScript type check..."
+npx tsc --noEmit --strict
+...
+```
+
+### Timestamp Files
+
+The Makefile uses these timestamp files for dependency tracking:
+
+| File | Purpose | Regenerates When |
+|------|---------|-----------------|
+| `node_modules/.install-stamp` | Dependencies installed | `package.json` changes |
+| `.typecheck-stamp` | Type check passed | Source files change |
+| `.test-stamp` | Tests passed | Source or test files change |
+| `.build-stamp` | Build completed | Any source/config changes |
+
+**Location:** Project root (gitignored)
+
+**Manual cleanup:**
+```bash
+# Remove all stamps (force full rebuild next time)
+rm -f .*-stamp
+
+# Or use make clean
+make clean
+```
+
+### Troubleshooting
+
+**Issue:** `make: *** No rule to make target 'build'`
+- **Cause:** Makefile syntax error or missing target
+- **Solution:** Verify Makefile exists and has proper formatting
+
+**Issue:** `make build` skips tests even though code changed
+- **Cause:** Stale timestamp files
+- **Solution:** `make clean && make build`
+
+**Issue:** `make install` runs every time
+- **Cause:** Missing or corrupted `.install-stamp`
+- **Solution:** `make clean-all && make install`
+
+**Issue:** Build hangs indefinitely
+- **Cause:** Background process not terminating
+- **Solution:** Press `Ctrl+C`, check for orphan processes with `ps aux | grep node`
+
+**Issue:** Permission denied on scripts
+- **Cause:** Scripts not executable
+- **Solution:** `chmod +x scripts/*.sh`
+
+### Integration with Scripts
+
+The Makefile delegates to shell scripts for complex operations:
+
+| Make Target | Delegates To | Purpose |
+|-------------|--------------|---------|
+| `make build` | `scripts/mkbld.sh` | Production build with verification |
+| `make deploy` | `scripts/mkbld.sh --deploy` | Deploy to gh-pages |
+| `make release` | `scripts/mkrelease.sh` | Version management |
+
+See [Release Process](#release-process) section for script details.
+
+### Best Practices
+
+**Daily Development:**
+```bash
+make dev          # Start dev server
+make test-watch   # Run tests in another terminal
+```
+
+**Before Committing:**
+```bash
+make status       # Check what's stale
+make typecheck    # Quick type check
+make test         # Run full test suite
+```
+
+**Before Releasing:**
+```bash
+make clean        # Clean slate
+make all          # Complete pipeline
+make test-coverage # Verify ≥75% coverage
+```
+
+**CI/CD Pipeline:**
+```bash
+make clean-all    # Fresh environment
+make all          # Full build
 ```
 
 ---
