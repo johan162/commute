@@ -17,4 +17,4 @@ export interface CommuteRecord {
   duration: number; // in seconds
 }
 
-export type View = 'main' | 'stats' | 'history' | 'settings';
+export type View = 'main' | 'stats' | 'history' | 'challenge' | 'settings';

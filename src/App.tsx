@@ -3,6 +3,7 @@ import { Header } from './components/Header';
 import { MainView } from './components/MainView';
 import { StatsView } from './components/StatsView';
 import { HistoryView } from './components/HistoryView';
+import { ChallengeView } from './components/ChallengeView';
 import { SettingsView } from './components/SettingsView';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import * as statsService from './services/statsService';
@@ -113,6 +114,8 @@ const App: React.FC = () => {
         return <StatsView records={commuteRecords} stats={stats} includeWeekends={includeWeekends} showAdvancedStatistics={showAdvancedStatistics} showCalendarHeatmap={showCalendarHeatmap} />;
       case 'history':
         return <HistoryView records={commuteRecords} median={stats?.median} onDeleteRecords={deleteCommuteRecords} />;
+      case 'challenge':
+        return <ChallengeView records={commuteRecords} />;
       case 'settings':
         return <SettingsView 
           onAddLocation={addWorkLocation}

@@ -883,16 +883,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
                     <span className="text-gray-400">PWA (vite-plugin-pwa)</span>
                     <span className="text-cyan-400 font-mono">1.1.0</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Human Central Nervous System (CNS)</span>
+                    <span className="text-cyan-400 font-mono">1.0.0</span>
+                  </div>
                 </div>
               </div>
 
+              {/* Features List 
               <div>
                 <h4 className="text-sm font-semibold text-gray-300 mb-2">Features</h4>
                 <div className="bg-gray-800 p-3 rounded-lg">
                   <ul className="text-sm text-gray-400 space-y-1">
                     <li>• Real-time GPS-based commute tracking</li>
                     <li>• Automatic arrival detection</li>
-                    <li>• Statistical analysis (Shapiro-Wilk, Mann-Kendall, Runs Test)</li>
+                    <li>• Statistical analysis both basic and advanced</li>
                     <li>• Interactive charts and histograms</li>
                     <li>• CSV and PDF export capabilities</li>
                     <li>• Offline support via PWA</li>
@@ -900,6 +905,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
                   </ul>
                 </div>
               </div>
+              */}
 
               <div>
                 <h4 className="text-sm font-semibold text-gray-300 mb-2">License</h4>
@@ -945,7 +951,8 @@ SOFTWARE.
                   © 2025 Johan Persson
                 </p>
                 <p className="text-xs text-gray-500 mt-1">
-                  All rights reserved
+                  All rights reserved <br />
+                  (github: <a href="https://github.com/johan162/commute/">https://github.com/johan162/commute/</a>)
                 </p>
               </div>
             </div>
