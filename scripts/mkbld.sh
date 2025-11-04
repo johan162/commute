@@ -111,12 +111,12 @@ fi
 if ! git diff-index --quiet HEAD -- || [[ -n $(git status --porcelain) ]]; then
     log_warn "You have uncommitted changes or untracked files in your working directory."
     git status --short
-    read -p "Continue anyway? (y/n) " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        log_error "Aborted by user"
-        exit 1
-    fi
+    # read -p "Continue anyway? (y/n) " -n 1 -r
+    # echo
+    # if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    #     log_error "Aborted by user"
+    #     exit 1
+    # fi
 fi
 
 # Get current branch
