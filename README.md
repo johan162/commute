@@ -166,20 +166,20 @@ $ git clone https://github.com/johan162/commute.git
 
 ```bash
 $ cd commute
-$ npm install
+$ make install
 ```
 
-### Do a bare bones build to check everything
+### Do a bare bones build to check everything and print the test coverage
 
 ```bash
-$ npm run build
-$ npm run test:coverage
+$ make build
+$ make test-coverage
 ```
 
-### Serve the app locally
+### Serve the app with local HTTP server
 
 ```bash
-$ npm run dev
+$ make dev
 ```
 
 By default this will set up a local server listening on `http://localhost:5173/commute/`
