@@ -108,6 +108,36 @@ if ! git rev-parse --git-dir >/dev/null 2>&1; then
     exit 1
 fi
 
+# Check that npm & npx are installed
+if ! command -v npm >/dev/null 2>&1; then
+    log_error "npm is not installed. Please install Node.js and npm."
+    exit 1
+fi
+
+if ! command -v npx >/dev/null 2>&1; then
+    log_error "npx is not installed. Please install Node.js and npm."
+    exit 1
+fi
+
+# Check that make is installed
+if ! command -v make >/dev/null 2>&1; then
+    log_error "make is not installed. Please install make."
+    exit 1
+fi
+
+# Warn if we are not on develop branch
+ORIGINAL_BRANCH=$(git branch --show-current)
+log_info "Current branch: $ORIGINAL_BRANCH"
+if [ "$ORIGINAL_BRANCH" != "develop" ]; then
+    log_warn "You are on branch '$ORIGINAL_BRANCH'. It is recommended to run this script from the 'develop' branch."
+    read -p "Continue anyway? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        log_error "Aborted by user"
+        exit 1
+    fi      
+fi
+
 if ! git diff-index --quiet HEAD -- || [[ -n $(git status --porcelain) ]]; then
     log_warn "You have uncommitted changes or untracked files in your working directory."
     git status --short
@@ -118,10 +148,6 @@ if ! git diff-index --quiet HEAD -- || [[ -n $(git status --porcelain) ]]; then
     #     exit 1
     # fi
 fi
-
-# Get current branch
-ORIGINAL_BRANCH=$(git branch --show-current)
-log_info "Current branch: $ORIGINAL_BRANCH"
 
 # Check if gh-pages branch exists
 if ! git show-ref --verify --quiet refs/heads/gh-pages; then

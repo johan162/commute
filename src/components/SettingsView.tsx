@@ -27,9 +27,13 @@ interface SettingsViewProps {
   showCalendarHeatmap: boolean;
   onShowCalendarHeatmapChange: (enabled: boolean) => void;
   onImportCSV: (records: CommuteRecord[]) => void;
+  debouncingEnabled: boolean;
+  onDebouncingEnabledChange: (enabled: boolean) => void;
+  debouncingLimit: number;
+  onDebouncingLimitChange: (limit: number) => void;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onClearWorkLocations, workLocationCount, averageWorkLocation, workLocations, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange, onLoadDebugData, useNixieDisplay, onUseNixieDisplayChange, showAdvancedStatistics, onShowAdvancedStatisticsChange, showCalendarHeatmap, onShowCalendarHeatmapChange, onImportCSV }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onClearWorkLocations, workLocationCount, averageWorkLocation, workLocations, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange, onLoadDebugData, useNixieDisplay, onUseNixieDisplayChange, showAdvancedStatistics, onShowAdvancedStatisticsChange, showCalendarHeatmap, onShowCalendarHeatmapChange, onImportCSV, debouncingEnabled, onDebouncingEnabledChange, debouncingLimit, onDebouncingLimitChange }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [showAboutDetails, setShowAboutDetails] = useState(false);
@@ -785,7 +789,67 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
       </Card>
       
       <Card title="Data Management">
-        <div className="space-y-4">
+        <div className="space-y-6">
+          {/* De-bouncing Section */}
+          <div className="pb-4 border-b border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex-1 mr-4">
+                <span className="text-gray-300 font-semibold">De-Bouncing</span>
+                <p className="text-xs text-gray-500 mt-1">
+                  Filter out very short commutes below a minimum duration threshold.
+                </p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={debouncingEnabled}
+                  onChange={(e) => onDebouncingEnabledChange(e.target.checked)}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-cyan-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+              </label>
+            </div>
+            
+            {/* De-bouncing Limit Slider */}
+            <div className={`transition-opacity duration-200 ${debouncingEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm text-gray-400">Minimum Duration</label>
+                <span className="text-cyan-400 font-semibold">
+                  {debouncingLimit === 60 && '1 min'}
+                  {debouncingLimit === 120 && '2 min'}
+                  {debouncingLimit === 300 && '5 min'}
+                  {debouncingLimit === 900 && '15 min'}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="3"
+                step="1"
+                value={
+                  debouncingLimit === 60 ? 0 :
+                  debouncingLimit === 120 ? 1 :
+                  debouncingLimit === 300 ? 2 : 3
+                }
+                onChange={(e) => {
+                  const index = parseInt(e.target.value);
+                  const limits = [60, 120, 300, 900]; // 1min, 2min, 5min, 15min
+                  onDebouncingLimitChange(limits[index]);
+                }}
+                disabled={!debouncingEnabled}
+                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-thumb"
+              />
+              <div className="flex justify-between text-xs text-gray-500 mt-1">
+                <span>1m</span>
+                <span>2m</span>
+                <span>5m</span>
+                <span>15m</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Import Data Section */}
+          <div className="pb-4 border-b border-gray-700">
           <div className="flex-1 mr-4">
           <span className="text-gray-300 font-semibold">Import Data</span>
           <p className="text-xs text-gray-500 mt-1">
@@ -813,7 +877,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
           )}
         </div>
 
-        <div className="mt-4 pt-4 border-t border-gray-700">
+        <div className="pt-4">
           <div className="space-y-4">
             <div className="flex-1 mr-4">
             <span className="text-gray-300 font-semibold">Clear All Data</span>
@@ -826,6 +890,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
                   Clear All Data
               </Button>
           </div>
+        </div>
         </div>
       </Card>
 

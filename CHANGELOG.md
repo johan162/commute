@@ -1,3 +1,18 @@
+## [1.3.0] - 2025-11-05
+
+Release type: minor
+
+### 📋 Summary 
+- Added de-bouncer logic to timer button
+
+### 🚀 Improvements
+- [feat] Added De-Bouncer with configurable cut-off time to prevent stupendiously short commute time to pollute the data
+
+### 🛠 Internal
+- [upd] Add check that npm, npx, and make exists as CLI tools in `mkbld.sh` script.
+- [bug] Fix automated retrieval of changelog entry for latest tag in `mkghrelease.sh`
+
+
 ## [1.2.0] - 2025-11-05
 
 Release type: minor

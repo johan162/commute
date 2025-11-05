@@ -487,15 +487,15 @@ fi
 
 # Extract the section for this version from CHANGELOG.md
 # Looks for ## [$VERSION] and captures until next ## or EOF
-sed -n "/^## \[$LATEST_TAG\]/,/^## \[/p" "$CHANGELOG_FILE" | sed '$d' > "$RELEASE_NOTES_FILE"
+sed -n "/^## \[$VERSION_NUMBER\]/,/^## \[/p" "$CHANGELOG_FILE" | sed '$d' > "$RELEASE_NOTES_FILE"
 
 EXTRACT_STATUS=$?
 
 if [[ $EXTRACT_STATUS -ne 0 ]] || [[ ! -s "$RELEASE_NOTES_FILE" ]]; then
-    print_warning "Could not extract release notes for $LATEST_TAG from CHANGELOG.md"
+    print_warning "Could not extract release notes for $VERSION_NUMBER from CHANGELOG.md"
     echo "Creating default release notes template..."
     cat > "$RELEASE_NOTES_FILE" << EOF
-## Release $LATEST_TAG
+## Release v$VERSION_NUMBER
 
 ### 📋 Summary
 [Add release summary here]

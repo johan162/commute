@@ -20,7 +20,9 @@ const App: React.FC = () => {
   const [useNixieDisplay, setUseNixieDisplay] = useLocalStorage<boolean>('useNixieDisplay', false);
   const [showAdvancedStatistics, setShowAdvancedStatistics] = useLocalStorage<boolean>('showAdvancedStatistics', false);
   const [showCalendarHeatmap, setShowCalendarHeatmap] = useLocalStorage<boolean>('showCalendarHeatmap', false);
-  const version = '1.2.0';
+  const [debouncingEnabled, setDebouncingEnabled] = useLocalStorage<boolean>('debouncingEnabled', false);
+  const [debouncingLimit, setDebouncingLimit] = useLocalStorage<number>('debouncingLimit', 60); // in seconds: 1min default
+  const version = '1.3.0';
 
   const averageWorkLocation = useMemo<Coordinates | null>(() => {
     if (workLocations.length === 0) return null;
@@ -66,13 +68,20 @@ const App: React.FC = () => {
     };
   }, [commuteRecords]);
 
-  const addCommuteRecord = (duration: number) => {
+  const addCommuteRecord = (duration: number): boolean => {
+    // Check if de-bouncing is enabled and duration is below limit
+    if (debouncingEnabled && duration < debouncingLimit) {
+      console.log(`Commute record rejected by de-bouncing: ${duration}s < ${debouncingLimit}s`);
+      return false; // Record was not saved
+    }
+    
     const newRecord: CommuteRecord = {
       id: Date.now(),
       date: new Date().toISOString(),
       duration,
     };
     setCommuteRecords(prev => [...prev, newRecord].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+    return true; // Record was saved
   };
 
   const addWorkLocation = (location: Coordinates) => {
@@ -140,6 +149,10 @@ const App: React.FC = () => {
           onShowAdvancedStatisticsChange={setShowAdvancedStatistics}
           showCalendarHeatmap={showCalendarHeatmap}
           onShowCalendarHeatmapChange={setShowCalendarHeatmap}
+          debouncingEnabled={debouncingEnabled}
+          onDebouncingEnabledChange={setDebouncingEnabled}
+          debouncingLimit={debouncingLimit}
+          onDebouncingLimitChange={setDebouncingLimit}
         />;
       case 'main':
       default:
@@ -150,6 +163,8 @@ const App: React.FC = () => {
           autoRecordWorkLocation={autoRecordWorkLocation}
           onAddWorkLocation={addWorkLocation}
           useNixieDisplay={useNixieDisplay}
+          debouncingEnabled={debouncingEnabled}
+          debouncingLimit={debouncingLimit}
         />;
     }
   };

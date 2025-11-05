@@ -5,7 +5,7 @@ import { getDistance } from '../services/locationService';
 
 interface UseCommuteTimerProps {
   workLocation: Coordinates | null;
-  onStop: (duration: number) => void;
+  onStop: (duration: number) => boolean;
   autoStopRadius?: number; // in meters
   autoRecordWorkLocation?: boolean;
   onAddWorkLocation?: (location: Coordinates) => void;
@@ -74,6 +74,18 @@ export const useCommuteTimer = ({ workLocation, onStop, autoStopRadius = 50, aut
     // Clear the stored start time
     localStorage.removeItem('commuteStartTime');
     
+    // Call onStop and check if the record was saved
+    const recordSaved = onStop(finalDuration);
+    
+    // If record was not saved due to de-bouncing, show appropriate message
+    if (!recordSaved) {
+      setStatusMessage('Commute NOT recorded. De-bouncing enabled.');
+      setTimeout(() => setStatusMessage('Press "Leaving" to start your commute.'), 5000);
+      setElapsedTime(0);
+      setDistance(null);
+      return;
+    }
+    
     // Auto-record work location if enabled
     if (autoRecordWorkLocation && onAddWorkLocation) {
       navigator.geolocation.getCurrentPosition(
@@ -96,8 +108,6 @@ export const useCommuteTimer = ({ workLocation, onStop, autoStopRadius = 50, aut
       setStatusMessage(message || `Commute recorded! Duration: ${Math.round(finalDuration)}s`);
       setTimeout(() => setStatusMessage('Press "Leaving" to start your commute.'), 5000);
     }
-    
-    onStop(finalDuration);
     
     setElapsedTime(0);
     setDistance(null);
