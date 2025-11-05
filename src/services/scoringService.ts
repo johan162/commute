@@ -8,10 +8,12 @@
  * 
  * The scoring system evaluates the quality of a confidence interval prediction using five components:
  * 
- * 1. INTERVAL WIDTH (Base Score)
- *    - Direct penalty for the width of the interval (high - low)
- *    - Encourages narrower, more precise predictions
- *    - This is the starting point of the score
+ * 1. PRECISION PENALTY (Base Score)
+ *    - Measures how close estimated bounds are to the actual sample 90% CI
+ *    - Calculate sample 5th percentile (p5) and 95th percentile (p95)
+ *    - Penalty = (estimated_low - p5)² + (estimated_high - p95)²
+ *    - This measures estimation skill, not inherent commute variability
+ *    - Fair: people with variable commutes aren't penalized for having wide intervals
  * 
  * 2. MISS PENALTY
  *    - For each data point outside the interval, calculate squared distance from nearest bound
@@ -68,8 +70,17 @@
  * 
  * Given:
  * - Interval bounds: [L, H] where L = low, H = high
- * - Data points: x₁, x₂, ..., xₙ
+ * - Data points: x₁, x₂, ..., xₙ (sorted)
  * - Confidence level: c ∈ [5, 10]
+ * 
+ * Sample percentiles:
+ * 
+ *   p₅ = x[⌊0.05·n⌋]  (5th percentile)
+ *   p₉₅ = x[⌊0.95·n⌋] (95th percentile)
+ * 
+ * Precision penalty (measures estimation accuracy):
+ * 
+ *   P_precision = (L - p₅)² + (H - p₉₅)²
  * 
  * Define miss for each point:
  * 
@@ -115,7 +126,7 @@
  * 
  * Final score:
  * 
- *   Score = (H - L) + P_miss + P_over + P_calib + P_balance
+ *   Score = P_precision + P_miss + P_over + P_calib + P_balance
  * 
  * @param low - Lower bound of interval (in seconds)
  * @param high - Upper bound of interval (in seconds)
@@ -131,6 +142,16 @@ export function computeScore(
 ): number {
   const intervalWidth = high - low;
   const N = records.length;
+
+  // Calculate sample percentiles for precision penalty
+  const sortedRecords = [...records].sort((a, b) => a - b);
+  const p5Index = Math.floor(N * 0.05);
+  const p95Index = Math.floor(N * 0.95);
+  const p5 = sortedRecords[p5Index];
+  const p95 = sortedRecords[p95Index];
+
+  // Precision penalty: how close are the estimates to the actual sample 90% CI?
+  const precisionPenalty = Math.pow(low - p5, 2) + Math.pow(high - p95, 2);
 
   // Collect squared misses and count coverage per tail
   const misses: number[] = [];
@@ -216,10 +237,10 @@ export function computeScore(
   // This ensures balanced intervals are always preferred
   const balancePenalty = Math.pow(tailImbalance / 10, 2) * intervalWidth * 1.0;
 
-  // Final score = interval width + miss penalty + overcoverage penalty + calibration penalty + balance penalty
-  const score = intervalWidth + missPenalty + overcoveragePenalty + calibrationPenalty + balancePenalty;
+  // Final score = precision penalty + miss penalty + overcoverage penalty + calibration penalty + balance penalty
+  const score = precisionPenalty + missPenalty + overcoveragePenalty + calibrationPenalty + balancePenalty;
 
-  console.log(`Score: ${score}, Coverage: ${actualCoverage.toFixed(1)}% (target: ${targetCoverage}%), Overcoverage: ${overcoveragePenalty.toFixed(0)}, Calibration: ${calibrationPenalty.toFixed(0)}`);
+  console.log(`Score: ${score.toFixed(0)}, Precision: ${precisionPenalty.toFixed(0)}, Coverage: ${actualCoverage.toFixed(1)}% (target: ${targetCoverage}%), p5=${p5.toFixed(0)}, p95=${p95.toFixed(0)}`);
   return Math.round(score);
 }
 

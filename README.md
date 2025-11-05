@@ -1,7 +1,7 @@
 # Commute Time Tracker PWA
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Version](https://img.shields.io/badge/version-1.1.0-brightgreen.svg)
+![Version](https://img.shields.io/badge/version-1.2.0-brightgreen.svg)
 ![React](https://img.shields.io/badge/react-18.2.0-blue.svg)
 ![Node.js](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
 ![PWA](https://img.shields.io/badge/PWA-Ready-green.svg)
@@ -166,20 +166,20 @@ $ git clone https://github.com/johan162/commute.git
 
 ```bash
 $ cd commute
-$ npm install
+$ make install
 ```
 
-### Do a bare bones build to check everything
+### Do a bare bones build to check everything and print the test coverage
 
 ```bash
-$ npm run build
-$ npm run test:coverage
+$ make build
+$ make test-coverage
 ```
 
-### Serve the app locally
+### Serve the app with local HTTP server
 
 ```bash
-$ npm run dev
+$ make dev
 ```
 
 By default this will set up a local server listening on `http://localhost:5173/commute/`

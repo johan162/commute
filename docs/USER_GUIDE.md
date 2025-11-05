@@ -44,6 +44,11 @@ Commute Tracker
 │   ├── Individual Record Details
 │   └── Delete Records
 │
+├── 🏆 Challenge View
+│   ├── 90% Confidence Interval Prediction
+│   ├── Score Tracking
+│   └── Morning Commute Focus
+│
 └── ⚙️ Settings View
     ├── AutoStop Feature
     ├── Work Location Management
@@ -525,6 +530,136 @@ A chronological list (newest first) of all your commutes:
 - Statistics automatically update
 
 **Data Integrity**: Deleting records immediately updates all statistics and charts.
+
+
+<div class="page-break"></div>
+
+---
+
+## 🏆 Challenge View - Test Your Prediction Skills
+
+The Challenge View is where you can put your statistical knowledge to the test! This gamified feature challenges you to predict your own 90% confidence interval for **morning commute times** (00:00-11:59) and scores how well your prediction matches reality.
+
+### What is a 90% Confidence Interval?
+
+A confidence interval is a range that should contain a specified percentage of your commute times. A **90% confidence interval** means that if you were to repeat your morning commute many times, 90% of those commutes should fall within the range you predict.
+
+**Example:**
+- If your typical morning commute is 25 minutes, a reasonable 90% CI might be 18-35 minutes
+- This means 9 out of 10 morning commutes should take between 18-35 minutes
+- The 10th commute might be unusually fast (< 18 min) or slow (> 35 min) due to traffic, weather, etc.
+
+### Getting Started
+
+**Requirements:**
+- You need at least **20 morning commute records** (commutes starting between 00:00-11:59)
+- The challenge only considers morning commutes to focus on your most predictable travel pattern
+
+**Why Morning Commutes Only?**
+Morning commutes tend to be more consistent than evening commutes because:
+- Less variable traffic patterns
+- More predictable departure times
+- Fewer unexpected delays from work meetings or social activities
+
+### Making Your Prediction
+
+1. **Enter Your Lower Bound**: The minimum time you think covers 90% of your morning commutes
+2. **Enter Your Upper Bound**: The maximum time you think covers 90% of your morning commutes
+3. **Adjust Confidence Level** (optional): Use the slider to set your confidence level (5-10). Higher values increase penalties for misses.
+
+**Tips for Good Estimates:**
+- Start with your statistics from the Statistics View as a guide
+- Look at your 5th percentile (very fast days) and 95th percentile (very slow days)
+- Consider your median time and add buffer for variability
+- A narrower interval = higher risk but potentially better score
+
+### Understanding Your Score
+
+The scoring system rewards **accuracy and precision** using a sophisticated statistical method called **Brier Scoring**:
+
+**How It Works:**
+- **Width Penalty**: Narrower intervals get better scores (precision rewarded)
+- **Miss Penalty**: Commutes outside your interval are penalized
+- **Distance Matters**: Misses farther from your bounds get higher penalties
+- **Lower Scores = Better Performance**
+
+**Score Components:**
+- **Interval Width**: Difference between your upper and lower bounds
+- **Coverage Accuracy**: How many commutes actually fell within your predicted range
+- **Miss Distance**: How far outside your bounds the misses were
+
+**Example Scoring:**
+- Perfect prediction (90% coverage, reasonable width): Score around 100-200
+- Good prediction (85-95% coverage): Score around 200-400
+- Poor prediction (many misses): Score 500+
+
+### Coverage Statistics
+
+After entering your prediction, you'll see detailed coverage statistics:
+
+- **Within Interval**: Commutes that fell inside your predicted range (green = good!)
+- **Below Interval**: Commutes faster than your lower bound
+- **Above Interval**: Commutes slower than your upper bound
+
+**Ideal Coverage:**
+- 85-95% within interval (close to your 90% target)
+- Balanced misses on both sides (not all misses in one direction)
+
+### Verification & Sharing
+
+**Checksum System:**
+Each prediction generates a unique checksum for verification. This prevents score manipulation and allows you to:
+- Share your results with others
+- Track your improvement over time
+- Verify scores in competitions
+
+**CSV Export:**
+Click "Copy CSV Data" to export your results in a standard format:
+```
+Low,High,Confidence,NumCommutes,Score,Checksum
+```
+
+### Strategy Guide
+
+**Beginner Strategy:**
+1. Use your Statistics View data as a starting point
+2. Set bounds at 5th percentile to 95th percentile
+3. Use confidence level 9 (standard 90%)
+4. Adjust based on coverage results
+
+**Advanced Strategy:**
+- Study your commute patterns in the Statistics View
+- Consider seasonal variations and weekly patterns
+- Use the histogram to understand your distribution shape
+- Balance risk: narrow intervals for high scores vs. wide intervals for safety
+
+**Improving Your Score:**
+- Track more commutes to get better statistics
+- Analyze your misses to understand what causes outliers
+- Consider different departure times or routes
+- Use trend analysis to see if your commute is getting faster/slower
+
+### Why This Matters
+
+The Challenge View transforms commute tracking from passive data collection into an **active learning experience**:
+
+**Skills You Develop:**
+- Statistical thinking and probability understanding
+- Risk assessment and decision-making
+- Pattern recognition in your own behavior
+- Data-driven prediction abilities
+
+**Real-World Benefits:**
+- Better planning for important morning appointments
+- Understanding your commute's true variability
+- Confidence in departure time decisions
+- Fun way to engage with your data!
+
+**Competitive Element:**
+Share your scores with friends, colleagues, or online communities. Who can predict their commute best? The checksum system ensures fair competition.
+
+> [!NOTE]
+> A detailed explanation of the scoring algorithm can be found in the [DEVELOPER_CHALLENGE_SCORING.md](./DEVELOPER_CHALLENGE_SCORING.md) file.
 
 
 <div class="page-break"></div>

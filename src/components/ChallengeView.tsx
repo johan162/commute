@@ -29,8 +29,17 @@ export const ChallengeView: React.FC<ChallengeViewProps> = ({ records }) => {
   const [coverageStats, setCoverageStats] = useState<{ below: number; within: number; above: number } | null>(null);
   const [copySuccess, setCopySuccess] = useState<boolean>(false);
 
-  const hasMinimumRecords = records.length >= 20;
-  const durations = useMemo(() => records.map(r => r.duration), [records]);
+  // Filter for morning commutes only (00:00 - 11:59)
+  const morningRecords = useMemo(() => {
+    return records.filter(record => {
+      const date = new Date(record.date);
+      const hour = date.getHours();
+      return hour >= 0 && hour < 12;
+    });
+  }, [records]);
+
+  const hasMinimumRecords = morningRecords.length >= 20;
+  const durations = useMemo(() => morningRecords.map(r => r.duration), [morningRecords]);
 
   // Calculate score whenever estimates change or new records are available
   useEffect(() => {
@@ -136,12 +145,12 @@ export const ChallengeView: React.FC<ChallengeViewProps> = ({ records }) => {
               Test Your Estimation Skills!
             </h3>
             <p className="mb-4">
-              Can you accurately predict your 90% confidence interval for commute times?
+              Can you accurately predict your 90% confidence interval for <strong>morning commute times</strong> (00:00-11:59)?
               Enter your estimated lower and upper bounds (in minutes), and we'll calculate
               how well your prediction matches reality.
             </p>
             <p className="text-sm text-gray-400 mb-4">
-              A 90% confidence interval means that 90% of your commutes should fall within
+              A 90% confidence interval means that 90% of your <strong>morning commutes</strong> should fall within
               this range. The score rewards narrow intervals with good coverage!
             </p>
           </div>
@@ -149,8 +158,8 @@ export const ChallengeView: React.FC<ChallengeViewProps> = ({ records }) => {
           {!hasMinimumRecords && (
             <div className="bg-yellow-900 bg-opacity-20 border border-yellow-700 rounded-lg p-4">
               <p className="text-yellow-400 text-sm">
-                ⚠️ You need at least 20 commute records to participate in the challenge.
-                Currently, you have <strong>{records.length}</strong> record{records.length !== 1 ? 's' : ''}.
+                ⚠️ You need at least 20 <strong>morning commute</strong> records (00:00-11:59) to participate in the challenge.
+                Currently, you have <strong>{morningRecords.length}</strong> morning record{morningRecords.length !== 1 ? 's' : ''} out of {records.length} total.
                 Keep tracking your commutes!
               </p>
             </div>
@@ -159,7 +168,7 @@ export const ChallengeView: React.FC<ChallengeViewProps> = ({ records }) => {
           {hasMinimumRecords && stats && (
             <div className="bg-gray-800 p-4 rounded-lg">
               <h4 className="text-sm font-semibold text-gray-300 mb-3">
-                📊 Your Commute Statistics (for reference)
+                📊 Morning Commute Statistics (00:00-11:59)
               </h4>
               <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
                 <div className="flex flex-col">
@@ -193,6 +202,9 @@ export const ChallengeView: React.FC<ChallengeViewProps> = ({ records }) => {
                   </span>
                 </div>
               </div>
+              <p className="text-xs text-gray-500 mt-3">
+                Based on {morningRecords.length} morning commute{morningRecords.length !== 1 ? 's' : ''}
+              </p>
             </div>
           )}
 
@@ -301,7 +313,7 @@ export const ChallengeView: React.FC<ChallengeViewProps> = ({ records }) => {
                   <div className="flex items-center justify-between text-sm mb-2">
                     <span className="text-gray-400">Based on:</span>
                     <span className="text-white font-mono">
-                      {records.length} commutes
+                      {morningRecords.length} morning commutes
                     </span>
                   </div>
                   {coverageStats && (
@@ -310,19 +322,19 @@ export const ChallengeView: React.FC<ChallengeViewProps> = ({ records }) => {
                       <div className="flex items-center justify-between text-sm mb-2">
                         <span className="text-gray-400">Below interval:</span>
                         <span className="text-white font-mono">
-                          {coverageStats.below} ({((coverageStats.below / records.length) * 100).toFixed(1)}%)
+                          {coverageStats.below} ({((coverageStats.below / morningRecords.length) * 100).toFixed(1)}%)
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-sm mb-2">
                         <span className="text-gray-400">Within interval:</span>
                         <span className="text-green-400 font-mono font-semibold">
-                          {coverageStats.within} ({((coverageStats.within / records.length) * 100).toFixed(1)}%)
+                          {coverageStats.within} ({((coverageStats.within / morningRecords.length) * 100).toFixed(1)}%)
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-400">Above interval:</span>
                         <span className="text-white font-mono">
-                          {coverageStats.above} ({((coverageStats.above / records.length) * 100).toFixed(1)}%)
+                          {coverageStats.above} ({((coverageStats.above / morningRecords.length) * 100).toFixed(1)}%)
                         </span>
                       </div>
                     </>
