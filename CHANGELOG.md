@@ -1,3 +1,22 @@
+## [1.2.0] - 2025-11-05
+
+Release type: minor
+
+### 📋 Summary 
+- Improved scoring algorithm and make sure we only take morning commutes into account for challenge.
+
+### 🚀 Improvements
+- [upd] Filter only morning commutes for challenge calculations
+- [upd] Tweak the scoring algorithm as to not penalize inherent variance
+
+### 📖 Documentation
+- [upd] Updated scoring papoer to reflect the algorithm change
+- [upd] Add challenge section in User Guide
+
+### 🛠 Internal
+- [upd] Only give warning for dirty directory in std build script and no confirmation question.
+
+
 ## [1.1.0] - 2025-11-04
 
 Release type: minor
