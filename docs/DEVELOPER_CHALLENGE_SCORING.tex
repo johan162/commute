@@ -137,7 +137,7 @@ quality dimensions, each contributing a penalty term to the final score.
 The total score \(S\) is expressed as:
 
 \[
-S = P_{\text{width}} + P_{\text{miss}} + P_{\text{over}} + P_{\text{calib}} + P_{\text{balance}}
+S = P_{\text{precision}} + P_{\text{miss}} + P_{\text{over}} + P_{\text{calib}} + P_{\text{balance}}
 \]
 
 where lower scores indicate superior performance. This additive
@@ -146,20 +146,35 @@ interpretability.
 
 \section{Scoring Components}\label{scoring-components}
 
-\subsection{Interval Width Penalty}\label{interval-width-penalty}
+\subsection{Precision Penalty}\label{interval-width-penalty}
 
 \textbf{Definition:}
 
+Let the sorted dataset be $\mathcal{D}_{\text{sorted}} = \{x_{(1)}, x_{(2)}, \ldots, x_{(n)}\}$ where $x_{(1)} \leq x_{(2)} \leq \cdots \leq x_{(n)}$.
+
+Define the sample percentiles:
+- $p_5 = x_{(\lfloor 0.05n \rfloor)}$ (5th percentile)
+- $p_{95} = x_{(\lfloor 0.95n \rfloor)}$ (95th percentile)
+
+Then:
+
 \[
-P_{\text{width}} = H - L
+P_{\text{precision}} = (L - p_5)^2 + (H - p_{95})^2
 \]
 
-\textbf{Rationale:} The width penalty provides the base score and
-directly encourages precision. Wider intervals naturally incur higher
-costs, creating pressure toward informative, narrow estimates.
 
-\textbf{Properties:} - Linear in interval width - Always non-negative -
-Scale-dependent (matches data units)
+\textbf{Rationale:} The precision penalty measures how accurately the participant estimates the empirical 90\% confidence interval boundaries. 
+By penalizing squared deviations from the actual sample percentiles, this component rewards accurate boundary estimation regardless of the 
+inherent variability of the commute times. This ensures fairness: participants with highly variable commutes (wide true intervals) are not 
+penalized relative to those with consistent commutes (narrow true intervals). The penalty measures \textit{orecasting skill}, 
+not the characteristics of the underlying data.
+
+
+\textbf{Properties:} 
+- Quadratic in estimation error (Brier-inspired)
+- Scale-independent: measures relative accuracy
+- Fair across different commute variability levels
+- Zero penalty for perfect percentile matching
 
 \subsection{Miss Penalty}\label{miss-penalty}
 
@@ -297,7 +312,7 @@ The complete scoring function for interval \([L, H]\) with confidence
 \(c\) and dataset \(\mathcal{D} = \{x_1, \ldots, x_n\}\) is:
 
 \[
-\boxed{S(L, H, c \mid \mathcal{D}) = (H - L) + P_{\text{miss}} + P_{\text{over}} + P_{\text{calib}} + P_{\text{balance}}}
+\boxed{S(L, H, c \mid \mathcal{D}) = P_{\text{precision}} + P_{\text{miss}} + P_{\text{over}} + P_{\text{calib}} + P_{\text{balance}}}
 \]
 
 where all penalty components are defined as above. The score is rounded
@@ -311,7 +326,7 @@ The scoring function incentivizes the following strategy:
 \def\labelenumi{\arabic{enumi}.}
 \tightlist
 \item
-  \textbf{Precision:} Minimize interval width subject to coverage
+  \textbf{Accuracy:} Match estimated bounds to actual sample percentiles (p5 and p95)
   constraints
 \item
   \textbf{Coverage:} Achieve approximately 90\% empirical coverage
@@ -332,84 +347,132 @@ tuned to prevent dominance by any single component.
 
 \subsection{Example: Perfect Interval}\label{example-5.1-perfect-interval}
 
-\textbf{Specifications:} - Interval: \([L, H]\) with \(H - L = 600\)
-seconds (10 minutes) - Empirical coverage: 90.2\% (4.8\% below, 5.0\%
-above) - Confidence: \(c = 10\)
+\textbf{Specifications:} 
+\begin{itemize}
+\item Sample percentiles: $p_5 = 1080$ seconds (18 min), $p_{95} = 1680$ seconds (28 min)
+\item Estimated interval: $[L, H] = [1080, 1680]$ (exactly matching sample percentiles)
+\item Empirical coverage: 90.2\% (4.8\% below, 5.0\% above)
+\item Confidence: $c = 10$
+\end{itemize}
 
-\textbf{Penalty Calculation:} - \(P_{\text{width}} = 600\) -
-\(P_{\text{miss}} \approx 150\) (small residual from 9.8\% outside) -
-\(P_{\text{over}} = 0\) (coverage \textless{} 95\%) -
-\(P_{\text{calib}} \approx 0\) (\(\Delta_{\text{cov}} = 0.2 < 1\),
-\(\Delta_{\text{tail}} = 0.2 < 2\)) -
-\(P_{\text{balance}} \approx 0.07\) (\(\Delta_{\text{tail}} = 0.2\))
 
-\textbf{Total Score:} \(S \approx 750\)
+\textbf{Penalty Calculation:} 
+\begin{itemize}
+\item \(P_{\text{precision}} = (1080 - 1080)^2 + (1680 - 1680)^2 = 0\) (perfect match!)
+\item \(P_{\text{miss}} \approx 150\) (small residual from 9.8\% outside) 
+\item \(P_{\text{over}} = 0\) (coverage \textless{} 95\%) 
+\item \(P_{\text{calib}} \approx 0\) (\(\Delta_{\text{cov}} = 0.2 < 1\), \(\Delta_{\text{tail}} = 0.2 < 2\)) 
+\item \(P_{\text{balance}} \approx 0.07\) (\(\Delta_{\text{tail}} = 0.2\))
+\end{itemize}
 
-\textbf{Interpretation:} Near-optimal performance with minimal
-penalties.
+\textbf{Total Score:} \(S \approx 150\)
+
+\textbf{Interpretation:} Near-optimal performance with minimal penalties. 
+The precision penalty is zero because the estimates perfectly match the sample percentiles.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
 \subsection{Example: Overconfident Estimate}\label{example-5.2-overconfident-estimate}
 
-\textbf{Specifications:} - Interval: \([L, H]\) with \(H - L = 600\)
-seconds - Empirical coverage: 85\% (8\% below, 7\% above) - Confidence:
-\(c = 10\)
+\textbf{Specifications:} 
+\begin{itemize}
+\item Sample percentiles: \(p_5 = 1080\) seconds, \(p_{95} = 1680\) seconds
+\item Estimated interval: \([L, H] = [1200, 1800]\) (120 sec high on each bound)
+\item Empirical coverage: 85\% (8\% below, 7\% above) 
+\item Confidence: \(c = 10\)
+\end{itemize}
 
-\textbf{Penalty Calculation:} - \(P_{\text{width}} = 600\) -
-\(P_{\text{miss}} \approx 400\) (15\% outside) - \(P_{\text{over}} = 0\)
-- \(\Delta_{\text{cov}} = |15 - 10| = 5 > 1\) -
-\(\Delta_{\text{tail}} = |8-5| + |7-5| = 5 > 2\) -
-\(P_{\text{calib}} = 3.0 \cdot 600 \cdot \left(\frac{5 + 5}{5}\right)^2 = 7200\)
-(heavy penalty) -
-\(P_{\text{balance}} = 1.0 \cdot 600 \cdot \left(\frac{5}{10}\right)^2 = 150\)
+\textbf{Penalty Calculation:} 
+\begin{itemize}
+\item \(P_{\text{precision}} = (1080 - 1200)^2 + (1680 - 1800)^2 = 14400\) (poor match!)
+\item \(P_{\text{miss}} \approx 400\) (15\% outside)
+\item \(P_{\text{over}} = 0\)
+\item \(\Delta_{\text{cov}} = |15 - 10| = 5 > 1\)
+\item \(\Delta_{\text{tail}} = |8-5| + |7-5| = 5 > 2\)
+\item Interval width for other penalties: \(1800 - 1200 = 600\) seconds
+\item \(P_{\text{calib}} = 3.0 \cdot 600 \cdot \left(\frac{5 + 5}{5}\right)^2 = 7200\) (heavy penalty)
+\item \(P_{\text{balance}} = 1.0 \cdot 600 \cdot \left(\frac{5}{10}\right)^2 = 150\)
+\end{itemize}
 
-\textbf{Total Score:} \(S \approx 8350\)
+\textbf{Total Score:} \(S \approx 36550\)
 
-\textbf{Interpretation:} Severe penalty for claiming perfection
-(confidence = 10) with poor actual performance.
+\textbf{Interpretation:} Large precision penalty for poor boundary estimation, 
+plus severe penalty for claiming perfection (confidence = 10) with poor actual performance.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
 
 \subsection{Example: Unbalanced Interval}\label{example-5.3-unbalanced-interval}
 
-\textbf{Specifications:} - Interval: \([L, H]\) with \(H - L = 650\)
-seconds - Empirical coverage: 90\% (2\% below, 8\% above) - Confidence:
-\(c = 9\)
+\textbf{Specifications:} 
+\begin{itemize}
+\item Sample percentiles: \(p_5 = 1080\) seconds, \(p_{95} = 1680\) seconds
+\item Estimated interval: \([L, H] = [1050, 1730]\) (30 sec low, 50 sec high)
+\item Empirical coverage: 90\% (2\% below, 8\% above)
+\item Confidence: \(c = 9\)
 
-\textbf{Penalty Calculation:} - \(P_{\text{width}} = 650\) -
-\(P_{\text{miss}} \approx 200\) - \(P_{\text{over}} = 0\) -
-\(\Delta_{\text{cov}} = 0\) (10\% outside) - \(c_{\text{ideal}} = 10\),
-\(\Delta_c = 1\) -
-\(P_{\text{calib}} = 2.0 \cdot 650 \cdot \left(\frac{1}{5}\right)^2 = 52\)
-- \(\Delta_{\text{tail}} = |2-5| + |8-5| = 6\) -
-\(P_{\text{balance}} = 1.0 \cdot 650 \cdot \left(\frac{6}{10}\right)^2 = 234\)
+\end{itemize}
 
-\textbf{Total Score:} \(S \approx 1136\)
+\textbf{Penalty Calculation:} 
+\begin{itemize}
+\item \(P_{\text{precision}} = (1050 - 1080)^2 + (1730 - 1680)^2 = 900 + 2500 = 3400\) 
+\item \(P_{\text{miss}} \approx 200\) - \(P_{\text{over}} = 0\) 
+\item \(P_{\text{miss}} \approx 200\) - \(P_{\text{over}} = 0\) 
+\item \(\Delta_{\text{cov}} = 0\) (10\% outside) - \(c_{\text{ideal}} = 10\), \(\Delta_c = 1\) 
+\item Interval width: \(1730 - 1050 = 680\) seconds
+\item \(P_{\text{calib}} = 2.0 \cdot 680 \cdot \left(\frac{1}{5}\right)^2 = 54\)
+\item \(\Delta_{\text{tail}} = |2-5| + |8-5| = 6\)
+\item \(P_{\text{balance}} = 1.0 \cdot 680 \cdot \left(\frac{6}{10}\right)^2 = 245\)
+\end{itemize}
 
-\textbf{Interpretation:} Moderate penalty for tail imbalance despite
-correct total coverage.
+\textbf{Total Score:} \(S \approx 3899\)
+
+\textbf{Interpretation:} Moderate penalty for tail imbalance and imperfect boundary estimation despite correct total coverage.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
+
+
 \subsection{Example: Honest Uncertainty}\label{example-5.4-honest-uncertainty}
 
-\textbf{Specifications:} - Interval: \([L, H]\) with \(H - L = 800\)
-seconds - Empirical coverage: 75\% (12\% below, 13\% above) -
+\textbf{Specifications:} 
+\begin{itemize}
+\item
+Sample percentiles: \(p_5 = 1080\) seconds, \(p_{95} = 1680\) seconds
+\item
+Estimated interval: \([L, H] = [900, 1900]\) (180 sec low, 220 sec high - very conservative)
+\item
+Empirical coverage: 75\% (12\% below, 13\% above)
+\item
 Confidence: \(c = 7\)
+\end{itemize}
 
-\textbf{Penalty Calculation:} - \(P_{\text{width}} = 800\) -
-\(P_{\text{miss}} \approx 600\) - \(P_{\text{over}} = 0\) -
-\(\Delta_{\text{cov}} = |25 - 10| = 15\) -
-\(c_{\text{ideal}} = 10 - 15/10 = 8.5\), \(\Delta_c = 1.5\) -
-\(P_{\text{calib}} = 2.0 \cdot 800 \cdot \left(\frac{1.5}{5}\right)^2 = 144\)
-- \(\Delta_{\text{tail}} = |12-5| + |13-5| = 15\) -
-\(P_{\text{balance}} = 1.0 \cdot 800 \cdot \left(\frac{15}{10}\right)^2 = 1800\)
+\textbf{Penalty Calculation:} 
+\begin{itemize}
+\item
+\(P_{\text{precision}} = (900 - 1080)^2 + (1900 - 1680)^2 = 32400 + 48400 = 80800\)
+\item
+\(P_{\text{miss}} \approx 600\) - \(P_{\text{over}} = 0\) 
+\item
+\(\Delta_{\text{cov}} = |25 - 10| = 15\) 
+\item
+\(c_{\text{ideal}} = 10 - 15/10 = 8.5\), \(\Delta_c = 1.5\) 
+\item
+Interval width: \(1900 - 900 = 1000\) seconds
+\item
+\(P_{\text{calib}} = 2.0 \cdot 1000 \cdot \left(\frac{1.5}{5}\right)^2 = 180\)
+\item
+\(\Delta_{\text{tail}} = |12-5| + |13-5| = 15\)
+\item
+\(P_{\text{balance}} = 1.0 \cdot 1000 \cdot \left(\frac{15}{10}\right)^2 = 2250\)
+\end{itemize}
 
-\textbf{Total Score:} \(S \approx 3344\)
+\textbf{Total Score:} \(S \approx 83830\)
 
-\textbf{Interpretation:} Poor interval quality but relatively small
-calibration penalty due to appropriately modest confidence claim.
+\textbf{Interpretation:} 
+Very poor boundary estimation (large precision penalty) combined with poor interval quality, 
+though relatively small calibration penalty due to appropriately modest confidence claim.
 
 \section{Strengths and Limitations}\label{strengths-and-limitations}
 
@@ -418,14 +481,11 @@ calibration penalty due to appropriately modest confidence claim.
 \begin{enumerate}
 \def\labelenumi{\arabic{enumi}.}
 \item
-  \textbf{Multi-dimensional Assessment:} The scoring system
-  simultaneously evaluates precision, coverage, calibration, and
-  balance, preventing optimization of any single dimension at the
-  expense of others.
+  \textbf{Multi-dimensional Assessment:} The scoring system simultaneously evaluates estimation accuracy, 
+  coverage, calibration, and balance, preventing optimization of any single dimension at the expense of others.
 \item
-  \textbf{Gaming Resistance:} Specific penalty components (overcoverage,
-  balance) explicitly counter known gaming strategies such as
-  arbitrarily wide intervals or asymmetric bounds.
+  \textbf{Gaming Resistance:} Specific penalty components (overcoverage, balance) explicitly counter known 
+  gaming strategies such as arbitrarily wide intervals or asymmetric bounds.
 \item
   \textbf{Theoretical Grounding:} The quadratic penalty structure
   inherits desirable properties from Brier scoring, including proper
@@ -458,10 +518,9 @@ calibration penalty due to appropriately modest confidence claim.
   distribution. For highly skewed commute time distributions, this
   requirement may be overly restrictive.
 \item
-  \textbf{Sample Size Dependence:} With small sample sizes
-  (\(n \approx 20-30\)), empirical coverage estimates exhibit high
-  variance. The scoring function does not explicitly account for
-  estimation uncertainty, potentially penalizing unlucky realizations.
+  \textbf{Sample Size Dependence:} With small sample sizes (\(n \approx 20-30\)), 
+  sample percentiles exhibit estimation variance.
+  The scoring function does not explicitly account for this uncertainty in the target percentiles.
 \item
   \textbf{Non-Convexity:} The piecewise nature of some penalty functions
   (e.g., overcoverage threshold) introduces discontinuities that may
@@ -477,17 +536,19 @@ calibration penalty due to appropriately modest confidence claim.
   nuanced uncertainty. This needs to be balanced against the poor ability
   of most individuals to reliably distinguish small differences in confidence.
 \item
-  \textbf{Independence Assumption:} The additive penalty structure
-  assumes independence among quality dimensions. In practice, certain
-  trade-offs are inevitable (e.g., narrower intervals naturally risk
-  higher miss penalties), and the optimal balance depends on the
-  specific weight configuration.
+  \textbf{Independence Assumption:} The additive penalty structure assumes independence among quality dimensions. 
+  In practice, certain trade-offs are inevitable, and the optimal balance depends on the specific weight configuration.
 \end{enumerate}
 
 \subsection{Relation to Traditional Brier Scoring}\label{relation-to-traditional-brier-scoring}
 
-The miss penalty component (\(P_{\text{miss}}\)) most directly
-implements Brier's mean squared error principle:
+Both the precision penalty ($P_{\text{precision}}$) and miss penalty 
+($P_{\text{miss}}$) implement Brier's mean squared error principle:
+
+\[
+P_{\text{precision}} = (L - p_5)^2 + (H - p_{95})^2
+\]
+
 
 \[
 P_{\text{miss}} = \frac{1}{n}\sum_{m \in \mathcal{M}'} m = \frac{1}{n}\sum_{m \in \mathcal{M}'} (\text{distance})^2
@@ -592,7 +653,7 @@ non-symmetric target distributions.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\textbf{Document Version Control:} - v1.0 (2025-11-04): Initial
-specification and mathematical formulation
+\textbf{Document Version Control:} - v0.1 (2025-11-04): Initial
+specification and mathematical formulation - Pre-Publication. Awaiting review.
 
 \end{document}
