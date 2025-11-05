@@ -4,12 +4,14 @@ import { useCommuteTimer } from '../hooks/useCommuteTimer';
 import { Card } from './Card';
 
 interface MainViewProps {
-  onSaveCommute: (duration: number) => void;
+  onSaveCommute: (duration: number) => boolean;
   workLocation: Coordinates | null;
   autoStopRadius: number;
   autoRecordWorkLocation: boolean;
   onAddWorkLocation: (location: Coordinates) => void;
   useNixieDisplay?: boolean;
+  debouncingEnabled?: boolean;
+  debouncingLimit?: number;
 }
 
 const formatTime = (totalSeconds: number): string => {
@@ -68,7 +70,7 @@ const NixieDisplay: React.FC<{ time: string }> = ({ time }) => {
   );
 };
 
-export const MainView: React.FC<MainViewProps> = ({ onSaveCommute, workLocation, autoStopRadius, autoRecordWorkLocation, onAddWorkLocation, useNixieDisplay = false }) => {
+export const MainView: React.FC<MainViewProps> = ({ onSaveCommute, workLocation, autoStopRadius, autoRecordWorkLocation, onAddWorkLocation, useNixieDisplay = false, debouncingEnabled = false, debouncingLimit = 60 }) => {
   const { isRunning, elapsedTime, startTimer, stopTimer, statusMessage, distance } = useCommuteTimer({
     workLocation,
     onStop: onSaveCommute,
@@ -115,6 +117,27 @@ export const MainView: React.FC<MainViewProps> = ({ onSaveCommute, workLocation,
           >
             Arrive
           </button>
+        )}
+        
+        {/* De-bouncing Info Box */}
+        {debouncingEnabled && (
+          <div className="bg-gray-800 border border-gray-700 rounded-lg p-3 text-sm mt-4">
+            <div className="flex items-center gap-2 text-gray-400">
+              <svg className="w-6 h-6 text-cyan-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>
+                De-bouncing enabled. <br /> Commutes &lt; {' '}
+                <span className="text-cyan-400 font-semibold">
+                  {debouncingLimit === 60 && '1 min'}
+                  {debouncingLimit === 120 && '2 min'}
+                  {debouncingLimit === 300 && '5 min'}
+                  {debouncingLimit === 900 && '15 min'}
+                </span>
+                {' '}will not be saved.
+              </span>
+            </div>
+          </div>
         )}
       </div>
 

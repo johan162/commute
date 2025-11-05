@@ -130,7 +130,7 @@ ORIGINAL_BRANCH=$(git branch --show-current)
 log_info "Current branch: $ORIGINAL_BRANCH"
 if [ "$ORIGINAL_BRANCH" != "develop" ]; then
     log_warn "You are on branch '$ORIGINAL_BRANCH'. It is recommended to run this script from the 'develop' branch."
-    read -p "Continue anyway? (y/n) "-n 1 -r
+    read -p "Continue anyway? (y/n) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         log_error "Aborted by user"
