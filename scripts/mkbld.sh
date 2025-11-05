@@ -125,11 +125,11 @@ if ! command -v make >/dev/null 2>&1; then
     exit 1
 fi
 
-# Warn if we are not on develop branch
+# Warn if we are not on "feature/" , develop or main branch
 ORIGINAL_BRANCH=$(git branch --show-current)
 log_info "Current branch: $ORIGINAL_BRANCH"
-if [ "$ORIGINAL_BRANCH" != "develop" ]; then
-    log_warn "You are on branch '$ORIGINAL_BRANCH'. It is recommended to run this script from the 'develop' branch."
+if [[ "$ORIGINAL_BRANCH" != "develop" ]] && [[ "$ORIGINAL_BRANCH" != "main" ]] && [[ "$ORIGINAL_BRANCH" != feature/* ]]; then
+    log_warn "You are on branch '$ORIGINAL_BRANCH'. It is recommended to run this script from the 'develop' or 'main' branch."
     read -p "Continue anyway? (y/n) " -n 1 -r
     echo
     if [[ ! $REPLY =~ ^[Yy]$ ]]; then

@@ -584,6 +584,12 @@ print_step "Removing temporary release notes file..."
 rm -f "$RELEASE_NOTES_FILE"
 print_success "Cleanup complete"
 
+if git checkout develop; then
+    print_success "Switched to 'develop' branch"
+else
+    print_warning "Could not switch to 'develop' branch. Please check your git branches."
+fi  
+
 
 # =====================================
 # RELEASE COMPLETE
