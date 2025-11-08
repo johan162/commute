@@ -268,7 +268,7 @@ export const ChallengeView: React.FC<ChallengeViewProps> = ({ records }) => {
                 </span>
               </div>
               <p className="text-xs text-gray-500 mt-2">
-                Higher confidence values increase penalties for misses. Start with 9 for standard 90% confidence interval.
+                Higher confidence values increase penalties for misses. 
               </p>
             </div>
 

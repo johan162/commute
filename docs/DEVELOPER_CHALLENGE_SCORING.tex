@@ -105,7 +105,7 @@ observed commute times, participants must specify:
   true 90\% CI
 \end{itemize}
 
-The target specification is a 90\% confidence interval, corresponding to
+The target specification is a 90\% confidence interval, corresponding to a significance level of
 \(\alpha = 0.10\) with \(\alpha/2 = 0.05\) in each tail under a
 symmetric distribution assumption (z-score \(\pm 1.645\)).
 
@@ -153,8 +153,13 @@ interpretability.
 Let the sorted dataset be $\mathcal{D}_{\text{sorted}} = \{x_{(1)}, x_{(2)}, \ldots, x_{(n)}\}$ where $x_{(1)} \leq x_{(2)} \leq \cdots \leq x_{(n)}$.
 
 Define the sample percentiles:
-- $p_5 = x_{(\lfloor 0.05n \rfloor)}$ (5th percentile)
-- $p_{95} = x_{(\lfloor 0.95n \rfloor)}$ (95th percentile)
+\begin{itemize}
+\tightlist
+\item
+  $p_5 = x_{(\lfloor 0.05n \rfloor)}$ (5th percentile)
+\item
+  $p_{95} = x_{(\lfloor 0.95n \rfloor)}$ (95th percentile)
+\end{itemize} 
 
 Then:
 
@@ -171,10 +176,17 @@ not the characteristics of the underlying data.
 
 
 \textbf{Properties:} 
-- Quadratic in estimation error (Brier-inspired)
-- Scale-independent: measures relative accuracy
-- Fair across different commute variability levels
-- Zero penalty for perfect percentile matching
+\begin{itemize}
+\tightlist
+\item
+Quadratic in estimation error (Brier-inspired)
+\item
+Scale-independent: measures relative accuracy
+\item
+Fair across different commute variability levels
+\item
+Zero penalty for perfect percentile matching
+\end{itemize}
 
 \subsection{Miss Penalty}\label{miss-penalty}
 
@@ -183,7 +195,7 @@ define the miss function:
 
 \[
 m(x_i) = \begin{cases}
-(L - x_i)^2 & \text{if } x_i < L \\
+(x_i - L)^2 & \text{if } x_i < L \\
 (x_i - H)^2 & \text{if } x_i > H \\
 0 & \text{if } L \leq x_i \leq H
 \end{cases}
@@ -204,10 +216,19 @@ severely than near-misses. The 10\% trimming provides tolerance for the
 90\% CI specification, effectively ignoring the smallest violations that
 fall within expected coverage gaps.
 
-\textbf{Properties:} - Quadratic in miss distance (Brier-inspired) -
-Normalized by total sample size \(n\) - Robust to extreme outliers
-through 10\% trimming - Invariant to confidence level (separated from
-calibration)
+\textbf{Properties:} 
+\begin{itemize}
+\tightlist
+\item
+Quadratic in miss distance (Brier-inspired) 
+\item
+Normalized by total sample size \(n\)
+\item
+Robust to extreme outliers through 10\% trimming
+\item
+Invariant to confidence level (separated from calibration)
+\end{itemize}
+
 
 \subsection{Overcoverage Penalty}\label{overcoverage-penalty}
 
@@ -230,9 +251,19 @@ coverage. The penalty activates only for coverage exceeding 95\%
 coverage and interval width. The multiplicative width term ensures that
 wasteful intervals incur proportionally higher costs.
 
-\textbf{Properties:} - Activates beyond 5\% tolerance threshold -
-Quadratic in excess coverage - Proportional to interval width -
+\textbf{Properties:} 
+
+\begin{itemize}
+\item
+Activates beyond 5\% tolerance threshold
+\item
+Quadratic in excess coverage
+\item
+Proportional to interval width
+\item
 Coefficient 0.5 balances impact relative to other penalties
+\end{itemize}
+
 
 \subsection{Confidence Calibration
 Penalty}\label{confidence-calibration-penalty}
@@ -278,9 +309,19 @@ total coverage (\(\Delta_{\text{cov}} < 1\%\)) and balanced tails
 (\(\Delta_{\text{tail}} < 2\%\)), enforced through a 3.0× penalty
 multiplier.
 
-\textbf{Properties:} - Maps coverage quality to expected confidence
-level - Quadratic penalty for calibration mismatch - Enhanced scrutiny
-for maximum confidence claims - Proportional to interval width
+\textbf{Properties:} 
+
+\begin{itemize}
+\item
+Maps coverage quality to expected confidence level
+\item
+Quadratic penalty for calibration mismatch
+\item
+Enhanced scrutiny for maximum confidence claims
+\item
+Proportional to interval width
+\end{itemize}
+
 
 \subsection{Balance Penalty}\label{balance-penalty}
 
@@ -300,9 +341,20 @@ very tight lower bound compensates for an excessively loose upper bound
 to achieve 10\% total outside. The penalty is applied universally,
 independent of confidence level.
 
-\textbf{Properties:} - Quadratic in tail imbalance - Enforces symmetric
-coverage - Independent of confidence calibration - Coefficient 1.0
-provides moderate weight
+\textbf{Properties:} 
+
+\begin{itemize}
+\tightlist
+\item
+Quadratic in tail imbalance 
+\item
+Enforces symmetric coverage
+\item
+Independent of confidence calibration
+\item
+Coefficient 1.0 provides moderate weight
+\end{itemize}
+
 
 \subsection{Complete Scoring Function}\label{complete-scoring-function}
 
@@ -596,9 +648,15 @@ for storing miss values.
 \subsection{Numerical Stability}\label{numerical-stability}
 
 All penalty calculations use floating-point arithmetic. Care must be
-taken with: - Division by zero when \(n = 0\) (handled by minimum record
-requirement \(n \geq 20\)) - Overflow in squared distance calculations
+taken with: 
+\begin{itemize}
+\item
+Division by zero when \(n = 0\) (handled by minimum record
+requirement \(n \geq 20\)) 
+\item
+Overflow in squared distance calculations
 for extreme outliers (mitigated by 10\% trimming)
+\end{itemize}
 
 \subsection{Verification and Reproducibility}\label{verification-and-reproducibility}
 
@@ -653,7 +711,7 @@ non-symmetric target distributions.
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
 
-\textbf{Document Version Control:} - v0.1 (2025-11-04): Initial
+\textbf{Document Version Control:} - v0.2 (2025-11-08): Initial
 specification and mathematical formulation - Pre-Publication. Awaiting review.
 
 \end{document}
