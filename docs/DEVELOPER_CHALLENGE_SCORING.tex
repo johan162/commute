@@ -44,6 +44,40 @@
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{same}
 
+% Code listings for source inclusion (TypeScript with line numbers)
+\IfFileExists{listings.sty}{%
+  \usepackage{listings}
+  % load the predefined language (case-sensitive name)
+  % \lstloadlanguages{JavaScript}
+  \lstdefinelanguage{JavaScript}{
+  sensitive=true,
+  morekeywords={break,case,catch,continue,debugger,default,delete,do,else,false,finally,for,function,if,in,instanceof,new,null,return,switch,this,throw,true,try,typeof,var,let,const,void,while,with,yield,async,await,import,export,from,as},
+  morecomment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  morestring=[b]",
+  morestring=[b]'
+}
+  \usepackage{courier}
+  % Define a TypeScript-friendly style based on JavaScript
+  \lstdefinestyle{tsstyle}{%
+    language=JavaScript,
+    morekeywords={interface,type,namespace,readonly,public,private,protected,abstract,implements,extends,as},
+    basicstyle=\ttfamily\small,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    stringstyle=\color{teal},
+    numbers=left,
+    numberstyle=\tiny,
+    stepnumber=1,
+    numbersep=8pt,
+    frame=single,
+    breaklines=true,
+    breakatwhitespace=true,
+    showstringspaces=false,
+    captionpos=b
+  }
+}{}
+
 \title{Scoring Methodology for Confidence Interval Estimation Challenge}
 \author{Johan Persson }
 
@@ -98,7 +132,7 @@ observed commute times, participants must specify:
 \tightlist
 \item
   \textbf{Interval bounds:} \([L, H]\) where \(L\) represents the lower
-  bound and \(H\) the upper bound (in seconds)
+  bound and \(H\) the upper bound (in minutes)
 \item
   \textbf{Confidence level:} \(c \in [5, 10]\) representing the
   participant's subjective confidence that their interval represents a
@@ -690,6 +724,19 @@ explore adaptive penalty weights based on sample size, explicit
 uncertainty quantification in score reporting, and extensions to
 non-symmetric target distributions.
 
+
+
+% Appendix with source code listing
+\clearpage
+\appendix
+\section{Appendix: Source code (scoring.ts)}\label{appendix:scoring}
+\noindent The following listing includes an example implementation of the scoring function using typescript.  
+Line numbers are shown for reference.
+
+\vspace{6pt}
+\lstinputlisting[style=tsstyle,caption={scoring.ts — source listing},label={lst:scoring}]{scoring.ts}
+
+\clearpage
 \section{References}\label{references}
 
 \begin{enumerate}
@@ -710,6 +757,11 @@ non-symmetric target distributions.
 \end{enumerate}
 
 \begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+
+
+
+
 
 \textbf{Document Version Control:} - v0.2 (2025-11-08): Initial
 specification and mathematical formulation - Pre-Publication. Awaiting review.
