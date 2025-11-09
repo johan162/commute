@@ -1,3 +1,20 @@
+## [1.3.1] - 2025-11-09
+
+Release type: patch
+
+### 📋 Summary 
+- Finished short paper describing the scoring algorithm.
+
+### 🚀 Improvements
+- [upd] Improved some guide texts in the challenge tab
+
+### 📖 Documentation
+- [upd] Added paper describing the scoring algorithm
+
+### 🛠 Internal
+- [chore] Added Makefile for latex-processing
+
+
 ## [1.3.0] - 2025-11-05
 
 Release type: minor
