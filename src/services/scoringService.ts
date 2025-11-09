@@ -181,7 +181,7 @@ export function computeScore(
 
   // Sort misses and ignore first 10% (coverage tolerance)
   misses.sort((a, b) => a - b);
-  const cutoff = Math.floor(misses.length * 0.10);
+  const cutoff = Math.floor(misses.length * (100-targetCoverage)/100);
   const trimmedMisses = misses.slice(cutoff);
 
   // Compute penalty for misses
