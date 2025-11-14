@@ -1,3 +1,17 @@
+## [1.4.0] - 2025-11-14
+
+Release type: minor
+
+### 📋 Summary 
+- Enhanced usability of submitting challenge scoring
+
+### 🚀 Improvements
+- [feat] Added button to create and populate mail with scoring
+
+### 🛠 Internal
+- [upd] Makefile cleanup, keep all dependencies directly in targets
+
+
 ## [1.3.1] - 2025-11-09
 
 Release type: patch

@@ -206,11 +206,3 @@ watch: ## Watch for changes and run tests + typecheck
 		$(MAKE) --no-print-directory typecheck test; \
 		sleep 2; \
 	done
-
-# =====================================
-# Dependencies Declaration
-# =====================================
-
-# Ensure proper build order
-$(TYPECHECK_STAMP): $(INSTALL_STAMP) 
-$(TEST_STAMP): $(INSTALL_STAMP)
