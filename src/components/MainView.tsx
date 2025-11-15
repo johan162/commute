@@ -34,13 +34,20 @@ const NixieDigit: React.FC<{ digit: string; isColon?: boolean }> = ({ digit, isC
   }
 
   return (
-    <div className="relative h-20 w-16 mx-1 bg-gray-900 border-2 border-gray-700 rounded-lg shadow-inner overflow-hidden">
+    <div className="nixie-digit relative h-20 w-16 mx-1 bg-gray-900 border-2 border-gray-700 rounded-lg shadow-inner overflow-hidden">
       {/* Glow effect */}
       <div className="absolute inset-0 bg-gradient-to-b from-orange-500/20 to-orange-600/20"></div>
+      <div className="filament-grid"></div>
 
       {/* Digit */}
       <div className="relative z-10 flex items-center justify-center h-full">
-        <span className="text-6xl sm:text-7xl md:text-8xl font-bold text-orange-400 font-mono tracking-wider drop-shadow-lg">
+        <span
+          className="digit-display text-5xl sm:text-6xl md:text-7xl font-light text-orange-300 font-mono"
+          style={{
+            letterSpacing: '0.08em',
+            textShadow: '0 0 12px rgba(251, 191, 36, 0.85), 0 0 25px rgba(220, 38, 38, 0.45)'
+          }}
+        >
           {digit}
         </span>
       </div>

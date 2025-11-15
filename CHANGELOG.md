@@ -1,3 +1,15 @@
+## [1.5.1] - 2025-11-15
+
+Release type: patch
+
+### 📋 Summary 
+- Improvement in Look & Feel for Nixie tube emulation
+
+### 🚀 Improvements
+- [upd] Tweak the CSS to make the Nixie tube emulation a bit better 
+
+
+
 ## [1.5.0] - 2025-11-15
 
 Release type: minor
