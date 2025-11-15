@@ -1,3 +1,14 @@
+## [1.4.2] - 2025-11-15
+
+Release type: patch
+
+### 📋 Summary 
+- Improve user experience by not showing mail-button on iPhone as it will not work due to Apple Sandbox restricions
+
+### 🐛 Bug Fixes
+- [bug] On iOS. The PWA sandbox is very restrictive and will not allow other applications to be opened. Therefore remove the "Copy & Open Mail" button when running on iOS
+
+
 ## [1.4.1] - 2025-11-15
 
 Release type: patch
