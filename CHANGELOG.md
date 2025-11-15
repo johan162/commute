@@ -1,3 +1,14 @@
+## [1.4.1] - 2025-11-15
+
+Release type: patch
+
+### 📋 Summary 
+- Try to work-around iOS PWA Sandbox restrictions to open other apps
+
+### 🚀 Improvements
+- [upd] Use direct link to see if this can open mail-application in iOS PWA sandbox
+
+
 ## [1.4.0] - 2025-11-14
 
 Release type: minor
