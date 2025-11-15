@@ -123,30 +123,14 @@ export const ChallengeView: React.FC<ChallengeViewProps> = ({ records }) => {
     }
   };
 
-  const handleCopyAndMail = async () => {
-    if (!calculatedScore || !checksum || !lowEstimate || !highEstimate) return;
+  const createMailtoLink = () => {
+    if (!calculatedScore || !checksum || !lowEstimate || !highEstimate) return '#';
 
-    // 1. Create CSV data
     const csvRow = `${lowEstimate},${highEstimate},${confidence},${records.length},${calculatedScore},${checksum}`;
-
-    // 2. Copy to clipboard
-    try {
-      await navigator.clipboard.writeText(csvRow);
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy to clipboard:', err);
-      // Continue to mail part even if copy fails
-    }
-
-    // 3. Create mailto link
     const subject = "Commute Challenge Score Submission";
     const body = `Hi,\n\nPlease find my score submission below:\n\n${csvRow}\n\nThanks!`;
     const encodedBody = encodeURIComponent(body);
-    const mailtoLink = `mailto:johan.persson@nasdaq.com?subject=${encodeURIComponent(subject)}&body=${encodedBody}`;
-
-    // 4. Open mail client
-    window.location.href = mailtoLink;
+    return `mailto:johan.persson@nasdaq.com?subject=${encodeURIComponent(subject)}&body=${encodedBody}`;
   };
 
   // Get some statistics for reference
@@ -406,8 +390,9 @@ export const ChallengeView: React.FC<ChallengeViewProps> = ({ records }) => {
                     </>
                   )}
                 </button>
-                <button
-                  onClick={handleCopyAndMail}
+                <a
+                  href={createMailtoLink()}
+                  onClick={handleCopyToClipboard}
                   className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -415,7 +400,7 @@ export const ChallengeView: React.FC<ChallengeViewProps> = ({ records }) => {
                     <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                   </svg>
                   Copy & Open Mail
-                </button>
+                </a>
               </div>
               <p className="text-xs text-gray-500 text-center mt-2">
                 Format: Low,High,Confidence,NumCommutes,Score,Checksum
