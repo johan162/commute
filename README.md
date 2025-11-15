@@ -15,7 +15,7 @@
 </td>
 <td valign="top">
 
-> **A Progressive Web App (PWA) to track your commute time to work. It provides detailed (basic-, advanced-, and very advanced) statistics and visualizations to help you understand your travel patterns.**
+**A Progressive Web App (PWA) to track your commute time to work. It provides detailed statistics, data analysis, and visualizations to help understand travel patterns.
 
 ## <TL;DR> Quick start
 
@@ -28,9 +28,6 @@
 
 
 ### On Android:
-
-> [!NOTE]
-> On recent version of Android+Chrome you will get a question when opening the URL if you want to install as an application.
 
 - Click the extended menu (three vertical dots)
 - Select "Add to home screen"
@@ -130,21 +127,7 @@ The good new is that this happens automatically but depending on OS there are so
 
 **Android:** On Android/Chrome Desktop this is almost instant as the service worker in the background will agressively check for new versions in the original URL  and  may even prompt you to swipe down to refresh the app. By Swiping down on the app twice so you see the update spinner will force the aup to immediately check for updates.
 
-* **In short on Android:** Updates can be near-instantaneous and are triggered by a simple refresh, often guided by an in-app prompt.
 
-### Summary of OS differences
-
-| Feature               | iOS (Home Screen PWA)                        | Android / Desktop Chrome         |
-| :-------------------- | :------------------------------------------- | :------------------------------- |
-| **Update Trigger**    | Automatic, periodic (~24h cycle)             | On navigation/startup            |
-| **Manual Refresh**    | Does **not** trigger an update check         | **Does** trigger an update check |
-| **Activation**        | Requires a full app restart (close & reopen) | On next navigation/refresh       |
-| **User Notification** | None (it's silent)                           | Possible via in-app prompts      |
-| **Update Speed**      | Slow (can take over 24 hours to appear)      | Fast (can be immediate)          |
-
-
-
-&nbsp;
 &nbsp;
 
 ## Developer Quick Start
