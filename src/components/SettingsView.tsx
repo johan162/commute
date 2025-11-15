@@ -463,6 +463,35 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
           <p className="text-xs text-gray-500">
             The application will use a Bayesian weighted average to take each new recorded location into account based on its accuracy.
           </p>
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex-1 mr-4">
+              <span className="text-gray-300 font-semibold">Auto-record Work Location</span>
+              <p className="text-xs text-gray-500 mt-1">
+                Automatically save your GPS position as a work location every time you stop the timer.
+              </p>
+            </div>
+            <div className="relative inline-block w-12 h-6 flex-shrink-0">
+              <input
+                type="checkbox"
+                checked={autoRecordWorkLocation}
+                onChange={(e) => onAutoRecordWorkLocationChange(e.target.checked)}
+                className="sr-only"
+                id="autoRecordWorkLocationToggle"
+              />
+              <label
+                htmlFor="autoRecordWorkLocationToggle"
+                className={`block w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 ${
+                  autoRecordWorkLocation ? 'bg-cyan-500' : 'bg-gray-600'
+                }`}
+              >
+                <span
+                  className={`block w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-1 ${
+                    autoRecordWorkLocation ? 'translate-x-7' : 'translate-x-1'
+                  }`}
+                />
+              </label>
+            </div>
+          </div>
           <p className="text-gray-300 font-semibold">
             Current Recordings: <span className="text-cyan-400">{workLocationCount}</span>
           </p>
@@ -617,36 +646,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
           {!canUseAutoStop && (
             <p className="text-xs text-yellow-400">Add at least one work location to enable AutoStop.</p>
           )}
-
-          <div className="mt-4 pt-4 border-t border-gray-700">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-300 font-semibold">Auto-record Work Location</span>
-              <div className="relative inline-block w-12 h-6 flex-shrink-0">
-                <input
-                  type="checkbox"
-                  checked={autoRecordWorkLocation}
-                  onChange={(e) => onAutoRecordWorkLocationChange(e.target.checked)}
-                  className="sr-only"
-                  id="autoRecordWorkLocationToggle"
-                />
-                <label
-                  htmlFor="autoRecordWorkLocationToggle"
-                  className={`block w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 ${
-                    autoRecordWorkLocation ? 'bg-cyan-500' : 'bg-gray-600'
-                  }`}
-                >
-                  <span
-                    className={`block w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-1 ${
-                      autoRecordWorkLocation ? 'translate-x-7' : 'translate-x-1'
-                    }`}
-                  />
-                </label>
-              </div>
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Automatically record your GPS location as a work each time you stop the timer.
-            </p>
-          </div>
 
           <div className="mt-4 pt-4 border-t border-gray-700">
             <div className="space-y-3">
