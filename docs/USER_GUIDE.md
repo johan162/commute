@@ -1,5 +1,11 @@
 # Commute Tracker User Guide
 
+> [!NOTE]
+> Covers version v1.0.0
+
+---
+
+
 Welcome to **Commute Tracker**! This guide will help you get the most out of your commute tracking experience and understand all the powerful features at your fingertips.
 
 ## What is Commute Tracker?

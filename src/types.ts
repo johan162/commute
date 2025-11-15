@@ -18,3 +18,5 @@ export interface CommuteRecord {
 }
 
 export type View = 'main' | 'stats' | 'history' | 'challenge' | 'settings';
+
+export type DebounceMode = 'disable-button' | 'discard-record';

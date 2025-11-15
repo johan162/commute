@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import type { Coordinates, WorkLocation, CommuteRecord } from '../types';
+import type { Coordinates, WorkLocation, CommuteRecord, DebounceMode } from '../types';
 import { Card } from './Card';
 import { Button } from './Button';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -31,9 +31,11 @@ interface SettingsViewProps {
   onDebouncingEnabledChange: (enabled: boolean) => void;
   debouncingLimit: number;
   onDebouncingLimitChange: (limit: number) => void;
+  debouncingMode: DebounceMode;
+  onDebouncingModeChange: (mode: DebounceMode) => void;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onClearWorkLocations, workLocationCount, averageWorkLocation, workLocations, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange, onLoadDebugData, useNixieDisplay, onUseNixieDisplayChange, showAdvancedStatistics, onShowAdvancedStatisticsChange, showCalendarHeatmap, onShowCalendarHeatmapChange, onImportCSV, debouncingEnabled, onDebouncingEnabledChange, debouncingLimit, onDebouncingLimitChange }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onClearWorkLocations, workLocationCount, averageWorkLocation, workLocations, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange, onLoadDebugData, useNixieDisplay, onUseNixieDisplayChange, showAdvancedStatistics, onShowAdvancedStatisticsChange, showCalendarHeatmap, onShowCalendarHeatmapChange, onImportCSV, debouncingEnabled, onDebouncingEnabledChange, debouncingLimit, onDebouncingLimitChange, debouncingMode, onDebouncingModeChange }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [showAboutDetails, setShowAboutDetails] = useState(false);
@@ -75,6 +77,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
   const [trendPercentage, setTrendPercentage] = useState(20);
 
   const canUseAutoStop = workLocationCount > 0;
+
+  const debounceModes: { value: DebounceMode; title: string; description: string }[] = [
+    {
+      value: 'disable-button',
+      title: 'Lock Arrive Button',
+      description: 'Arrive is disabled until the minimum duration has elapsed. Prevents accidental early stops.'
+    },
+    {
+      value: 'discard-record',
+      title: 'Allow but Discard',
+      description: 'Arrive stays active, but commutes shorter than the limit are ignored when saving.'
+    }
+  ];
 
   useEffect(() => {
     if (!canUseAutoStop && autoStopEnabled) {
@@ -448,6 +463,35 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
           <p className="text-xs text-gray-500">
             The application will use a Bayesian weighted average to take each new recorded location into account based on its accuracy.
           </p>
+          <div className="flex items-center justify-between pt-2">
+            <div className="flex-1 mr-4">
+              <span className="text-gray-300 font-semibold">Auto-record Work Location</span>
+              <p className="text-xs text-gray-500 mt-1">
+                Automatically save your GPS position as a work location every time you stop the timer.
+              </p>
+            </div>
+            <div className="relative inline-block w-12 h-6 flex-shrink-0">
+              <input
+                type="checkbox"
+                checked={autoRecordWorkLocation}
+                onChange={(e) => onAutoRecordWorkLocationChange(e.target.checked)}
+                className="sr-only"
+                id="autoRecordWorkLocationToggle"
+              />
+              <label
+                htmlFor="autoRecordWorkLocationToggle"
+                className={`block w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 ${
+                  autoRecordWorkLocation ? 'bg-cyan-500' : 'bg-gray-600'
+                }`}
+              >
+                <span
+                  className={`block w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-1 ${
+                    autoRecordWorkLocation ? 'translate-x-7' : 'translate-x-1'
+                  }`}
+                />
+              </label>
+            </div>
+          </div>
           <p className="text-gray-300 font-semibold">
             Current Recordings: <span className="text-cyan-400">{workLocationCount}</span>
           </p>
@@ -519,11 +563,28 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
               {/* Individual location details with accuracy weighting information */}
               {workLocations.length > 1 && (
                 <div className="mt-3 text-xs text-gray-500">
-                  <details className="cursor-pointer">
-                    <summary className="hover:text-gray-400 flex items-center space-x-2">
-                      <span>📍 Show individual recordings with accuracy weights ({workLocationCount} total)</span>
+                  <details className="group bg-gray-900/40 rounded-lg border border-gray-800">
+                    <summary className="flex items-center justify-between px-3 py-2 cursor-pointer select-none text-gray-300 hover:text-white">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">📍</span>
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-sm">Show individual recordings</span>
+                          <span className="text-[11px] text-gray-400">
+                            {workLocationCount} weighted entries available
+                          </span>
+                        </div>
+                      </div>
+                      <svg
+                        className="w-4 h-4 text-cyan-400 transition-transform duration-200 group-open:rotate-180"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
                     </summary>
-                    <div className="mt-2 space-y-2 max-h-40 overflow-y-auto bg-gray-900 p-3 rounded">
+                    <div className="mt-0 space-y-2 max-h-40 overflow-y-auto bg-gray-900 p-3 rounded-b-lg border-t border-gray-800">
                       {workLocations.map((loc, index) => {
                         const weight = 1 / (loc.accuracy * loc.accuracy);
                         const totalWeight = workLocations.reduce((sum, l) => sum + (1 / (l.accuracy * l.accuracy)), 0);
@@ -602,36 +663,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
           {!canUseAutoStop && (
             <p className="text-xs text-yellow-400">Add at least one work location to enable AutoStop.</p>
           )}
-
-          <div className="mt-4 pt-4 border-t border-gray-700">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-300 font-semibold">Auto-record Work Location</span>
-              <div className="relative inline-block w-12 h-6 flex-shrink-0">
-                <input
-                  type="checkbox"
-                  checked={autoRecordWorkLocation}
-                  onChange={(e) => onAutoRecordWorkLocationChange(e.target.checked)}
-                  className="sr-only"
-                  id="autoRecordWorkLocationToggle"
-                />
-                <label
-                  htmlFor="autoRecordWorkLocationToggle"
-                  className={`block w-12 h-6 rounded-full cursor-pointer transition-colors duration-200 ${
-                    autoRecordWorkLocation ? 'bg-cyan-500' : 'bg-gray-600'
-                  }`}
-                >
-                  <span
-                    className={`block w-4 h-4 bg-white rounded-full shadow-md transform transition-transform duration-200 mt-1 ${
-                      autoRecordWorkLocation ? 'translate-x-7' : 'translate-x-1'
-                    }`}
-                  />
-                </label>
-              </div>
-            </div>
-            <p className="text-xs text-gray-500 mt-2">
-              Automatically record your GPS location as a work each time you stop the timer.
-            </p>
-          </div>
 
           <div className="mt-4 pt-4 border-t border-gray-700">
             <div className="space-y-3">
@@ -788,75 +819,105 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
         </div>
       </Card>
       
-      <Card title="Data Management">
+      <Card title="De-bounce">
         <div className="space-y-6">
-          {/* De-bouncing Section */}
-          <div className="pb-4 border-b border-gray-700">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex-1 mr-4">
-                <span className="text-gray-300 font-semibold">De-Bouncing</span>
-                <p className="text-xs text-gray-500 mt-1">
-                  Filter out very short commutes below a minimum duration threshold.
-                </p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={debouncingEnabled}
-                  onChange={(e) => onDebouncingEnabledChange(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-cyan-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
-              </label>
+          <div className="flex items-center justify-between">
+            <div className="flex-1 mr-4">
+              <span className="text-gray-300 font-semibold">Enable De-bounce</span>
+              <p className="text-xs text-gray-500 mt-1">
+                Prevent accidental taps on the Arrive button or discard ultra-short commutes.
+              </p>
             </div>
-            
-            {/* De-bouncing Limit Slider */}
-            <div className={`transition-opacity duration-200 ${debouncingEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm text-gray-400">Minimum Duration</label>
-                <span className="text-cyan-400 font-semibold">
-                  {debouncingLimit === 60 && '1 min'}
-                  {debouncingLimit === 120 && '2 min'}
-                  {debouncingLimit === 300 && '5 min'}
-                  {debouncingLimit === 900 && '15 min'}
-                </span>
-              </div>
+            <label className="relative inline-flex items-center cursor-pointer">
               <input
-                type="range"
-                min="0"
-                max="3"
-                step="1"
-                value={
-                  debouncingLimit === 60 ? 0 :
-                  debouncingLimit === 120 ? 1 :
-                  debouncingLimit === 300 ? 2 : 3
-                }
-                onChange={(e) => {
-                  const index = parseInt(e.target.value);
-                  const limits = [60, 120, 300, 900]; // 1min, 2min, 5min, 15min
-                  onDebouncingLimitChange(limits[index]);
-                }}
-                disabled={!debouncingEnabled}
-                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-thumb"
+                type="checkbox"
+                checked={debouncingEnabled}
+                onChange={(e) => onDebouncingEnabledChange(e.target.checked)}
+                className="sr-only peer"
               />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>1m</span>
-                <span>2m</span>
-                <span>5m</span>
-                <span>15m</span>
-              </div>
+              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-cyan-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+            </label>
+          </div>
+
+          <div className={`transition-opacity duration-200 ${debouncingEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm text-gray-400">Minimum Duration</label>
+              <span className="text-cyan-400 font-semibold">
+                {debouncingLimit === 60 && '1 min'}
+                {debouncingLimit === 120 && '2 min'}
+                {debouncingLimit === 300 && '5 min'}
+                {debouncingLimit === 900 && '15 min'}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="3"
+              step="1"
+              value={
+                debouncingLimit === 60 ? 0 :
+                debouncingLimit === 120 ? 1 :
+                debouncingLimit === 300 ? 2 : 3
+              }
+              onChange={(e) => {
+                const index = parseInt(e.target.value);
+                const limits = [60, 120, 300, 900];
+                onDebouncingLimitChange(limits[index]);
+              }}
+              disabled={!debouncingEnabled}
+              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-thumb"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>1m</span>
+              <span>2m</span>
+              <span>5m</span>
+              <span>15m</span>
             </div>
           </div>
 
+          <div className={`space-y-3 ${debouncingEnabled ? '' : 'opacity-40 pointer-events-none'}`}>
+            <p className="text-sm text-gray-400">Behavior</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {debounceModes.map((mode) => (
+                <button
+                  key={mode.value}
+                  type="button"
+                  onClick={() => onDebouncingModeChange(mode.value)}
+                  className={`text-left border rounded-lg p-3 transition-colors duration-200 ${
+                    debouncingMode === mode.value
+                      ? 'border-cyan-400 bg-cyan-500/10 shadow-lg shadow-cyan-500/10'
+                      : 'border-gray-700 bg-gray-800 hover:border-cyan-400/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-gray-200 font-semibold">{mode.title}</span>
+                    {debouncingMode === mode.value && (
+                      <span className="text-cyan-400 text-xs font-semibold">Active</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400">{mode.description}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-500">
+            Tip: Switching modes or turning De-bounce off will immediately re-enable the Arrive button if it was locked.
+          </p>
+        </div>
+      </Card>
+
+      <Card title="Data Management">
+        <div className="space-y-6">
           {/* Import Data Section */}
           <div className="pb-4 border-b border-gray-700">
           <div className="flex-1 mr-4">
           <span className="text-gray-300 font-semibold">Import Data</span>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 mt-1 mb-4">
             Import commute records from a CSV file. The file must have the headers: <code>ID,Date,Time,Duration (s)</code>.
           </p>
           </div>
-          <p className="text-xs text-yellow-400">
+          <p className="text-xs text-yellow-400 mb-3">
             ⚠️ This will replace all existing commute records.
           </p>
           <div className="flex items-center space-x-4">
@@ -877,7 +938,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
           )}
         </div>
 
-        <div className="pt-4">
+        <div className="pt-1">
           <div className="space-y-4">
             <div className="flex-1 mr-4">
             <span className="text-gray-300 font-semibold">Clear All Data</span>

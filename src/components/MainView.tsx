@@ -1,5 +1,5 @@
 import React from 'react';
-import type { Coordinates } from '../types';
+import type { Coordinates, DebounceMode } from '../types';
 import { useCommuteTimer } from '../hooks/useCommuteTimer';
 import { Card } from './Card';
 
@@ -12,6 +12,7 @@ interface MainViewProps {
   useNixieDisplay?: boolean;
   debouncingEnabled?: boolean;
   debouncingLimit?: number;
+  debouncingMode?: DebounceMode;
 }
 
 const formatTime = (totalSeconds: number): string => {
@@ -70,7 +71,7 @@ const NixieDisplay: React.FC<{ time: string }> = ({ time }) => {
   );
 };
 
-export const MainView: React.FC<MainViewProps> = ({ onSaveCommute, workLocation, autoStopRadius, autoRecordWorkLocation, onAddWorkLocation, useNixieDisplay = false, debouncingEnabled = false, debouncingLimit = 60 }) => {
+export const MainView: React.FC<MainViewProps> = ({ onSaveCommute, workLocation, autoStopRadius, autoRecordWorkLocation, onAddWorkLocation, useNixieDisplay = false, debouncingEnabled = false, debouncingLimit = 60, debouncingMode = 'discard-record' }) => {
   const { isRunning, elapsedTime, startTimer, stopTimer, statusMessage, distance } = useCommuteTimer({
     workLocation,
     onStop: onSaveCommute,
@@ -79,11 +80,16 @@ export const MainView: React.FC<MainViewProps> = ({ onSaveCommute, workLocation,
     onAddWorkLocation,
   });
 
+  const shouldDisableArriveButton = debouncingEnabled && debouncingMode === 'disable-button' && isRunning && elapsedTime < debouncingLimit;
+
   const handleStart = () => {
     startTimer();
   };
 
   const handleStop = () => {
+    if (shouldDisableArriveButton) {
+      return;
+    }
     stopTimer();
   };
 
@@ -113,9 +119,14 @@ export const MainView: React.FC<MainViewProps> = ({ onSaveCommute, workLocation,
         ) : (
           <button
             onClick={handleStop}
-            className="w-full bg-red-500 hover:bg-red-600 text-white font-bold py-6 text-2xl rounded-lg shadow-lg transition-transform transform hover:scale-105"
+            disabled={shouldDisableArriveButton}
+            className={`w-full bg-red-500 text-white font-bold py-6 text-2xl rounded-lg shadow-lg transition-transform transform ${
+              shouldDisableArriveButton
+                ? 'opacity-60 cursor-not-allowed'
+                : 'hover:bg-red-600 hover:scale-105'
+            }`}
           >
-            Arrive
+            {shouldDisableArriveButton ? 'Arrive (locked)' : 'Arrive'}
           </button>
         )}
         
@@ -127,14 +138,35 @@ export const MainView: React.FC<MainViewProps> = ({ onSaveCommute, workLocation,
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>
-                De-bouncing enabled. <br /> Commutes &lt; {' '}
-                <span className="text-cyan-400 font-semibold">
-                  {debouncingLimit === 60 && '1 min'}
-                  {debouncingLimit === 120 && '2 min'}
-                  {debouncingLimit === 300 && '5 min'}
-                  {debouncingLimit === 900 && '15 min'}
-                </span>
-                {' '}will not be saved.
+                De-bouncing enabled. <br />
+                {debouncingMode === 'disable-button' ? (
+                  <>
+                    Arrive button unlocks after{' '}
+                    <span className="text-cyan-400 font-semibold">
+                      {debouncingLimit === 60 && '1 min'}
+                      {debouncingLimit === 120 && '2 min'}
+                      {debouncingLimit === 300 && '5 min'}
+                      {debouncingLimit === 900 && '15 min'}
+                    </span>
+                    .
+                    {isRunning && shouldDisableArriveButton && (
+                      <span className="block text-xs text-gray-500 mt-1">
+                        {`Remaining: ${Math.max(0, Math.ceil(debouncingLimit - elapsedTime))}s`}
+                      </span>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    Commutes &lt; {' '}
+                    <span className="text-cyan-400 font-semibold">
+                      {debouncingLimit === 60 && '1 min'}
+                      {debouncingLimit === 120 && '2 min'}
+                      {debouncingLimit === 300 && '5 min'}
+                      {debouncingLimit === 900 && '15 min'}
+                    </span>
+                    {' '}will not be saved.
+                  </>
+                )}
               </span>
             </div>
           </div>

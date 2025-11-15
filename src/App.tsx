@@ -7,7 +7,7 @@ import { ChallengeView } from './components/ChallengeView';
 import { SettingsView } from './components/SettingsView';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import * as statsService from './services/statsService';
-import type { CommuteRecord, Coordinates, WorkLocation, View } from './types';
+import type { CommuteRecord, Coordinates, WorkLocation, View, DebounceMode } from './types';
 
 const App: React.FC = () => {
   const [view, setView] = useState<View>('main');
@@ -22,7 +22,8 @@ const App: React.FC = () => {
   const [showCalendarHeatmap, setShowCalendarHeatmap] = useLocalStorage<boolean>('showCalendarHeatmap', false);
   const [debouncingEnabled, setDebouncingEnabled] = useLocalStorage<boolean>('debouncingEnabled', false);
   const [debouncingLimit, setDebouncingLimit] = useLocalStorage<number>('debouncingLimit', 60); // in seconds: 1min default
-  const version = '1.4.2';
+  const [debouncingMode, setDebouncingMode] = useLocalStorage<DebounceMode>('debouncingMode', 'discard-record');
+  const version = '1.5.0';
 
   const averageWorkLocation = useMemo<Coordinates | null>(() => {
     if (workLocations.length === 0) return null;
@@ -70,7 +71,7 @@ const App: React.FC = () => {
 
   const addCommuteRecord = (duration: number): boolean => {
     // Check if de-bouncing is enabled and duration is below limit
-    if (debouncingEnabled && duration < debouncingLimit) {
+    if (debouncingEnabled && debouncingMode === 'discard-record' && duration < debouncingLimit) {
       console.log(`Commute record rejected by de-bouncing: ${duration}s < ${debouncingLimit}s`);
       return false; // Record was not saved
     }
@@ -153,6 +154,8 @@ const App: React.FC = () => {
           onDebouncingEnabledChange={setDebouncingEnabled}
           debouncingLimit={debouncingLimit}
           onDebouncingLimitChange={setDebouncingLimit}
+          debouncingMode={debouncingMode}
+          onDebouncingModeChange={setDebouncingMode}
         />;
       case 'main':
       default:
@@ -165,6 +168,7 @@ const App: React.FC = () => {
           useNixieDisplay={useNixieDisplay}
           debouncingEnabled={debouncingEnabled}
           debouncingLimit={debouncingLimit}
+          debouncingMode={debouncingMode}
         />;
     }
   };
