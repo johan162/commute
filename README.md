@@ -15,12 +15,12 @@
 </td>
 <td valign="top">
 
-**A Progressive Web App (PWA) to track your commute time to work. It provides detailed statistics, data analysis, and visualizations to help understand travel patterns.
+**A Progressive Web App (PWA) to track your commute time to work. It provides detailed statistics, data analysis, and visualizations to help understand travel patterns.**
 
 ## <TL;DR> Quick start
 
-> [!IMPORTANT]
-> *Note on privacy: Data is ONLY stored locally in the browser/App. No remote data is saved!*
+> [!NOTE]
+> **Note on privacy:** Data is ONLY stored locally in the browser/App. No remote data is saved!*
 
 **Step 1:** Open the App URL on your device: https://johan162.github.io/commute
 
