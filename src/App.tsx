@@ -22,7 +22,7 @@ const App: React.FC = () => {
   const [showCalendarHeatmap, setShowCalendarHeatmap] = useLocalStorage<boolean>('showCalendarHeatmap', false);
   const [debouncingEnabled, setDebouncingEnabled] = useLocalStorage<boolean>('debouncingEnabled', false);
   const [debouncingLimit, setDebouncingLimit] = useLocalStorage<number>('debouncingLimit', 60); // in seconds: 1min default
-  const version = '1.4.0';
+  const version = '1.4.1';
 
   const averageWorkLocation = useMemo<Coordinates | null>(() => {
     if (workLocations.length === 0) return null;
