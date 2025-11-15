@@ -563,11 +563,28 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
               {/* Individual location details with accuracy weighting information */}
               {workLocations.length > 1 && (
                 <div className="mt-3 text-xs text-gray-500">
-                  <details className="cursor-pointer">
-                    <summary className="hover:text-gray-400 flex items-center space-x-2">
-                      <span>📍 Show individual recordings with accuracy weights ({workLocationCount} total)</span>
+                  <details className="group bg-gray-900/40 rounded-lg border border-gray-800">
+                    <summary className="flex items-center justify-between px-3 py-2 cursor-pointer select-none text-gray-300 hover:text-white">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base">📍</span>
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-sm">Show individual recordings</span>
+                          <span className="text-[11px] text-gray-400">
+                            {workLocationCount} weighted entries available
+                          </span>
+                        </div>
+                      </div>
+                      <svg
+                        className="w-4 h-4 text-cyan-400 transition-transform duration-200 group-open:rotate-180"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
                     </summary>
-                    <div className="mt-2 space-y-2 max-h-40 overflow-y-auto bg-gray-900 p-3 rounded">
+                    <div className="mt-0 space-y-2 max-h-40 overflow-y-auto bg-gray-900 p-3 rounded-b-lg border-t border-gray-800">
                       {workLocations.map((loc, index) => {
                         const weight = 1 / (loc.accuracy * loc.accuracy);
                         const totalWeight = workLocations.reduce((sum, l) => sum + (1 / (l.accuracy * l.accuracy)), 0);
