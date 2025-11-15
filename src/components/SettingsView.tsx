@@ -913,11 +913,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
           <div className="pb-4 border-b border-gray-700">
           <div className="flex-1 mr-4">
           <span className="text-gray-300 font-semibold">Import Data</span>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 mt-1 mb-4">
             Import commute records from a CSV file. The file must have the headers: <code>ID,Date,Time,Duration (s)</code>.
           </p>
           </div>
-          <p className="text-xs text-yellow-400">
+          <p className="text-xs text-yellow-400 mb-3">
             ⚠️ This will replace all existing commute records.
           </p>
           <div className="flex items-center space-x-4">
@@ -938,7 +938,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
           )}
         </div>
 
-        <div className="pt-4">
+        <div className="pt-1">
           <div className="space-y-4">
             <div className="flex-1 mr-4">
             <span className="text-gray-300 font-semibold">Clear All Data</span>
