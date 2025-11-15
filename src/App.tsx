@@ -23,7 +23,7 @@ const App: React.FC = () => {
   const [debouncingEnabled, setDebouncingEnabled] = useLocalStorage<boolean>('debouncingEnabled', false);
   const [debouncingLimit, setDebouncingLimit] = useLocalStorage<number>('debouncingLimit', 60); // in seconds: 1min default
   const [debouncingMode, setDebouncingMode] = useLocalStorage<DebounceMode>('debouncingMode', 'discard-record');
-  const version = '1.4.2';
+  const version = '1.5.0';
 
   const averageWorkLocation = useMemo<Coordinates | null>(() => {
     if (workLocations.length === 0) return null;

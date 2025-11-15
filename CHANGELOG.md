@@ -1,3 +1,18 @@
+## [1.5.0] - 2025-11-15
+
+Release type: minor
+
+### 📋 Summary 
+- Improved De-bounce functionality with two-modes
+
+### 🚀 Improvements
+- [upd] Introduced two modes of de-bounce, disable button or enabled and stops the timer but does not save it.
+- [upd] Make it more obvious that there is a list of Workplace that can be expanded on the setting tab
+
+### 📖 Documentation
+- Some shortening of README to make it more concise 
+
+
 ## [1.4.2] - 2025-11-15
 
 Release type: patch
