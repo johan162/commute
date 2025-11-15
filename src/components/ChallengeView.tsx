@@ -28,6 +28,11 @@ export const ChallengeView: React.FC<ChallengeViewProps> = ({ records }) => {
   const [checksum, setChecksum] = useState<string>('');
   const [coverageStats, setCoverageStats] = useState<{ below: number; within: number; above: number } | null>(null);
   const [copySuccess, setCopySuccess] = useState<boolean>(false);
+  const [score, setScore] = useState<number | null>(null);
+
+  const isPWA = window.matchMedia('(display-mode: standalone)').matches;
+  const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const showMailButton = !isIos || !isPWA;
 
   // Filter for morning commutes only (00:00 - 11:59)
   const morningRecords = useMemo(() => {
@@ -89,10 +94,12 @@ export const ChallengeView: React.FC<ChallengeViewProps> = ({ records }) => {
 
   const handleLowChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLowEstimate(e.target.value);
+    setScore(null); // Reset score when inputs change
   };
 
   const handleHighChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setHighEstimate(e.target.value);
+    setScore(null); // Reset score when inputs change
   };
 
   const handleConfidenceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -390,21 +397,20 @@ export const ChallengeView: React.FC<ChallengeViewProps> = ({ records }) => {
                     </>
                   )}
                 </button>
-                <a
-                  href={createMailtoLink()}
-                  onClick={handleCopyToClipboard}
-                  className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-                    <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-                  </svg>
-                  Copy & Open Mail
-                </a>
+                {showMailButton && (
+                  <a
+                    href={createMailtoLink()}
+                    onClick={handleCopyToClipboard}
+                    className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors text-sm font-medium"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
+                      <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
+                    </svg>
+                    Copy & Open Mail
+                  </a>
+                )}
               </div>
-              <p className="text-xs text-gray-500 text-center mt-2">
-                Format: Low,High,Confidence,NumCommutes,Score,Checksum
-              </p>
             </div>
           )}
 
@@ -424,3 +430,5 @@ export const ChallengeView: React.FC<ChallengeViewProps> = ({ records }) => {
     </div>
   );
 };
+
+export default ChallengeView;
