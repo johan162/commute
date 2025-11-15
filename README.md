@@ -112,7 +112,8 @@
 
 ## How to Use
 
-1. **Start Tracking**: Tap "Start Commute" when leaving home. 
+1. **Start Tracking**: Tap `Leaving` to start the timer.
+2. **Stop Tracking**: Tap `Arrive` to stop the timer. 
 2. **Automatic Stop**: Enable GPS geofencing in Settings to auto-stop when arriving at work so you never forget to stop the timer and have the timer run all day!
 3. **View Insights**: Check the Statistics tab for trends, or export data as CSV/PDF.
 4. **Customize**: Adjust settings like radius or weekend inclusion for personalized analytics.
@@ -122,15 +123,12 @@ For detailed guidance, see the complete [User Guide](docs/USER_GUIDE.md).
 
 ## Updating a previously installed app
 
-The good new is that this happens automatically (in theory) but depending on OS there are some crucial differences.
+The good new is that this happens automatically but depending on OS there are some crucial differences.
 
-**iOS:** If you are on an iOS device the bad news are that this check only happens roughly every 24h (the exact interval is unknown) and will require
-a complete App restart (swiping it away from the multitasking App switcher). 
+**iOS:** If you are on an iOS device the checks will happen automatically but there are a few hours delay as the service worker in the background only checks a few times a day. The exact schedule is unknown. To force an update sooner you need to remove the bookmark and open the app web-page (which will retrieve the latest version) and save it as a bookmark again.
 
-* **In short on iOS:** Updates are automatic but slow and require a full app restart. Refreshing does nothing.
 
-**Android:** On Android/Chrome Desktop this is almost instant as the service worker in the background will agressively check for new versions in the original URL  and 
-may even prompt you to swipe down to refresh the app. 
+**Android:** On Android/Chrome Desktop this is almost instant as the service worker in the background will agressively check for new versions in the original URL  and  may even prompt you to swipe down to refresh the app. By Swiping down on the app twice so you see the update spinner will force the aup to immediately check for updates.
 
 * **In short on Android:** Updates can be near-instantaneous and are triggered by a simple refresh, often guided by an in-app prompt.
 
