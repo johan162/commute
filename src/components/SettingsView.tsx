@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import type { Coordinates, WorkLocation, CommuteRecord } from '../types';
+import type { Coordinates, WorkLocation, CommuteRecord, DebounceMode } from '../types';
 import { Card } from './Card';
 import { Button } from './Button';
 import { useLocalStorage } from '../hooks/useLocalStorage';
@@ -31,9 +31,11 @@ interface SettingsViewProps {
   onDebouncingEnabledChange: (enabled: boolean) => void;
   debouncingLimit: number;
   onDebouncingLimitChange: (limit: number) => void;
+  debouncingMode: DebounceMode;
+  onDebouncingModeChange: (mode: DebounceMode) => void;
 }
 
-export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onClearWorkLocations, workLocationCount, averageWorkLocation, workLocations, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange, onLoadDebugData, useNixieDisplay, onUseNixieDisplayChange, showAdvancedStatistics, onShowAdvancedStatisticsChange, showCalendarHeatmap, onShowCalendarHeatmapChange, onImportCSV, debouncingEnabled, onDebouncingEnabledChange, debouncingLimit, onDebouncingLimitChange }) => {
+export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onClearWorkLocations, workLocationCount, averageWorkLocation, workLocations, onClearAllData, autoStopRadius, onAutoStopRadiusChange, autoStopEnabled, onAutoStopEnabledChange, autoRecordWorkLocation, onAutoRecordWorkLocationChange, includeWeekends, onIncludeWeekendsChange, onLoadDebugData, useNixieDisplay, onUseNixieDisplayChange, showAdvancedStatistics, onShowAdvancedStatisticsChange, showCalendarHeatmap, onShowCalendarHeatmapChange, onImportCSV, debouncingEnabled, onDebouncingEnabledChange, debouncingLimit, onDebouncingLimitChange, debouncingMode, onDebouncingModeChange }) => {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [showAboutDetails, setShowAboutDetails] = useState(false);
@@ -75,6 +77,19 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
   const [trendPercentage, setTrendPercentage] = useState(20);
 
   const canUseAutoStop = workLocationCount > 0;
+
+  const debounceModes: { value: DebounceMode; title: string; description: string }[] = [
+    {
+      value: 'disable-button',
+      title: 'Lock Arrive Button',
+      description: 'Arrive is disabled until the minimum duration has elapsed. Prevents accidental early stops.'
+    },
+    {
+      value: 'discard-record',
+      title: 'Allow but Discard',
+      description: 'Arrive stays active, but commutes shorter than the limit are ignored when saving.'
+    }
+  ];
 
   useEffect(() => {
     if (!canUseAutoStop && autoStopEnabled) {
@@ -788,66 +803,96 @@ export const SettingsView: React.FC<SettingsViewProps> = ({ onAddLocation, onCle
         </div>
       </Card>
       
-      <Card title="Data Management">
+      <Card title="De-bounce">
         <div className="space-y-6">
-          {/* De-bouncing Section */}
-          <div className="pb-4 border-b border-gray-700">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex-1 mr-4">
-                <span className="text-gray-300 font-semibold">De-Bouncing</span>
-                <p className="text-xs text-gray-500 mt-1">
-                  Filter out very short commutes below a minimum duration threshold.
-                </p>
-              </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={debouncingEnabled}
-                  onChange={(e) => onDebouncingEnabledChange(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-cyan-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
-              </label>
+          <div className="flex items-center justify-between">
+            <div className="flex-1 mr-4">
+              <span className="text-gray-300 font-semibold">Enable De-bounce</span>
+              <p className="text-xs text-gray-500 mt-1">
+                Prevent accidental taps on the Arrive button or discard ultra-short commutes.
+              </p>
             </div>
-            
-            {/* De-bouncing Limit Slider */}
-            <div className={`transition-opacity duration-200 ${debouncingEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
-              <div className="flex items-center justify-between mb-2">
-                <label className="text-sm text-gray-400">Minimum Duration</label>
-                <span className="text-cyan-400 font-semibold">
-                  {debouncingLimit === 60 && '1 min'}
-                  {debouncingLimit === 120 && '2 min'}
-                  {debouncingLimit === 300 && '5 min'}
-                  {debouncingLimit === 900 && '15 min'}
-                </span>
-              </div>
+            <label className="relative inline-flex items-center cursor-pointer">
               <input
-                type="range"
-                min="0"
-                max="3"
-                step="1"
-                value={
-                  debouncingLimit === 60 ? 0 :
-                  debouncingLimit === 120 ? 1 :
-                  debouncingLimit === 300 ? 2 : 3
-                }
-                onChange={(e) => {
-                  const index = parseInt(e.target.value);
-                  const limits = [60, 120, 300, 900]; // 1min, 2min, 5min, 15min
-                  onDebouncingLimitChange(limits[index]);
-                }}
-                disabled={!debouncingEnabled}
-                className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-thumb"
+                type="checkbox"
+                checked={debouncingEnabled}
+                onChange={(e) => onDebouncingEnabledChange(e.target.checked)}
+                className="sr-only peer"
               />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
-                <span>1m</span>
-                <span>2m</span>
-                <span>5m</span>
-                <span>15m</span>
-              </div>
+              <div className="w-11 h-6 bg-gray-700 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-cyan-500 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+            </label>
+          </div>
+
+          <div className={`transition-opacity duration-200 ${debouncingEnabled ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-sm text-gray-400">Minimum Duration</label>
+              <span className="text-cyan-400 font-semibold">
+                {debouncingLimit === 60 && '1 min'}
+                {debouncingLimit === 120 && '2 min'}
+                {debouncingLimit === 300 && '5 min'}
+                {debouncingLimit === 900 && '15 min'}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max="3"
+              step="1"
+              value={
+                debouncingLimit === 60 ? 0 :
+                debouncingLimit === 120 ? 1 :
+                debouncingLimit === 300 ? 2 : 3
+              }
+              onChange={(e) => {
+                const index = parseInt(e.target.value);
+                const limits = [60, 120, 300, 900];
+                onDebouncingLimitChange(limits[index]);
+              }}
+              disabled={!debouncingEnabled}
+              className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider-thumb"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>1m</span>
+              <span>2m</span>
+              <span>5m</span>
+              <span>15m</span>
             </div>
           </div>
 
+          <div className={`space-y-3 ${debouncingEnabled ? '' : 'opacity-40 pointer-events-none'}`}>
+            <p className="text-sm text-gray-400">Behavior</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {debounceModes.map((mode) => (
+                <button
+                  key={mode.value}
+                  type="button"
+                  onClick={() => onDebouncingModeChange(mode.value)}
+                  className={`text-left border rounded-lg p-3 transition-colors duration-200 ${
+                    debouncingMode === mode.value
+                      ? 'border-cyan-400 bg-cyan-500/10 shadow-lg shadow-cyan-500/10'
+                      : 'border-gray-700 bg-gray-800 hover:border-cyan-400/50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-gray-200 font-semibold">{mode.title}</span>
+                    {debouncingMode === mode.value && (
+                      <span className="text-cyan-400 text-xs font-semibold">Active</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-gray-400">{mode.description}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-500">
+            Tip: Switching modes or turning De-bounce off will immediately re-enable the Arrive button if it was locked.
+          </p>
+        </div>
+      </Card>
+
+      <Card title="Data Management">
+        <div className="space-y-6">
           {/* Import Data Section */}
           <div className="pb-4 border-b border-gray-700">
           <div className="flex-1 mr-4">
