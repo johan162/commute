@@ -74,8 +74,8 @@ const isChristmasSeason = (): boolean => {
   const month = now.getMonth(); // 0-indexed: 11 = December
   const day = now.getDate();
   
-  // December 1-30
-  return month === 11 && day >= 1 && day <= 30;
+  // December 13-30
+  return month === 11 && day >= 13 && day <= 30;
 };
 
 // Nixie tube digit component
