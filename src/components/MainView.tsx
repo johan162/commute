@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Coordinates, DebounceMode } from '../types';
 import { useCommuteTimer } from '../hooks/useCommuteTimer';
 import { Card } from './Card';
@@ -20,6 +20,62 @@ const formatTime = (totalSeconds: number): string => {
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = Math.floor(totalSeconds % 60);
   return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+};
+
+// Snowflake component
+interface Snowflake {
+  id: number;
+  left: number;
+  size: number;
+  duration: number;
+  delay: number;
+  opacity: number;
+}
+
+const SnowfallEffect: React.FC = () => {
+  const [snowflakes, setSnowflakes] = useState<Snowflake[]>([]);
+
+  useEffect(() => {
+    // Generate 20 snowflakes with random properties
+    const flakes: Snowflake[] = Array.from({ length: 20 }, (_, i) => ({
+      id: i,
+      left: Math.random() * 100, // Random horizontal position (%)
+      size: Math.random() * 5 + 4, // Size between 4-9px
+      duration: Math.random() * 15 + 12, // Fall duration 10-20s
+      delay: Math.random() * 5, // Start delay 0-5s
+      opacity: Math.random() * 0.4 + 0.3, // Opacity 0.3-0.7
+    }));
+    setSnowflakes(flakes);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-50 overflow-hidden">
+      {snowflakes.map((flake) => (
+        <div
+          key={flake.id}
+          className="absolute rounded-full bg-white shadow-sm"
+          style={{
+            left: `${flake.left}%`,
+            width: `${flake.size}px`,
+            height: `${flake.size}px`,
+            opacity: flake.opacity,
+            animation: `snowfall ${flake.duration}s linear ${flake.delay}s infinite`,
+            filter: 'blur(0.5px)',
+          }}
+        />
+      ))}
+    </div>
+  );
+};
+
+// Helper to check if it's Christmas season
+const isChristmasSeason = (): boolean => {
+  const now = new Date();
+  const month = now.getMonth(); // 0-indexed: 11 = December
+  const day = now.getDate();
+  
+  // December 13-30
+  return month === 11 && day >= 13 && day <= 30;
 };
 
 // Nixie tube digit component
@@ -101,8 +157,10 @@ export const MainView: React.FC<MainViewProps> = ({ onSaveCommute, workLocation,
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-full gap-6">
-      <Card>
+    <>
+      {isChristmasSeason() && <SnowfallEffect />}
+      <div className="flex flex-col items-center justify-center h-full gap-6">
+        <Card>
         <div className="text-center">
             <p className="text-lg text-gray-400 mb-4">Commute Duration</p>
             {useNixieDisplay ? (
@@ -184,6 +242,7 @@ export const MainView: React.FC<MainViewProps> = ({ onSaveCommute, workLocation,
         <p>{statusMessage}</p>
         {distance !== null && <p>Distance to work: {distance.toFixed(0)}m</p>}
       </div>
-    </div>
+      </div>
+    </>
   );
 };

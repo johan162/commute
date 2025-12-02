@@ -33,6 +33,15 @@ YELLOW := \033[1;33m
 NC := \033[0m # No Color
 
 # =====================================
+# Prerequisites Check
+# =====================================
+# Add pre-req check that podman is installed
+ifeq (, $(shell which npm))
+$(error No npm found. Please install npm & npx to build this project. "brew install node" on macOS)
+endif
+
+
+# =====================================
 # Help Target
 # =====================================
 
