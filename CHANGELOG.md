@@ -1,3 +1,11 @@
+## [1.5.2] - 2025-12-02
+
+Release type: patch
+
+### 📋 Summary 
+- Added snow effect from 13 Dec - 30 Dec
+
+
 ## [1.5.1] - 2025-11-15
 
 Release type: patch
